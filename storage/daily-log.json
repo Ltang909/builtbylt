@@ -1,20 +1,20 @@
 [
   {
-    "date": "2026-09-17",
-    "tomorrow_target": "Ship Subscription Cancellation Assistant and execute its first distribution step.",
-    "entries": [
-      {"product":"Loom-ish","kind":"shipped","title":"Product fixes and SEO/AEO work","impact":"Product + acquisition","priority":"maintain","minutes":null},
-      {"product":"WellFinder","kind":"shipped","title":"WellFinder live","impact":"Product + users","priority":"P0","next":"Expand provider directories so search results become meaningfully denser.","minutes":null},
-      {"product":"leontang.ca","kind":"discovered","title":"Real-time visitor chat needed","impact":"Users + conversion","priority":"P0","next":"Replace/augment keyword-trigger experience with true live visitor chat.","minutes":null},
-      {"product":"staging.leontang.ca","kind":"bug","title":"Stroke-heavy sessions lag and can crash the browser","impact":"Product reliability","priority":"P0","next":"Profile sustained drawing sessions and eliminate progressive slowdown/crashes.","minutes":null},
-      {"product":"BuiltByLT","kind":"shipped","title":"Founder portal and opportunity pipeline stood up","impact":"Focus + velocity","priority":"P1","next":"Performance pass and simplify information hierarchy.","minutes":null},
-      {"product":"Subscription Canceller","kind":"decision","title":"Promoted to P0 and first new product to launch","impact":"Potential users + revenue","priority":"P0","next":"Ship company → cancellation path → ready-to-use script/email, then distribute.","minutes":null},
-      {"product":"Product pipeline","kind":"decision","title":"24-hour shipping cadence established","impact":"Velocity","priority":"ongoing","minutes":null},
-      {"product":"Product pipeline","kind":"killed","title":"Loom Exporter killed; QuickBooks deprioritized","impact":"Focus","priority":"done","minutes":null},
-      {"product":"Distribution","kind":"miss","title":"Distribution was not treated as part of shipping","impact":"Users + revenue","priority":"P0 process","next":"Every launch must name where the first 10 users come from.","minutes":null},
-      {"product":"Ops / Claude","kind":"waste","title":"Claude sat idle while other work was happening","impact":"Lost velocity","priority":"fix tomorrow","next":"Run parallel research/validation assignments continuously.","minutes":null},
-      {"product":"Ops / Job Search","kind":"waste","title":"Too much time spent reviewing Claude-found job descriptions","impact":"Lost time","priority":"fix tomorrow","next":"Tighten screening so only high-confidence matches reach manual review.","minutes":null},
-      {"product":"Operating system","kind":"shipped","title":"Daily factual changelog ritual started","impact":"Accountability + focus","priority":"daily","minutes":null}
+    "date":"2026-09-17",
+    "tomorrow_target":"Ship Subscription Cancellation Assistant and execute its first distribution step.",
+    "entries":[
+      {"product":"Loom-ish","vertical":"Horizontal / Creator Tools","kind":"shipped","title":"Product fixes and SEO/AEO work","impact":"Product + acquisition","priority":"maintain","minutes":null,"return":null},
+      {"product":"WellFinder","vertical":"Local Services / Discovery","kind":"shipped","title":"WellFinder live","impact":"Product + users","priority":"P0","next":"Expand provider directories so search results become meaningfully denser.","minutes":null,"return":null},
+      {"product":"leontang.ca","vertical":"Personal Brand / Portfolio","kind":"discovered","title":"Real-time visitor chat needed","impact":"Users + conversion","priority":"P0","next":"Replace/augment keyword-trigger experience with true live visitor chat.","minutes":null,"return":null},
+      {"product":"staging.leontang.ca","vertical":"Personal Brand / Portfolio","kind":"bug","title":"Stroke-heavy sessions lag and can crash the browser","impact":"Product reliability","priority":"P0","next":"Profile sustained drawing sessions and eliminate progressive slowdown/crashes.","minutes":null,"return":null},
+      {"product":"BuiltByLT","vertical":"Internal / Founder Ops","kind":"shipped","title":"Founder portal and opportunity pipeline stood up","impact":"Focus + velocity","priority":"P1","next":"Performance pass and simplify information hierarchy.","minutes":null,"return":null},
+      {"product":"Subscription Canceller","vertical":"Consumer / Subscriptions","kind":"decision","title":"Promoted to P0 and first new product to launch","impact":"Potential users + revenue","priority":"P0","next":"Ship company → cancellation path → ready-to-use script/email, then distribute.","minutes":null,"return":null},
+      {"product":"Product pipeline","vertical":"Internal / Founder Ops","kind":"decision","title":"24-hour shipping cadence established","impact":"Velocity","priority":"ongoing","minutes":null,"return":null},
+      {"product":"Product pipeline","vertical":"Internal / Founder Ops","kind":"killed","title":"Loom Exporter killed; QuickBooks deprioritized","impact":"Focus","priority":"done","minutes":null,"return":null},
+      {"product":"Distribution","vertical":"Cross-portfolio / Distribution","kind":"miss","title":"Distribution was not treated as part of shipping","impact":"Users + revenue","priority":"P0 process","next":"Every launch must name where the first 10 users come from.","minutes":null,"return":null},
+      {"product":"Ops / Claude","vertical":"Internal / Founder Ops","kind":"waste","title":"Claude sat idle while other work was happening","impact":"Lost velocity","priority":"fix tomorrow","next":"Run parallel research/validation assignments continuously.","minutes":null,"return":null},
+      {"product":"Ops / Job Search","vertical":"Career / Job Search","kind":"waste","title":"Too much time spent reviewing Claude-found job descriptions","impact":"Lost time","priority":"fix tomorrow","next":"Tighten screening so only high-confidence matches reach manual review.","minutes":null,"return":null},
+      {"product":"Operating system","vertical":"Internal / Founder Ops","kind":"shipped","title":"Daily factual changelog ritual started","impact":"Accountability + focus","priority":"daily","minutes":null,"return":null}
     ]
   }
 ]
