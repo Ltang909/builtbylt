@@ -65,10 +65,11 @@ function portal_activity_for_project(string $projectId, array $activity): array
 function portal_freshness(?string $timestamp): array
 {
     if (!$timestamp) return ['tone' => 'red', 'label' => 'No updates yet'];
-    $days = max(0, (int) floor((time() - portal_date($timestamp)->getTimestamp()) / 86400));
-    if ($days <= 7) return ['tone' => 'green', 'label' => $days === 0 ? 'Shipped today' : "Shipped {$days}d ago"];
-    if ($days <= 14) return ['tone' => 'yellow', 'label' => "Shipped {$days}d ago"];
-    return ['tone' => 'red', 'label' => "Shipped {$days}d ago"];
+    $hours = max(0, (int) floor((time() - portal_date($timestamp)->getTimestamp()) / 3600));
+    $label = $hours < 1 ? 'Shipped just now' : ($hours < 48 ? "Shipped {$hours}h ago" : 'Shipped ' . floor($hours / 24) . 'd ago');
+    if ($hours <= 48) return ['tone' => 'green', 'label' => $label];
+    if ($hours <= 94) return ['tone' => 'yellow', 'label' => $label];
+    return ['tone' => 'red', 'label' => $label];
 }
 
 function portal_posthog_metrics(array $projects): array
