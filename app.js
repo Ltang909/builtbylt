@@ -7,6 +7,8 @@ document.querySelectorAll('[data-open-log]').forEach((button) => button.addEvent
   dialog.showModal();
   setTimeout(() => form.elements.title.focus(), 50);
 }));
+document.querySelector('[data-close-log]')?.addEventListener('click', () => dialog.close());
+dialog?.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
 
 form?.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -33,5 +35,4 @@ document.querySelectorAll('.filter').forEach((filter) => filter.addEventListener
 
 const tick = () => { const clock = document.querySelector('#clock'); if (clock) clock.textContent = new Intl.DateTimeFormat('en-CA', {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).format(new Date()); };
 tick(); setInterval(tick, 1000);
-
 

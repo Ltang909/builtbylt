@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 function portal_config(): array
 {
-    $config = ['password_hash' => getenv('PORTAL_PASSWORD_HASH') ?: '', 'timezone' => getenv('PORTAL_TIMEZONE') ?: 'America/Toronto'];
+    $config = ['password_hash' => getenv('PORTAL_PASSWORD_HASH') ?: '', 'timezone' => getenv('PORTAL_TIMEZONE') ?: 'America/Toronto', 'posthog' => []];
     $privateConfig = dirname(__DIR__) . '/private/builtbylt.php';
     if (is_file($privateConfig)) {
         $values = require $privateConfig;
@@ -57,6 +57,62 @@ function portal_read_activity(): array
     return array_slice($items, 0, 250);
 }
 
+function portal_activity_for_project(string $projectId, array $activity): array
+{
+    return array_values(array_filter($activity, static fn(array $item): bool => $item['project'] === $projectId));
+}
+
+function portal_freshness(?string $timestamp): array
+{
+    if (!$timestamp) return ['tone' => 'red', 'label' => 'No updates yet'];
+    $days = max(0, (int) floor((time() - portal_date($timestamp)->getTimestamp()) / 86400));
+    if ($days <= 7) return ['tone' => 'green', 'label' => $days === 0 ? 'Shipped today' : "Shipped {$days}d ago"];
+    if ($days <= 14) return ['tone' => 'yellow', 'label' => "Shipped {$days}d ago"];
+    return ['tone' => 'red', 'label' => "Shipped {$days}d ago"];
+}
+
+function portal_posthog_metrics(array $projects): array
+{
+    $config = portal_config()['posthog'] ?? [];
+    $empty = array_fill_keys(array_column($projects, 'id'), ['views' => null, 'visitors' => null]);
+    if (empty($config['personal_api_key']) || empty($config['project_id'])) return $empty;
+    $cachePath = __DIR__ . '/storage/posthog-metrics.json';
+    if (is_file($cachePath) && filemtime($cachePath) > time() - 600) {
+        $cached = json_decode((string) file_get_contents($cachePath), true);
+        if (is_array($cached)) return array_replace($empty, $cached);
+    }
+    $domainToId = []; foreach ($projects as $project) $domainToId[$project['domain']] = $project['id'];
+    $quoted = implode(',', array_map(static fn(string $domain): string => "'" . str_replace("'", "''", $domain) . "'", array_keys($domainToId)));
+    $sql = "SELECT properties.\$host AS host, count() AS views, uniqExact(distinct_id) AS visitors FROM events WHERE event = '\$pageview' AND timestamp >= now() - INTERVAL 30 DAY AND properties.\$host IN ({$quoted}) GROUP BY host LIMIT 20";
+    $body = json_encode(['query' => ['kind' => 'HogQLQuery', 'query' => $sql], 'name' => 'Built by LT portfolio metrics']);
+    $host = rtrim((string) ($config['api_host'] ?? 'https://us.posthog.com'), '/');
+    $response = portal_http_post("{$host}/api/projects/" . rawurlencode((string) $config['project_id']) . '/query/', $body, ['Authorization: Bearer ' . $config['personal_api_key']]);
+    if (!$response) return $empty;
+    $decoded = json_decode($response, true); if (!isset($decoded['results']) || !is_array($decoded['results'])) return $empty;
+    $metrics = $empty;
+    foreach ($decoded['results'] as $row) if (isset($row[0], $domainToId[$row[0]])) $metrics[$domainToId[$row[0]]] = ['views' => (int) ($row[1] ?? 0), 'visitors' => (int) ($row[2] ?? 0)];
+    @file_put_contents($cachePath, json_encode($metrics), LOCK_EX);
+    return $metrics;
+}
+
+function portal_posthog_capture(array $item): void
+{
+    $config = portal_config()['posthog'] ?? [];
+    if (empty($config['project_api_key'])) return;
+    $host = rtrim((string) ($config['capture_host'] ?? 'https://us.i.posthog.com'), '/');
+    $payload = json_encode(['api_key' => $config['project_api_key'], 'event' => 'update_shipped', 'distinct_id' => 'builtbylt-founder', 'timestamp' => $item['timestamp'], 'properties' => ['business' => $item['project'], 'update_type' => $item['type'], 'title' => $item['title'], 'source' => 'builtbylt_portal']]);
+    portal_http_post("{$host}/capture/", $payload, [], 3);
+}
+
+function portal_http_post(string $url, string $body, array $headers = [], int $timeout = 8): ?string
+{
+    if (!function_exists('curl_init')) return null;
+    $curl = curl_init($url); if (!$curl) return null;
+    curl_setopt_array($curl, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $body, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => $timeout, CURLOPT_HTTPHEADER => array_merge(['Content-Type: application/json'], $headers)]);
+    $response = curl_exec($curl); $status = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE); curl_close($curl);
+    return is_string($response) && $status >= 200 && $status < 300 ? $response : null;
+}
+
 function portal_append_activity(array $item): bool
 {
     $directory = dirname(portal_storage_path());
@@ -80,5 +136,4 @@ function portal_render_login(bool $setupRequired, ?string $error): void
     http_response_code($setupRequired ? 503 : 200);
     ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><title>Built by LT — Private</title><link rel="stylesheet" href="/app.css?v=1"></head><body class="login-page"><div class="grain"></div><main class="login-shell"><div class="login-mark"><span>BUILT</span><i>by</i><span>LT</span></div><section class="login-panel"><p class="eyebrow">Private founder console</p><h1>The work<br>behind the work.</h1><?php if ($setupRequired): ?><div class="setup-notice"><strong>One last setup step.</strong><p>Add a password hash outside the public web directory, then reload. The exact two-minute setup is in <code>README.md</code>.</p></div><?php else: ?><form method="post" class="login-form"><input type="hidden" name="action" value="login"><label for="password">Access key</label><div><input id="password" name="password" type="password" autocomplete="current-password" autofocus required placeholder="Enter password"><button class="button button-accent">Unlock →</button></div><?php if ($error): ?><p class="form-error" role="alert"><?= htmlspecialchars($error) ?></p><?php endif; ?></form><?php endif; ?><footer><span>builtbylt.com</span><span>Eyes only</span></footer></section></main></body></html><?php
 }
-
 

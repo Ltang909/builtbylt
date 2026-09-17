@@ -36,6 +36,7 @@ if (!portal_is_authenticated()) {
 
 $projects = portal_projects();
 $activity = portal_read_activity();
+$posthogMetrics = portal_posthog_metrics($projects);
 $today = (new DateTimeImmutable('now', new DateTimeZone($config['timezone'])))->format('Y-m-d');
 $todayActivity = array_values(array_filter($activity, static fn(array $item): bool => str_starts_with($item['timestamp'], $today)));
 $activeCount = count(array_filter($projects, static fn(array $project): bool => $project['status'] === 'active'));
@@ -75,10 +76,19 @@ $latest = $activity[0]['timestamp'] ?? null;
     <section class="section-head"><div><span>01</span><h2>Properties</h2></div><p>A living index of the things under construction.</p></section>
     <section class="project-grid">
       <?php foreach ($projects as $index => $project): ?>
+      <?php $projectActivity = portal_activity_for_project($project['id'], $activity); $lastProjectUpdate = $projectActivity[0] ?? null; $freshness = portal_freshness($lastProjectUpdate['timestamp'] ?? null); $updates30d = count(array_filter($projectActivity, static fn(array $item): bool => portal_date($item['timestamp'])->getTimestamp() >= time() - 2592000)); $deploys30d = count(array_filter($projectActivity, static fn(array $item): bool => $item['type'] === 'deploy' && portal_date($item['timestamp'])->getTimestamp() >= time() - 2592000)); ?>
       <article class="project-card tone-<?= ($index % 4) + 1 ?>">
         <div class="project-number">0<?= $index + 1 ?></div>
         <div class="project-main"><span class="status status-<?= htmlspecialchars($project['status']) ?>"><?= htmlspecialchars($project['status']) ?></span><h3><?= htmlspecialchars($project['name']) ?></h3><a href="https://<?= htmlspecialchars($project['domain']) ?>" target="_blank" rel="noreferrer"><?= htmlspecialchars($project['domain']) ?> ↗</a></div>
         <p><?= htmlspecialchars($project['note']) ?></p>
+        <div class="business-metrics">
+          <div><strong><?= $posthogMetrics[$project['id']]['views'] === null ? '—' : number_format($posthogMetrics[$project['id']]['views']) ?></strong><span>30d views</span></div>
+          <div><strong><?= $posthogMetrics[$project['id']]['visitors'] === null ? '—' : number_format($posthogMetrics[$project['id']]['visitors']) ?></strong><span>visitors</span></div>
+          <div><strong><?= $updates30d ?></strong><span>updates</span></div>
+          <div><strong><?= $deploys30d ?></strong><span>deploys</span></div>
+        </div>
+        <div class="last-shipped"><span class="health-dot <?= $freshness['tone'] ?>"></span><div><small>Last update shipped</small><strong><?= htmlspecialchars($lastProjectUpdate['title'] ?? 'Nothing logged') ?></strong><em><?= htmlspecialchars($freshness['label']) ?></em></div></div>
+        <?php if ($projectActivity): ?><div class="mini-log"><small>Recent change log</small><?php foreach (array_slice($projectActivity, 0, 3) as $change): ?><div><time><?= htmlspecialchars(portal_format_day($change['timestamp'])) ?></time><span><?= htmlspecialchars($change['title']) ?></span></div><?php endforeach; ?></div><?php endif; ?>
         <div class="card-foot"><span><?= htmlspecialchars($project['phase']) ?></span><button type="button" data-open-log data-project="<?= htmlspecialchars($project['id']) ?>">Log ↗</button></div>
       </article>
       <?php endforeach; ?>
@@ -99,7 +109,7 @@ $latest = $activity[0]['timestamp'] ?? null;
 
   <dialog id="log-dialog">
     <form id="log-form" method="dialog">
-      <div class="dialog-head"><div><span>Quick entry</span><h2>Log an update</h2></div><button class="icon-button" value="cancel" aria-label="Close">×</button></div>
+      <div class="dialog-head"><div><span>Quick entry</span><h2>Log an update</h2></div><button class="icon-button" type="button" data-close-log aria-label="Close">×</button></div>
       <label>Property<select name="project" required><?php foreach ($projects as $project): ?><option value="<?= htmlspecialchars($project['id']) ?>"><?= htmlspecialchars($project['name']) ?></option><?php endforeach; ?></select></label>
       <fieldset><legend>Entry type</legend><label><input type="radio" name="type" value="update" checked><span>Update</span></label><label><input type="radio" name="type" value="deploy"><span>Deploy</span></label><label><input type="radio" name="type" value="milestone"><span>Milestone</span></label></fieldset>
       <label>What shipped?<input name="title" maxlength="120" required placeholder="Tight, specific, done."></label>
@@ -110,5 +120,4 @@ $latest = $activity[0]['timestamp'] ?? null;
   <script src="/app.js?v=1" defer></script>
 </body>
 </html>
-
 

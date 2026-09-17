@@ -24,6 +24,14 @@ The portal refuses to show the dashboard until a real server-side password hash 
 
 The app also accepts `PORTAL_PASSWORD_HASH` and `PORTAL_TIMEZONE` environment variables.
 
+## Optional PostHog connection
+
+When connected, the dashboard reads 30-day page views and unique visitors per domain and sends every manual log entry to PostHog as an `update_shipped` event.
+
+Add the `posthog` block shown in `private-config.example.php` to the private configuration file. You need the numeric project ID, a Personal API key restricted to **Query Read**, and the normal `phc_...` project key for capture. Keep the Personal API key server-side and never commit it or place it in browser JavaScript.
+
+The example uses PostHog US hosts. EU projects should use the EU hosts shown in PostHog settings. Website analytics must send `$pageview` with `$host`; cards match that host to the exact business domain. Metrics are cached for ten minutes.
+
 ## Deployment behavior
 
 `.github/workflows/main.yml` remains unchanged. Pushes to `main` copy the repository to `domains/builtbylt.com/public_html`. The private configuration sits outside that target. Runtime activity lives in `storage/activity.json`; it is gitignored, and the workflow uses `rm: false`, so deploys preserve it.
@@ -36,5 +44,4 @@ The app also accepts `PORTAL_PASSWORD_HASH` and `PORTAL_TIMEZONE` environment va
 - The activity API requires the authenticated session.
 - Storage and configuration files are blocked from direct web access by `.htaccess`.
 - Keep HTTPS enabled in Hostinger so session cookies are secure.
-
 

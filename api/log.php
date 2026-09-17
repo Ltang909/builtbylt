@@ -19,6 +19,6 @@ if (!in_array($project, $projectIds, true) || !in_array($type, ['update', 'deplo
 }
 $item = ['id' => bin2hex(random_bytes(8)), 'project' => $project, 'type' => $type, 'title' => $title, 'detail' => $detail, 'timestamp' => (new DateTimeImmutable('now', new DateTimeZone(portal_config()['timezone'])))->format(DateTimeInterface::ATOM)];
 if (!portal_append_activity($item)) { http_response_code(500); echo json_encode(['error' => 'Could not write to storage. Check folder permissions.']); exit; }
+portal_posthog_capture($item);
 http_response_code(201); echo json_encode(['ok' => true, 'item' => $item]);
-
 
