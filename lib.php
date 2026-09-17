@@ -105,6 +105,28 @@ function portal_posthog_capture(array $item): void
     portal_http_post("{$host}/capture/", $payload, [], 3);
 }
 
+function portal_posthog_trends(array $projects): array
+{
+    $config = portal_config()['posthog'] ?? []; $empty = ['views' => [], 'revenue' => [], 'visitors' => []];
+    if (empty($config['personal_api_key']) || empty($config['project_id'])) return $empty;
+    $cachePath = __DIR__ . '/storage/posthog-trends.json';
+    if (is_file($cachePath) && filemtime($cachePath) > time() - 600) { $cached = json_decode((string) file_get_contents($cachePath), true); if (is_array($cached)) return array_replace($empty, $cached); }
+    $quoted = implode(',', array_map(static fn(array $project): string => "'" . str_replace("'", "''", $project['domain']) . "'", $projects));
+    $sql = "SELECT toDate(timestamp) AS day, countIf(event = '\$pageview') AS views, uniqExactIf(distinct_id, event = '\$pageview') AS visitors, sum(toFloatOrZero(properties.revenue)) AS revenue FROM events WHERE timestamp >= now() - INTERVAL 30 DAY AND properties.\$host IN ({$quoted}) GROUP BY day ORDER BY day LIMIT 31";
+    $body = json_encode(['query' => ['kind' => 'HogQLQuery', 'query' => $sql], 'name' => 'Built by LT portfolio trends']); $host = rtrim((string) ($config['api_host'] ?? 'https://us.posthog.com'), '/');
+    $response = portal_http_post("{$host}/api/projects/" . rawurlencode((string) $config['project_id']) . '/query/', $body, ['Authorization: Bearer ' . $config['personal_api_key']]);
+    if (!$response) return $empty; $decoded = json_decode($response, true); if (!isset($decoded['results']) || !is_array($decoded['results'])) return $empty;
+    $trends = $empty; foreach ($decoded['results'] as $row) { $trends['views'][] = (float) ($row[1] ?? 0); $trends['visitors'][] = (float) ($row[2] ?? 0); $trends['revenue'][] = (float) ($row[3] ?? 0); }
+    @file_put_contents($cachePath, json_encode($trends), LOCK_EX); return $trends;
+}
+
+function portal_sparkline_svg(array $values, string $color): string
+{
+    if (!$values) $values = [0, 0]; if (count($values) === 1) $values[] = $values[0]; $width = 240; $height = 54; $max = max($values); $min = min($values); $range = max(1, $max - $min); $last = count($values) - 1; $points = [];
+    foreach ($values as $index => $value) { $points[] = round(($index / $last) * $width, 1) . ',' . round($height - 4 - ((($value - $min) / $range) * ($height - 8)), 1); }
+    return '<svg class="metric-sparkline" viewBox="0 0 240 54" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="50" x2="240" y2="50" stroke="currentColor" opacity=".15"/><polyline points="' . implode(' ', $points) . '" fill="none" stroke="' . htmlspecialchars($color) . '" stroke-width="3" vector-effect="non-scaling-stroke"/></svg>';
+}
+
 function portal_http_post(string $url, string $body, array $headers = [], int $timeout = 8): ?string
 {
     if (!function_exists('curl_init')) return null;
@@ -119,6 +141,19 @@ function portal_read_tasks(): array
 {
     $path = portal_tasks_path(); if (!is_file($path)) return [];
     $tasks = json_decode((string) file_get_contents($path), true); return is_array($tasks) ? $tasks : [];
+}
+
+function portal_ideas_path(): string { return __DIR__ . '/storage/ideas.json'; }
+function portal_read_ideas(): array { $path = portal_ideas_path(); if (!is_file($path)) return []; $ideas = json_decode((string) file_get_contents($path), true); return is_array($ideas) ? $ideas : []; }
+function portal_write_ideas(array $ideas): bool { return file_put_contents(portal_ideas_path(), json_encode(array_values($ideas), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX) !== false; }
+
+function portal_calendar_events(): array
+{
+    $url = (string) (portal_config()['calendar_ics_url'] ?? ''); if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) return [];
+    $context = stream_context_create(['http' => ['timeout' => 5, 'user_agent' => 'BuiltByLT/1.0']]); $raw = @file_get_contents($url, false, $context); if (!$raw) return [];
+    preg_match_all('/BEGIN:VEVENT(.*?)END:VEVENT/s', $raw, $matches); $events = [];
+    foreach ($matches[1] ?? [] as $block) { preg_match('/DTSTART[^:]*:(\d{8})(?:T(\d{6})Z?)?/', $block, $date); preg_match('/SUMMARY:(.*)/', $block, $summary); if (!$date || !$summary) continue; $stamp = $date[1] . ($date[2] ?? '090000'); $eventDate = DateTimeImmutable::createFromFormat('YmdHis', $stamp, new DateTimeZone(portal_config()['timezone'])); if ($eventDate && $eventDate->getTimestamp() >= time() - 86400) $events[] = ['title' => trim(str_replace(['\\,','\\n'], [',',' '], $summary[1])), 'timestamp' => $eventDate->format(DateTimeInterface::ATOM)]; }
+    usort($events, static fn(array $a, array $b): int => strcmp($a['timestamp'], $b['timestamp'])); return array_slice($events, 0, 6);
 }
 function portal_write_tasks(array $tasks): bool
 {

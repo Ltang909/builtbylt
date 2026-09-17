@@ -32,6 +32,12 @@ Add the `posthog` block shown in `private-config.example.php` to the private con
 
 The example uses PostHog US hosts. EU projects should use the EU hosts shown in PostHog settings. Website analytics must send `$pageview` with `$host`; cards match that host to the exact business domain. Metrics are cached for ten minutes.
 
+## Optional Google Calendar connection
+
+The planning rail can show the next six calendar blocks without putting Google credentials in browser code. In Google Calendar, open **Settings → Integrate calendar**, copy the **Secret address in iCal format**, and add it as `calendar_ics_url` in the private `builtbylt.php` file. Treat that URL like a password and never commit it. The dashboard reads it server-side and does not modify calendar events.
+
+Upcoming ideas are stored in `storage/ideas.json`, alongside the protected runtime data. Add Claude-scraped ideas through the visible Ideas to ship form; no scraper credentials are required by the portal.
+
 ## Deployment behavior
 
 `.github/workflows/main.yml` remains unchanged. Pushes to `main` copy the repository to `domains/builtbylt.com/public_html`. The private configuration sits outside that target. Runtime activity lives in `storage/activity.json`; it is gitignored, and the workflow uses `rm: false`, so deploys preserve it.

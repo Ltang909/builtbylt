@@ -46,3 +46,11 @@ document.querySelectorAll('[data-task-id]').forEach((input) => input.addEventLis
   if (response.ok) location.reload();
 }));
 
+document.querySelector('#idea-form')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = event.currentTarget.querySelector('button');
+  button.disabled = true;
+  const response = await fetch('/api/ideas.php', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(Object.fromEntries(new FormData(event.currentTarget)))});
+  if (response.ok) location.reload(); else button.disabled = false;
+});
+

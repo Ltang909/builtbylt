@@ -4,6 +4,8 @@
 return [
     'password_hash' => 'PASTE_GENERATED_PASSWORD_HASH_HERE',
     'timezone' => 'America/Toronto',
+    // Optional: Google Calendar "Secret address in iCal format". Keep this private.
+    'calendar_ics_url' => '',
     'posthog' => [
         // Server-side query access. Create a Personal API key with Query Read only.
         'personal_api_key' => 'phx_PASTE_QUERY_READ_KEY_HERE',
