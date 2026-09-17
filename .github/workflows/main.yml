@@ -1,0 +1,28 @@
+name: Deploy Built by LT Portal
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy Built by LT
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.hostinger_host }}
+          username: ${{ secrets.hostinger_username }}
+          password: ${{ secrets.name_password }}
+          port: ${{ secrets.hostinger_port }}
+          source: "."
+          target: "domains/builtbylt.com/public_html"
+          overwrite: true
+          rm: false
+          exclude: ".git,.github"
