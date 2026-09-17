@@ -36,3 +36,13 @@ document.querySelectorAll('.filter').forEach((filter) => filter.addEventListener
 const tick = () => { const clock = document.querySelector('#clock'); if (clock) clock.textContent = new Intl.DateTimeFormat('en-CA', {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).format(new Date()); };
 tick(); setInterval(tick, 1000);
 
+document.querySelector('#task-form')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const response = await fetch('/api/tasks.php', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({...Object.fromEntries(new FormData(event.currentTarget)), action:'add'})});
+  if (response.ok) location.reload();
+});
+document.querySelectorAll('[data-task-id]').forEach((input) => input.addEventListener('change', async () => {
+  const response = await fetch('/api/tasks.php', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'toggle', id:input.dataset.taskId})});
+  if (response.ok) location.reload();
+}));
+

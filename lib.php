@@ -75,7 +75,7 @@ function portal_freshness(?string $timestamp): array
 function portal_posthog_metrics(array $projects): array
 {
     $config = portal_config()['posthog'] ?? [];
-    $empty = array_fill_keys(array_column($projects, 'id'), ['views' => null, 'visitors' => null]);
+    $empty = array_fill_keys(array_column($projects, 'id'), ['views' => null, 'visitors' => null, 'revenue' => null]);
     if (empty($config['personal_api_key']) || empty($config['project_id'])) return $empty;
     $cachePath = __DIR__ . '/storage/posthog-metrics.json';
     if (is_file($cachePath) && filemtime($cachePath) > time() - 600) {
@@ -84,14 +84,14 @@ function portal_posthog_metrics(array $projects): array
     }
     $domainToId = []; foreach ($projects as $project) $domainToId[$project['domain']] = $project['id'];
     $quoted = implode(',', array_map(static fn(string $domain): string => "'" . str_replace("'", "''", $domain) . "'", array_keys($domainToId)));
-    $sql = "SELECT properties.\$host AS host, count() AS views, uniqExact(distinct_id) AS visitors FROM events WHERE event = '\$pageview' AND timestamp >= now() - INTERVAL 30 DAY AND properties.\$host IN ({$quoted}) GROUP BY host LIMIT 20";
+    $sql = "SELECT properties.\$host AS host, countIf(event = '\$pageview') AS views, uniqExactIf(distinct_id, event = '\$pageview') AS visitors, sum(toFloatOrZero(properties.revenue)) AS revenue FROM events WHERE timestamp >= now() - INTERVAL 30 DAY AND properties.\$host IN ({$quoted}) GROUP BY host LIMIT 20";
     $body = json_encode(['query' => ['kind' => 'HogQLQuery', 'query' => $sql], 'name' => 'Built by LT portfolio metrics']);
     $host = rtrim((string) ($config['api_host'] ?? 'https://us.posthog.com'), '/');
     $response = portal_http_post("{$host}/api/projects/" . rawurlencode((string) $config['project_id']) . '/query/', $body, ['Authorization: Bearer ' . $config['personal_api_key']]);
     if (!$response) return $empty;
     $decoded = json_decode($response, true); if (!isset($decoded['results']) || !is_array($decoded['results'])) return $empty;
     $metrics = $empty;
-    foreach ($decoded['results'] as $row) if (isset($row[0], $domainToId[$row[0]])) $metrics[$domainToId[$row[0]]] = ['views' => (int) ($row[1] ?? 0), 'visitors' => (int) ($row[2] ?? 0)];
+    foreach ($decoded['results'] as $row) if (isset($row[0], $domainToId[$row[0]])) $metrics[$domainToId[$row[0]]] = ['views' => (int) ($row[1] ?? 0), 'visitors' => (int) ($row[2] ?? 0), 'revenue' => (float) ($row[3] ?? 0)];
     @file_put_contents($cachePath, json_encode($metrics), LOCK_EX);
     return $metrics;
 }
@@ -112,6 +112,18 @@ function portal_http_post(string $url, string $body, array $headers = [], int $t
     curl_setopt_array($curl, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $body, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => $timeout, CURLOPT_HTTPHEADER => array_merge(['Content-Type: application/json'], $headers)]);
     $response = curl_exec($curl); $status = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE); curl_close($curl);
     return is_string($response) && $status >= 200 && $status < 300 ? $response : null;
+}
+
+function portal_tasks_path(): string { return __DIR__ . '/storage/tasks.json'; }
+function portal_read_tasks(): array
+{
+    $path = portal_tasks_path(); if (!is_file($path)) return [];
+    $tasks = json_decode((string) file_get_contents($path), true); return is_array($tasks) ? $tasks : [];
+}
+function portal_write_tasks(array $tasks): bool
+{
+    $directory = dirname(portal_tasks_path()); if (!is_dir($directory) && !mkdir($directory, 0750, true) && !is_dir($directory)) return false;
+    return file_put_contents(portal_tasks_path(), json_encode(array_values($tasks), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX) !== false;
 }
 
 function portal_append_activity(array $item): bool

@@ -17,7 +17,9 @@ $detail = trim((string) ($payload['detail'] ?? ''));
 if (!in_array($project, $projectIds, true) || !in_array($type, ['update', 'deploy', 'milestone'], true) || $title === '' || mb_strlen($title) > 120 || mb_strlen($detail) > 600) {
     http_response_code(422); echo json_encode(['error' => 'Check the entry and try again.']); exit;
 }
-$item = ['id' => bin2hex(random_bytes(8)), 'project' => $project, 'type' => $type, 'title' => $title, 'detail' => $detail, 'timestamp' => (new DateTimeImmutable('now', new DateTimeZone(portal_config()['timezone'])))->format(DateTimeInterface::ATOM)];
+$date = trim((string) ($payload['date'] ?? ''));
+try { $occurredAt = $date === '' ? new DateTimeImmutable('now', new DateTimeZone(portal_config()['timezone'])) : new DateTimeImmutable($date . ' 12:00:00', new DateTimeZone(portal_config()['timezone'])); } catch (Throwable $e) { http_response_code(422); echo json_encode(['error' => 'Choose a valid date.']); exit; }
+$item = ['id' => bin2hex(random_bytes(8)), 'project' => $project, 'type' => $type, 'title' => $title, 'detail' => $detail, 'timestamp' => $occurredAt->format(DateTimeInterface::ATOM)];
 if (!portal_append_activity($item)) { http_response_code(500); echo json_encode(['error' => 'Could not write to storage. Check folder permissions.']); exit; }
 portal_posthog_capture($item);
 http_response_code(201); echo json_encode(['ok' => true, 'item' => $item]);

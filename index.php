@@ -37,6 +37,11 @@ if (!portal_is_authenticated()) {
 $projects = portal_projects();
 $activity = portal_read_activity();
 $posthogMetrics = portal_posthog_metrics($projects);
+$tasks = portal_read_tasks();
+$openTasks = array_values(array_filter($tasks, static fn(array $task): bool => empty($task['done'])));
+$totalViews = array_sum(array_map(static fn(array $metric): int => (int) ($metric['views'] ?? 0), $posthogMetrics));
+$totalVisitors = array_sum(array_map(static fn(array $metric): int => (int) ($metric['visitors'] ?? 0), $posthogMetrics));
+$totalRevenue = array_sum(array_map(static fn(array $metric): float => (float) ($metric['revenue'] ?? 0), $posthogMetrics));
 $today = (new DateTimeImmutable('now', new DateTimeZone($config['timezone'])))->format('Y-m-d');
 $todayActivity = array_values(array_filter($activity, static fn(array $item): bool => str_starts_with($item['timestamp'], $today)));
 $activeCount = count(array_filter($projects, static fn(array $project): bool => $project['status'] === 'active'));
@@ -49,7 +54,7 @@ $latest = $activity[0]['timestamp'] ?? null;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>Built by LT — Founder Console</title>
-  <link rel="stylesheet" href="/app.css?v=2">
+  <link rel="stylesheet" href="/app.css?v=3">
 </head>
 <body>
   <div class="grain" aria-hidden="true"></div>
@@ -66,11 +71,11 @@ $latest = $activity[0]['timestamp'] ?? null;
       <div class="dispatch"><span>Daily dispatch</span><strong><?= count($todayActivity) ?></strong><p><?= count($todayActivity) === 1 ? 'record on the board' : 'records on the board' ?></p></div>
     </section>
 
-    <section class="scorecard" aria-label="Portfolio scorecard">
-      <article><span>Properties</span><strong><?= count($projects) ?></strong><small>in portfolio</small></article>
-      <article><span>In motion</span><strong><?= $activeCount ?></strong><small>active builds</small></article>
-      <article><span>Today</span><strong><?= count($todayActivity) ?></strong><small>updates logged</small></article>
-      <article><span>Last ship</span><strong class="small-value"><?= $latest ? htmlspecialchars(portal_relative_time($latest)) : '—' ?></strong><small><?= $latest ? htmlspecialchars(portal_format_time($latest)) : 'nothing logged yet' ?></small></article>
+    <section class="scorecard revenue-scorecard" aria-label="Portfolio scorecard">
+      <article><span>Total web traffic</span><strong><?= number_format($totalViews) ?></strong><small>page views · 30 days</small></article>
+      <article><span>Total revenue</span><strong>$<?= number_format($totalRevenue, 0) ?></strong><small>tracked · 30 days</small></article>
+      <article><span>Unique users</span><strong><?= number_format($totalVisitors) ?></strong><small>visitors · 30 days</small></article>
+      <article><span>Open to ship</span><strong><?= count($openTasks) ?></strong><small>things needing action</small></article>
     </section>
 
     <section class="section-head"><div><span>01</span><h2>Properties</h2></div><p>A living index of the things under construction.</p></section>
@@ -84,8 +89,8 @@ $latest = $activity[0]['timestamp'] ?? null;
         <div class="business-metrics">
           <div><strong><?= $posthogMetrics[$project['id']]['views'] === null ? '—' : number_format($posthogMetrics[$project['id']]['views']) ?></strong><span>30d views</span></div>
           <div><strong><?= $posthogMetrics[$project['id']]['visitors'] === null ? '—' : number_format($posthogMetrics[$project['id']]['visitors']) ?></strong><span>visitors</span></div>
+          <div><strong>$<?= number_format((float) ($posthogMetrics[$project['id']]['revenue'] ?? 0), 0) ?></strong><span>revenue</span></div>
           <div><strong><?= $updates30d ?></strong><span>updates</span></div>
-          <div><strong><?= $deploys30d ?></strong><span>deploys</span></div>
         </div>
         <div class="last-shipped"><span class="health-dot <?= $freshness['tone'] ?>"></span><div><small>Last update shipped</small><strong><?= htmlspecialchars($lastProjectUpdate['title'] ?? 'Nothing logged') ?></strong><em><?= htmlspecialchars($freshness['label']) ?></em></div></div>
         <?php if ($projectActivity): ?><div class="mini-log"><small>Recent change log</small><?php foreach (array_slice($projectActivity, 0, 3) as $change): ?><div><time><?= htmlspecialchars(portal_format_day($change['timestamp'])) ?></time><span><?= htmlspecialchars($change['title']) ?></span></div><?php endforeach; ?></div><?php endif; ?>
@@ -105,6 +110,15 @@ $latest = $activity[0]['timestamp'] ?? null;
       </article>
       <?php endforeach; ?>
     </section>
+
+    <section class="section-head"><div><span>03</span><h2>Open things to ship</h2></div><p>The work that turns traffic into revenue.</p></section>
+    <section class="ship-queue">
+      <form id="task-form"><select name="project" required><?php foreach ($projects as $project): ?><option value="<?= htmlspecialchars($project['id']) ?>"><?= htmlspecialchars($project['name']) ?></option><?php endforeach; ?></select><input name="title" maxlength="140" required placeholder="What needs to ship next?"><button class="button button-dark">Add to queue →</button></form>
+      <div class="task-list">
+        <?php if (!$openTasks): ?><div class="empty-task">Nothing open. Add the next revenue-moving ship.</div><?php endif; ?>
+        <?php foreach ($openTasks as $task): ?><label class="task-row"><input type="checkbox" data-task-id="<?= htmlspecialchars($task['id']) ?>"><span></span><strong><?= htmlspecialchars($task['title']) ?></strong><em><?= htmlspecialchars(portal_project_name($task['project'], $projects)) ?></em></label><?php endforeach; ?>
+      </div>
+    </section>
   </main>
 
   <dialog id="log-dialog">
@@ -113,11 +127,12 @@ $latest = $activity[0]['timestamp'] ?? null;
       <label>Property<select name="project" required><?php foreach ($projects as $project): ?><option value="<?= htmlspecialchars($project['id']) ?>"><?= htmlspecialchars($project['name']) ?></option><?php endforeach; ?></select></label>
       <fieldset><legend>Entry type</legend><label><input type="radio" name="type" value="update" checked><span>Update</span></label><label><input type="radio" name="type" value="deploy"><span>Deploy</span></label><label><input type="radio" name="type" value="milestone"><span>Milestone</span></label></fieldset>
       <label>What shipped?<input name="title" maxlength="120" required placeholder="Tight, specific, done."></label>
+      <label>Ship date<input name="date" type="date" value="<?= htmlspecialchars(date('Y-m-d')) ?>" required></label>
       <label>Notes <span>(optional)</span><textarea name="detail" maxlength="600" rows="3" placeholder="Context, outcome, or the next move."></textarea></label>
       <div class="dialog-actions"><span id="form-status" role="status"></span><button class="button button-dark" type="submit">Put it on the board →</button></div>
     </form>
   </dialog>
-  <script src="/app.js?v=2" defer></script>
+  <script src="/app.js?v=3" defer></script>
 </body>
 </html>
 
