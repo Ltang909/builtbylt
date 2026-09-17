@@ -1,0 +1,57 @@
+[
+  {
+    "id": "qb-plan-optimizer",
+    "project": "staging",
+    "title": "P1 · PRE-PRODUCT · QuickBooks Plan Optimizer · SHIP SEP 18",
+    "stage": "pre-product",
+    "priority": "P1",
+    "ship_by": "2026-09-18",
+    "confidence": "medium-high",
+    "hypothesis": "Small businesses hit by the August 2026 QuickBooks price increase will use a fast calculator to identify the cheapest plan that actually fits their needs.",
+    "next_action": "Build a 5-question calculator and a single acquisition page."
+  },
+  {
+    "id": "mindbody-escape",
+    "project": "staging",
+    "title": "P1 · PRE-PRODUCT · Mindbody Escape · SHIP SEP 19",
+    "stage": "pre-product",
+    "priority": "P1",
+    "ship_by": "2026-09-19",
+    "confidence": "medium-high",
+    "hypothesis": "Studios leaving Mindbody will use a cleanup tool that turns messy exports into migration-ready customer files.",
+    "next_action": "Create CSV upload → dedupe → normalized export proof of concept."
+  },
+  {
+    "id": "shopify-app-audit",
+    "project": "staging",
+    "title": "P1 · PRE-PRODUCT · Shopify App Audit · SHIP SEP 20",
+    "stage": "pre-product",
+    "priority": "P1",
+    "ship_by": "2026-09-20",
+    "confidence": "medium",
+    "hypothesis": "Shopify merchants will audit installed apps when the tool makes overlapping functionality and unnecessary recurring spend obvious.",
+    "next_action": "Build paste-your-app-list audit with pricing and overlap flags."
+  },
+  {
+    "id": "meeting-bot-scanner",
+    "project": "staging",
+    "title": "P2 · VALIDATE · Meeting Bot Scanner · DECIDE SEP 21",
+    "stage": "validate",
+    "priority": "P2",
+    "ship_by": "2026-09-21",
+    "confidence": "medium",
+    "hypothesis": "IT and operations teams want visibility into third-party AI meeting bots touching company calendars.",
+    "next_action": "Validate with 10 direct pain signals before accepting the OAuth trust burden."
+  },
+  {
+    "id": "contractor-lead-checker",
+    "project": "staging",
+    "title": "P2 · VALIDATE · Contractor Lead Checker · DECIDE SEP 22",
+    "stage": "validate",
+    "priority": "P2",
+    "ship_by": "2026-09-22",
+    "confidence": "medium-high",
+    "hypothesis": "Service pros paying for marketplace leads want a fast sanity check before spending time chasing suspicious leads.",
+    "next_action": "Interview/observe contractor complaints and define signals that can be checked without making unverifiable fraud claims."
+  }
+]
