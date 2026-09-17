@@ -49,7 +49,7 @@ $latest = $activity[0]['timestamp'] ?? null;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>Built by LT — Founder Console</title>
-  <link rel="stylesheet" href="/app.css?v=1">
+  <link rel="stylesheet" href="/app.css?v=2">
 </head>
 <body>
   <div class="grain" aria-hidden="true"></div>
@@ -117,7 +117,7 @@ $latest = $activity[0]['timestamp'] ?? null;
       <div class="dialog-actions"><span id="form-status" role="status"></span><button class="button button-dark" type="submit">Put it on the board →</button></div>
     </form>
   </dialog>
-  <script src="/app.js?v=1" defer></script>
+  <script src="/app.js?v=2" defer></script>
 </body>
 </html>
 
