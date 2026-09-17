@@ -11,46 +11,41 @@ document.querySelector('[data-close-log]')?.addEventListener('click', () => dial
 dialog?.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
 
 form?.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  status.textContent = 'Writing…';
-  const button = form.querySelector('[type="submit"]');
-  button.disabled = true;
+  event.preventDefault(); status.textContent = 'Writing…';
+  const button = form.querySelector('[type="submit"]'); button.disabled = true;
   try {
     const response = await fetch('/api/log.php', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Could not save the entry.');
-    status.textContent = 'Logged.';
-    setTimeout(() => location.reload(), 350);
-  } catch (error) {
-    status.textContent = error.message;
-    button.disabled = false;
-  }
+    const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Could not save the entry.');
+    status.textContent = 'Logged.'; setTimeout(() => location.reload(), 350);
+  } catch (error) { status.textContent = error.message; button.disabled = false; }
 });
 
 document.querySelectorAll('.filter').forEach((filter) => filter.addEventListener('click', () => {
-  document.querySelectorAll('.filter').forEach((item) => item.classList.remove('active'));
-  filter.classList.add('active');
+  document.querySelectorAll('.filter').forEach((item) => item.classList.remove('active')); filter.classList.add('active');
   document.querySelectorAll('.timeline-item').forEach((item) => item.hidden = filter.dataset.filter !== 'all' && item.dataset.type !== filter.dataset.filter);
 }));
 
-const tick = () => { const clock = document.querySelector('#clock'); if (clock) clock.textContent = new Intl.DateTimeFormat('en-CA', {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).format(new Date()); };
+const tick = () => { const clock = document.querySelector('#clock'); if (clock) clock.textContent = new Intl.DateTimeFormat('en-CA', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date()); };
 tick(); setInterval(tick, 1000);
 
-document.querySelector('#task-form')?.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const response = await fetch('/api/tasks.php', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({...Object.fromEntries(new FormData(event.currentTarget)), action:'add'})});
-  if (response.ok) location.reload();
-});
-document.querySelectorAll('[data-task-id]').forEach((input) => input.addEventListener('change', async () => {
-  const response = await fetch('/api/tasks.php', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'toggle', id:input.dataset.taskId})});
-  if (response.ok) location.reload();
-}));
-
-document.querySelector('#idea-form')?.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const button = event.currentTarget.querySelector('button');
-  button.disabled = true;
-  const response = await fetch('/api/ideas.php', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(Object.fromEntries(new FormData(event.currentTarget)))});
-  if (response.ok) location.reload(); else button.disabled = false;
-});
-
+// BuiltByLT is a read/decision surface. Priorities are managed through ChatGPT,
+// so remove the manual task queue and idea-entry UI while preserving the priority list.
+const taskQueue = document.querySelector('.ship-queue');
+if (taskQueue) {
+  const heading = taskQueue.previousElementSibling;
+  if (heading?.classList.contains('section-head')) heading.remove();
+  taskQueue.remove();
+}
+const ideaForm = document.querySelector('#idea-form');
+if (ideaForm) ideaForm.remove();
+const ideasPanel = document.querySelector('.ideas-panel');
+if (ideasPanel) {
+  const intro = ideasPanel.querySelector('p');
+  if (intro) intro.textContent = 'Prioritized with ChatGPT. Scan the queue; change it by asking.';
+  ideasPanel.querySelectorAll('.idea-list article').forEach((article) => {
+    const strong = article.querySelector('strong');
+    const raw = strong?.textContent || '';
+    const priority = raw.match(/^(P\d|PARKED|WATCHLIST)/i)?.[1]?.toUpperCase();
+    if (priority) article.dataset.priority = priority;
+  });
+}
