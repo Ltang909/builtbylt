@@ -21,8 +21,10 @@ jobs:
           username: ${{ secrets.hostinger_username }}
           password: ${{ secrets.name_password }}
           port: ${{ secrets.hostinger_port }}
-          source: "."
+          # v1 has no exclude input, so list only deployable app files.
+          source: "index.php,lib.php,api,app.js,app.css,.htaccess,storage,private-config.example.php,README.md"
           target: "domains/builtbylt.com/public_html"
           overwrite: true
           rm: false
-          exclude: ".git,.github"
+
+
