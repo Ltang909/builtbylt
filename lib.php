@@ -102,6 +102,15 @@ function portal_read_tasks(): array { $path = portal_tasks_path(); if (!is_file(
 function portal_ideas_path(): string { return __DIR__ . '/storage/ideas.json'; }
 function portal_read_ideas(): array { $path = portal_ideas_path(); if (!is_file($path)) return []; $ideas = json_decode((string) file_get_contents($path), true); return is_array($ideas) ? $ideas : []; }
 function portal_write_ideas(array $ideas): bool { return file_put_contents(portal_ideas_path(), json_encode(array_values($ideas), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX) !== false; }
+function portal_daily_log_path(): string { return __DIR__ . '/storage/daily-log.json'; }
+function portal_read_daily_log(): array
+{
+    $path = portal_daily_log_path(); if (!is_file($path)) return [];
+    $days = json_decode((string) file_get_contents($path), true); if (!is_array($days)) return [];
+    $days = array_values(array_filter($days, static fn($day): bool => is_array($day) && !empty($day['date'])));
+    usort($days, static fn(array $a, array $b): int => strcmp((string) $b['date'], (string) $a['date']));
+    return $days;
+}
 function portal_calendar_events(): array
 {
     $url = (string) (portal_config()['calendar_ics_url'] ?? ''); if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) return []; $context = stream_context_create(['http' => ['timeout' => 5, 'user_agent' => 'BuiltByLT/1.0']]); $raw = @file_get_contents($url, false, $context); if (!$raw) return []; preg_match_all('/BEGIN:VEVENT(.*?)END:VEVENT/s', $raw, $matches); $events = [];
@@ -123,3 +132,4 @@ function portal_render_login(bool $setupRequired, ?string $error): void
     http_response_code($setupRequired ? 503 : 200); ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><title>Built by LT — Private</title><link rel="stylesheet" href="/app.css?v=4"></head><body class="login-page"><div class="grain"></div><main class="lock-shell"><div class="lock-mark"><span>BUILT</span><i>by</i><span>LT</span></div><div class="lock-copy"><p class="eyebrow">Private founder console</p><h1>Not for<br><em>spectators.</em></h1><p>Ship. Measure. Decide what deserves another day.</p></div><form class="lock-form" method="post"><input type="hidden" name="action" value="login"><label for="password">Access key</label><div><input id="password" name="password" type="password" autocomplete="current-password" autofocus <?= $setupRequired ? 'disabled' : '' ?>><button <?= $setupRequired ? 'disabled' : '' ?>>Enter →</button></div><?php if ($setupRequired): ?><p class="lock-error">Setup required: add a password hash outside public_html before this console can unlock.</p><?php elseif ($error): ?><p class="lock-error"><?= htmlspecialchars($error) ?></p><?php endif; ?></form><footer>builtbylt.com · <?= date('Y') ?></footer></main></body></html><?php
 }
+
