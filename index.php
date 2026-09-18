@@ -38,10 +38,27 @@ $projects = portal_projects();
 $activity = portal_read_activity();
 $posthogMetrics = portal_posthog_metrics($projects);
 $posthogTrends = portal_posthog_trends($projects);
-$tasks = portal_read_tasks();
 $ideas = portal_read_ideas();
-$calendarEvents = portal_calendar_events();
-$openTasks = array_values(array_filter($tasks, static fn(array $task): bool => empty($task['done'])));
+$priorityOrder = ['P0' => 0, 'P1' => 1, 'P2' => 2, 'PARKED' => 3, 'WATCHLIST' => 4];
+usort($ideas, static function (array $a, array $b) use ($priorityOrder): int {
+    $aPriority = strtoupper((string) ($a['priority'] ?? ''));
+    $bPriority = strtoupper((string) ($b['priority'] ?? ''));
+    $aRank = $priorityOrder[$aPriority] ?? ($priorityOrder[strtoupper((string) ($a['stage'] ?? ''))] ?? 5);
+    $bRank = $priorityOrder[$bPriority] ?? ($priorityOrder[strtoupper((string) ($b['stage'] ?? ''))] ?? 5);
+    return $aRank <=> $bRank ?: strcmp((string) ($a['ship_by'] ?? '9999-12-31'), (string) ($b['ship_by'] ?? '9999-12-31'));
+});
+$dailyLog = portal_read_daily_log();
+$dailyLogByDate = []; $verticalCoverage = [];
+foreach ($dailyLog as $day) {
+    $entries = is_array($day['entries'] ?? null) ? $day['entries'] : [];
+    $dailyLogByDate[(string) $day['date']] = ['entries' => $entries, 'tomorrow_target' => (string) ($day['tomorrow_target'] ?? '')];
+    foreach ($entries as $entry) { $vertical = trim((string) ($entry['vertical'] ?? '')) ?: 'Unclassified'; $verticalCoverage[$vertical] = ($verticalCoverage[$vertical] ?? 0) + 1; }
+}
+arsort($verticalCoverage);
+$calendarAnchor = $dailyLog ? new DateTimeImmutable((string) $dailyLog[0]['date']) : new DateTimeImmutable('today');
+$calendarStart = $calendarAnchor->modify('first day of this month');
+$calendarLeading = (int) $calendarStart->format('N') - 1;
+$calendarDays = (int) $calendarStart->format('t');
 $totalViews = array_sum(array_map(static fn(array $metric): int => (int) ($metric['views'] ?? 0), $posthogMetrics));
 $totalVisitors = array_sum(array_map(static fn(array $metric): int => (int) ($metric['visitors'] ?? 0), $posthogMetrics));
 $totalRevenue = array_sum(array_map(static fn(array $metric): float => (float) ($metric['revenue'] ?? 0), $posthogMetrics));
@@ -82,7 +99,7 @@ $latest = $activity[0]['timestamp'] ?? null;
       <article class="metric-traffic"><span>Total web traffic</span><strong><?= number_format($totalViews) ?></strong><small>page views · 30 days</small><?= portal_sparkline_svg($posthogTrends['views'], '#195cff') ?></article>
       <article class="metric-revenue <?= $totalRevenue > 0 ? 'is-positive' : 'is-zero' ?>"><span>Total revenue</span><strong>$<?= number_format($totalRevenue, 0) ?></strong><small>tracked · 30 days</small><?= portal_sparkline_svg($posthogTrends['revenue'], $totalRevenue > 0 ? '#187c43' : '#d6382f') ?></article>
       <article class="metric-users"><span>Unique users</span><strong><?= number_format($totalVisitors) ?></strong><small>visitors · 30 days</small><?= portal_sparkline_svg($posthogTrends['visitors'], '#6943c6') ?></article>
-      <article><span>Open to ship</span><strong><?= count($openTasks) ?></strong><small>things needing action</small></article>
+      <article><span>Priority queue</span><strong><?= count($ideas) ?></strong><small>ordered things to ship</small></article>
     </section>
 
     <div class="cockpit-layout"><div class="cockpit-main">
@@ -136,29 +153,24 @@ $latest = $activity[0]['timestamp'] ?? null;
       <?php endforeach; ?>
     </section>
 
-    <section class="section-head"><div><span>03</span><h2>Open things to ship</h2></div><p>The work that turns traffic into revenue.</p></section>
-    <section class="ship-queue">
-      <form id="task-form"><select name="project" required><?php foreach ($projects as $project): ?><option value="<?= htmlspecialchars($project['id']) ?>"><?= htmlspecialchars($project['name']) ?></option><?php endforeach; ?></select><input name="title" maxlength="140" required placeholder="What needs to ship next?"><button class="button button-dark">Add to queue →</button></form>
-      <div class="task-list">
-        <?php if (!$openTasks): ?><div class="empty-task">Nothing open. Add the next revenue-moving ship.</div><?php endif; ?>
-        <?php foreach ($openTasks as $task): ?><label class="task-row"><input type="checkbox" data-task-id="<?= htmlspecialchars($task['id']) ?>"><span></span><strong><?= htmlspecialchars($task['title']) ?></strong><em><?= htmlspecialchars(portal_project_name($task['project'], $projects)) ?></em></label><?php endforeach; ?>
-      </div>
-    </section>
     </div>
 
-    <aside class="idea-rail" aria-label="Founder planning rail">
-      <section class="ideas-panel">
-        <div class="rail-kicker">Always visible</div><h2>Ideas to ship</h2><p>Capture the promising things before they disappear.</p>
-        <form id="idea-form"><select name="project" aria-label="Property" required><?php foreach ($projects as $project): ?><option value="<?= htmlspecialchars($project['id']) ?>"><?= htmlspecialchars($project['name']) ?></option><?php endforeach; ?></select><input name="title" maxlength="180" required placeholder="One sharp idea…"><button class="button button-dark">Add idea →</button></form>
-        <div class="idea-list"><?php if (!$ideas): ?><div class="rail-empty">No scraped ideas are connected yet. Add the best ones here as they surface.</div><?php endif; ?><?php foreach (array_slice($ideas, 0, 12) as $idea): ?><article><span><?= htmlspecialchars(portal_project_name($idea['project'], $projects)) ?></span><strong><?= htmlspecialchars($idea['title']) ?></strong></article><?php endforeach; ?></div>
+    <aside class="priority-rail" aria-label="Founder planning rail">
+      <section class="priorities-panel">
+        <div class="rail-kicker">Ordered queue</div><h2>Things to ship</h2><p>Highest priority first. Managed from the source data.</p>
+        <div class="priority-list"><?php if (!$ideas): ?><div class="rail-empty">No priorities recorded.</div><?php endif; ?><?php foreach ($ideas as $idea): $rawPriority = strtoupper((string) ($idea['priority'] ?? '')); $priority = in_array($rawPriority, ['P0','P1','P2'], true) ? $rawPriority : strtoupper((string) ($idea['stage'] ?? $rawPriority ?: 'NEXT')); ?><article><span class="priority-badge"><?= htmlspecialchars($priority) ?></span><div><strong><?= htmlspecialchars(preg_replace('/^(P\d|PARKED|WATCHLIST)\s*·\s*/i', '', (string) $idea['title'])) ?></strong><small><?= htmlspecialchars((string) ($idea['vertical'] ?? 'Unclassified')) ?><?php if (!empty($idea['ship_by'])): ?> · <?= htmlspecialchars((new DateTimeImmutable($idea['ship_by']))->format('M j')) ?><?php endif; ?></small></div></article><?php endforeach; ?></div>
       </section>
-      <section class="calendar-panel">
-        <div class="rail-kicker">Weekly attention</div><h2>Time split</h2>
-        <div class="allocation"><div><span>Revenue</span><strong>60%</strong></div><i><b style="width:60%"></b></i><div><span>Shipping</span><strong>40%</strong></div><i><b style="width:40%"></b></i></div>
-        <div class="calendar-events"><?php if (!$calendarEvents): ?><div class="rail-empty">Connect your private Google Calendar iCal link to see upcoming focus blocks here.</div><?php endif; ?><?php foreach ($calendarEvents as $event): ?><article><time><?= htmlspecialchars(portal_date($event['timestamp'])->format('D · M j · g:ia')) ?></time><strong><?= htmlspecialchars($event['title']) ?></strong></article><?php endforeach; ?></div>
-        <a class="calendar-link" href="https://calendar.google.com/calendar/u/0/r/week" target="_blank" rel="noreferrer">Open Google Calendar ↗</a>
+      <section class="coverage-panel">
+        <div class="rail-kicker">Completed actions</div><h2>Vertical coverage</h2>
+        <div class="coverage-list"><?php if (!$verticalCoverage): ?><div class="rail-empty">No daily-log activity yet.</div><?php endif; ?><?php foreach ($verticalCoverage as $vertical => $count): ?><div><span><?= htmlspecialchars($vertical) ?></span><strong><?= $count ?></strong></div><?php endforeach; ?></div>
       </section>
     </aside></div>
+
+    <section class="section-head log-calendar-heading"><div><span>03</span><h2>Daily logs</h2></div><p>Factual activity from the daily record.</p></section>
+    <section class="daily-log-panel">
+      <div class="month-calendar"><header><strong><?= htmlspecialchars($calendarAnchor->format('F Y')) ?></strong><span><?= count($dailyLogByDate) ?> active <?= count($dailyLogByDate) === 1 ? 'day' : 'days' ?></span></header><div class="weekdays"><?php foreach (['M','T','W','T','F','S','S'] as $weekday): ?><span><?= $weekday ?></span><?php endforeach; ?></div><div class="calendar-grid"><?php for ($blank = 0; $blank < $calendarLeading; $blank++): ?><span class="calendar-blank"></span><?php endfor; ?><?php for ($dayNumber = 1; $dayNumber <= $calendarDays; $dayNumber++): $date = $calendarStart->format('Y-m-') . str_pad((string) $dayNumber, 2, '0', STR_PAD_LEFT); $dayData = $dailyLogByDate[$date] ?? null; ?><button type="button" class="calendar-day<?= $dayData ? ' has-activity' : '' ?>" data-log-date="<?= $date ?>" <?= $dayData ? '' : 'disabled' ?>><span><?= $dayNumber ?></span><?php if ($dayData): ?><i></i><small><?= count($dayData['entries']) ?></small><?php endif; ?></button><?php endfor; ?></div></div>
+      <div class="day-detail" id="day-detail"><?php if (!$dailyLog): ?><div class="empty"><strong>No daily logs yet.</strong><p>Add entries to storage/daily-log.json to build the calendar.</p></div><?php else: ?><?php foreach ($dailyLogByDate as $date => $dayData): ?><section data-log-detail="<?= htmlspecialchars($date) ?>" <?= $date === array_key_first($dailyLogByDate) ? '' : 'hidden' ?>><header><div><span>Selected day</span><h3><?= htmlspecialchars((new DateTimeImmutable($date))->format('D · M j, Y')) ?></h3></div><strong><?= count($dayData['entries']) ?> actions</strong></header><div class="day-entries"><?php foreach ($dayData['entries'] as $entry): ?><article><span><?= htmlspecialchars((string) ($entry['kind'] ?? 'activity')) ?> · <?= htmlspecialchars((string) ($entry['vertical'] ?? 'Unclassified')) ?></span><strong><?= htmlspecialchars((string) ($entry['title'] ?? 'Untitled activity')) ?></strong><small><?= htmlspecialchars((string) ($entry['product'] ?? '—')) ?><?php if (!empty($entry['priority'])): ?> · <?= htmlspecialchars((string) $entry['priority']) ?><?php endif; ?></small></article><?php endforeach; ?></div><?php if ($dayData['tomorrow_target'] !== ''): ?><p class="tomorrow-target"><strong>Next →</strong> <?= htmlspecialchars($dayData['tomorrow_target']) ?></p><?php endif; ?></section><?php endforeach; ?><?php endif; ?></div>
+    </section>
   </main>
 
   <dialog id="log-dialog">
@@ -172,7 +184,8 @@ $latest = $activity[0]['timestamp'] ?? null;
       <div class="dialog-actions"><span id="form-status" role="status"></span><button class="button button-dark" type="submit">Put it on the board →</button></div>
     </form>
   </dialog>
-  <script src="/app.js?v=5" defer></script>
+  <script src="/app.js?v=6" defer></script>
 </body>
 </html>
+
 
