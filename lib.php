@@ -38,10 +38,10 @@ function portal_require_auth(): void
 function portal_projects(): array
 {
     return [
-        ['id' => 'loom-ish', 'name' => 'Loom-ish', 'domain' => 'loom-ish.builtbylt.com', 'status' => 'active', 'phase' => 'Product build', 'note' => 'Fast, focused async video without the enterprise drag.'],
+        ['id' => 'loom-ish', 'name' => 'Loom-ish', 'domain' => 'loom-ish.builtbylt.com', 'status' => 'live', 'phase' => 'Product build', 'note' => 'Fast, focused async video without the enterprise drag.'],
         ['id' => 'wellfinder', 'name' => 'WellFinder', 'domain' => 'wellfinder.ca', 'status' => 'live', 'phase' => 'Live / validate', 'note' => 'Live in market. Measure real usage and learn from demand before expanding it.'],
         ['id' => 'leontang', 'name' => 'leontang.ca', 'domain' => 'leontang.ca', 'status' => 'live', 'phase' => 'Live / optimize', 'note' => 'Live chat, sharper copy, and product-quality fixes shipped. Monitor visitor response and keep tightening conversion.'],
-        ['id' => 'staging', 'name' => 'Staging', 'domain' => 'staging.leontang.ca', 'status' => 'active', 'phase' => 'Workshop', 'note' => 'The proving ground before anything earns a public URL.'],
+        ['id' => 'staging', 'name' => 'Staging', 'domain' => 'staging.leontang.ca', 'status' => 'live', 'phase' => 'Workshop', 'note' => 'The proving ground before anything earns a public URL.'],
     ];
 }
 
@@ -110,6 +110,24 @@ function portal_read_daily_log(): array
     $days = array_values(array_filter($days, static fn($day): bool => is_array($day) && !empty($day['date'])));
     usort($days, static fn(array $a, array $b): int => strcmp((string) $b['date'], (string) $a['date']));
     return $days;
+}
+function portal_posthog_project_sessions(array $projects): array
+{
+    $config = portal_config()['posthog'] ?? []; $empty = array_fill_keys(array_column($projects, 'id'), []);
+    if (empty($config['personal_api_key']) || empty($config['project_id'])) return $empty;
+    $cachePath = __DIR__ . '/storage/posthog-project-sessions.json';
+    if (is_file($cachePath) && filemtime($cachePath) > time() - 600) { $cached = json_decode((string) file_get_contents($cachePath), true); if (is_array($cached)) return array_replace($empty, $cached); }
+    $domainToId = []; foreach ($projects as $project) $domainToId[$project['domain']] = $project['id'];
+    $quoted = implode(',', array_map(static fn(string $domain): string => "'" . str_replace("'", "''", $domain) . "'", array_keys($domainToId)));
+    $sql = "SELECT toDate(timestamp) AS day, properties.\$host AS host, uniqExactIf(properties.\$session_id, event = '\$pageview') AS sessions FROM events WHERE timestamp >= now() - INTERVAL 30 DAY AND properties.\$host IN ({$quoted}) GROUP BY day, host ORDER BY day LIMIT 500";
+    $body = json_encode(['query' => ['kind' => 'HogQLQuery', 'query' => $sql], 'name' => 'Built by LT property sessions']);
+    $host = rtrim((string) ($config['api_host'] ?? 'https://us.posthog.com'), '/');
+    $response = portal_http_post("{$host}/api/projects/" . rawurlencode((string) $config['project_id']) . '/query/', $body, ['Authorization: Bearer ' . $config['personal_api_key']]); if (!$response) return $empty;
+    $decoded = json_decode($response, true); if (!isset($decoded['results']) || !is_array($decoded['results'])) return $empty;
+    $byProjectDay = []; foreach ($decoded['results'] as $row) if (isset($row[0], $row[1], $domainToId[$row[1]])) $byProjectDay[$domainToId[$row[1]]][(string) $row[0]] = (int) ($row[2] ?? 0);
+    $sessions = $empty; $start = new DateTimeImmutable('-29 days');
+    foreach ($projects as $project) for ($offset = 0; $offset < 30; $offset++) { $day = $start->modify("+{$offset} days")->format('Y-m-d'); $sessions[$project['id']][] = (int) ($byProjectDay[$project['id']][$day] ?? 0); }
+    @file_put_contents($cachePath, json_encode($sessions), LOCK_EX); return $sessions;
 }
 function portal_calendar_events(): array
 {
