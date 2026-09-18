@@ -40,7 +40,7 @@ function portal_projects(): array
     return [
         ['id' => 'loom-ish', 'name' => 'Loom-ish', 'domain' => 'loom-ish.builtbylt.com', 'status' => 'active', 'phase' => 'Product build', 'note' => 'Fast, focused async video without the enterprise drag.'],
         ['id' => 'wellfinder', 'name' => 'WellFinder', 'domain' => 'wellfinder.ca', 'status' => 'live', 'phase' => 'Live / validate', 'note' => 'Live in market. Measure real usage and learn from demand before expanding it.'],
-        ['id' => 'leontang', 'name' => 'leontang.ca', 'domain' => 'leontang.ca', 'status' => 'live', 'phase' => 'Portfolio', 'note' => 'The public front door: selected work, point of view, contact.'],
+        ['id' => 'leontang', 'name' => 'leontang.ca', 'domain' => 'leontang.ca', 'status' => 'live', 'phase' => 'Live / optimize', 'note' => 'Live chat, sharper copy, and product-quality fixes shipped. Monitor visitor response and keep tightening conversion.'],
         ['id' => 'staging', 'name' => 'Staging', 'domain' => 'staging.leontang.ca', 'status' => 'active', 'phase' => 'Workshop', 'note' => 'The proving ground before anything earns a public URL.'],
     ];
 }
