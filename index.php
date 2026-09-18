@@ -38,6 +38,7 @@ $projects = portal_projects();
 $activity = portal_read_activity();
 $posthogMetrics = portal_posthog_metrics($projects);
 $posthogTrends = portal_posthog_trends($projects);
+$projectSessions = portal_posthog_project_sessions($projects);
 $ideas = portal_read_ideas();
 $priorityOrder = ['P0' => 0, 'P1' => 1, 'P2' => 2, 'PARKED' => 3, 'WATCHLIST' => 4];
 usort($ideas, static function (array $a, array $b) use ($priorityOrder): int {
@@ -68,7 +69,6 @@ $totalVisitors = array_sum(array_map(static fn(array $metric): int => (int) ($me
 $totalRevenue = array_sum(array_map(static fn(array $metric): float => (float) ($metric['revenue'] ?? 0), $posthogMetrics));
 $today = (new DateTimeImmutable('now', new DateTimeZone($config['timezone'])))->format('Y-m-d');
 $todayActivity = array_values(array_filter($activity, static fn(array $item): bool => str_starts_with($item['timestamp'], $today)));
-$activeCount = count(array_filter($projects, static fn(array $project): bool => $project['status'] === 'active'));
 $latest = $activity[0]['timestamp'] ?? null;
 ?>
 <!doctype html>
@@ -78,7 +78,7 @@ $latest = $activity[0]['timestamp'] ?? null;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>Built by LT — Founder Console</title>
-  <link rel="stylesheet" href="/app.css?v=7">
+  <link rel="stylesheet" href="/app.css?v=8">
   <style>
     .hero{min-height:220px;padding:40px 0 28px}.hero h1{font-size:clamp(42px,5vw,72px);line-height:.86}.dispatch strong{font-size:54px}.scorecard article{padding:20px 16px 16px;min-height:160px}.scorecard strong{font-size:40px;margin:9px 0 4px}.revenue-scorecard .metric-revenue.is-zero strong{color:#d6382f}.revenue-scorecard .metric-revenue.is-positive strong{color:#187c43}.project-grid{grid-template-columns:repeat(2,1fr)}.project-card{min-height:auto!important;border-bottom:1px solid}.project-card:nth-child(2n){border-right:0}.project-card:nth-last-child(-n+2){border-bottom:0}.project-number{margin-bottom:22px}.section-head{padding:46px 0 18px}.timeline-item{padding:20px 0}
     @media(max-width:700px){.project-grid{grid-template-columns:1fr}.project-card{border-right:0}.hero{min-height:190px}.hero h1{font-size:45px}}
@@ -112,15 +112,19 @@ $latest = $activity[0]['timestamp'] ?? null;
       <?php foreach ($projects as $index => $project): ?>
       <?php
         $projectActivity = portal_activity_for_project($project['id'], $activity);
-        $lastProjectUpdate = $projectActivity[0] ?? null;
         $dailyProjectActivity = $dailyEntriesByProduct[strtolower($project['domain'])] ?? $dailyEntriesByProduct[strtolower($project['name'])] ?? [];
-        $lastDailyUpdate = $dailyProjectActivity[0] ?? null;
-        if ($lastDailyUpdate && (!$lastProjectUpdate || substr((string) $lastProjectUpdate['timestamp'], 0, 10) < $lastDailyUpdate['date'])) $lastProjectUpdate = ['timestamp' => $lastDailyUpdate['date'], 'title' => $lastDailyUpdate['title'] ?? 'Daily log update'];
+        $changeLog = $projectActivity;
+        foreach ($dailyProjectActivity as $dailyChange) $changeLog[] = ['timestamp' => $dailyChange['date'], 'title' => (string) ($dailyChange['title'] ?? 'Daily log update'), 'detail' => (string) ($dailyChange['impact'] ?? ''), 'type' => (string) ($dailyChange['kind'] ?? 'update')];
+        usort($changeLog, static fn(array $a, array $b): int => strcmp((string) $b['timestamp'], (string) $a['timestamp']));
+        $seenChanges = []; $changeLog = array_values(array_filter($changeLog, static function (array $change) use (&$seenChanges): bool { $key = substr((string) ($change['timestamp'] ?? ''), 0, 10) . '|' . strtolower(trim((string) ($change['title'] ?? ''))); if (isset($seenChanges[$key])) return false; $seenChanges[$key] = true; return true; }));
+        $lastProjectUpdate = $changeLog[0] ?? null;
         $freshness = portal_freshness($lastProjectUpdate['timestamp'] ?? null);
-        $updates30d = count(array_filter($projectActivity, static fn(array $item): bool => portal_date($item['timestamp'])->getTimestamp() >= time() - 2592000)) + count(array_filter($dailyProjectActivity, static fn(array $item): bool => portal_date($item['date'])->getTimestamp() >= time() - 2592000));
+        $updates30d = count(array_filter($changeLog, static fn(array $item): bool => portal_date((string) $item['timestamp'])->getTimestamp() >= time() - 2592000));
         $projectVisitors = (int) ($posthogMetrics[$project['id']]['visitors'] ?? 0);
         $projectRevenue = (float) ($posthogMetrics[$project['id']]['revenue'] ?? 0);
-        $activityText = strtolower(implode(' ', array_map(static fn(array $item): string => ($item['title'] ?? '') . ' ' . ($item['detail'] ?? ''), $projectActivity)));
+        $activityText = strtolower(implode(' ', array_map(static fn(array $item): string => ($item['title'] ?? '') . ' ' . ($item['detail'] ?? ''), $changeLog)));
+        $sessionTrend = $projectSessions[$project['id']] ?? [];
+        $sessionColor = ['#195cff', '#187c43', '#6943c6', '#ff6a3d'][$index % 4];
         $launched = str_contains($activityText, 'launch') || in_array($project['status'], ['live', 'active'], true);
         $gtm = str_contains($activityText, 'go to market') || str_contains($activityText, 'organic social') || str_contains($activityText, 'social post');
         $milestones = [
@@ -140,9 +144,10 @@ $latest = $activity[0]['timestamp'] ?? null;
           <div><strong>$<?= number_format((float) ($posthogMetrics[$project['id']]['revenue'] ?? 0), 0) ?></strong><span>revenue</span></div>
           <div><strong><?= $updates30d ?></strong><span>updates</span></div>
         </div>
+        <div class="property-sessions"><div><span>Sessions · 30 days</span><strong><?= $sessionTrend ? number_format(array_sum($sessionTrend)) : '—' ?></strong></div><?php if ($sessionTrend): ?><?= portal_sparkline_svg($sessionTrend, $sessionColor) ?><?php else: ?><small>Session trend unavailable</small><?php endif; ?></div>
         <div class="last-shipped"><span class="health-dot <?= $freshness['tone'] ?>"></span><div><small>Last update shipped</small><strong><?= htmlspecialchars($lastProjectUpdate['title'] ?? 'Nothing logged') ?></strong><em><?= htmlspecialchars($freshness['label']) ?></em></div></div>
         <div class="milestone-track"><div class="milestone-head"><small>Milestones</small><strong><?= $milestonesDone ?>/<?= count($milestones) ?></strong></div><div class="milestone-progress"><i style="width:<?= round(($milestonesDone / count($milestones)) * 100) ?>%"></i></div><ol><?php foreach ($milestones as [$milestoneLabel, $milestoneDone]): ?><li class="<?= $milestoneDone ? 'done' : '' ?>"><i></i><span><?= htmlspecialchars($milestoneLabel) ?></span></li><?php endforeach; ?></ol></div>
-        <?php if ($projectActivity): ?><div class="mini-log"><small>Recent change log</small><?php foreach (array_slice($projectActivity, 0, 3) as $change): ?><div><time><?= htmlspecialchars(portal_format_day($change['timestamp'])) ?></time><span><?= htmlspecialchars($change['title']) ?></span></div><?php endforeach; ?></div><?php endif; ?>
+        <?php if ($changeLog): ?><div class="mini-log"><small>Recent change log</small><?php foreach (array_slice($changeLog, 0, 3) as $change): ?><div><time><?= htmlspecialchars(portal_format_day((string) $change['timestamp'])) ?></time><span><?= htmlspecialchars((string) $change['title']) ?></span></div><?php endforeach; ?></div><?php endif; ?>
         <div class="card-foot"><span><?= htmlspecialchars($project['phase']) ?></span><button type="button" data-open-log data-project="<?= htmlspecialchars($project['id']) ?>">Log ↗</button></div>
       </article>
       <?php endforeach; ?>
