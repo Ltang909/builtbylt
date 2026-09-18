@@ -78,7 +78,7 @@ $latest = $activity[0]['timestamp'] ?? null;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>Built by LT — Founder Console</title>
-  <link rel="stylesheet" href="/app.css?v=5">
+  <link rel="stylesheet" href="/app.css?v=7">
   <style>
     .hero{min-height:220px;padding:40px 0 28px}.hero h1{font-size:clamp(42px,5vw,72px);line-height:.86}.dispatch strong{font-size:54px}.scorecard article{padding:20px 16px 16px;min-height:160px}.scorecard strong{font-size:40px;margin:9px 0 4px}.revenue-scorecard .metric-revenue.is-zero strong{color:#d6382f}.revenue-scorecard .metric-revenue.is-positive strong{color:#187c43}.project-grid{grid-template-columns:repeat(2,1fr)}.project-card{min-height:auto!important;border-bottom:1px solid}.project-card:nth-child(2n){border-right:0}.project-card:nth-last-child(-n+2){border-bottom:0}.project-number{margin-bottom:22px}.section-head{padding:46px 0 18px}.timeline-item{padding:20px 0}
     @media(max-width:700px){.project-grid{grid-template-columns:1fr}.project-card{border-right:0}.hero{min-height:190px}.hero h1{font-size:45px}}
