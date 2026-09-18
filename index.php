@@ -48,13 +48,17 @@ usort($ideas, static function (array $a, array $b) use ($priorityOrder): int {
     return $aRank <=> $bRank ?: strcmp((string) ($a['ship_by'] ?? '9999-12-31'), (string) ($b['ship_by'] ?? '9999-12-31'));
 });
 $dailyLog = portal_read_daily_log();
-$dailyLogByDate = []; $verticalCoverage = [];
+$dailyLogByDate = []; $verticalCoverage = []; $dailyEntriesByProduct = [];
 foreach ($dailyLog as $day) {
     $entries = is_array($day['entries'] ?? null) ? $day['entries'] : [];
     $dailyLogByDate[(string) $day['date']] = ['entries' => $entries, 'tomorrow_target' => (string) ($day['tomorrow_target'] ?? '')];
-    foreach ($entries as $entry) { $vertical = trim((string) ($entry['vertical'] ?? '')) ?: 'Unclassified'; $verticalCoverage[$vertical] = ($verticalCoverage[$vertical] ?? 0) + 1; }
+    foreach ($entries as $entry) {
+        $vertical = trim((string) ($entry['vertical'] ?? '')) ?: 'Unclassified'; $verticalCoverage[$vertical] = ($verticalCoverage[$vertical] ?? 0) + 1;
+        $productKey = strtolower(trim((string) ($entry['product'] ?? ''))); if ($productKey !== '') $dailyEntriesByProduct[$productKey][] = ['date' => (string) $day['date']] + $entry;
+    }
 }
 arsort($verticalCoverage);
+$maxVerticalCount = $verticalCoverage ? max($verticalCoverage) : 0;
 $calendarAnchor = $dailyLog ? new DateTimeImmutable((string) $dailyLog[0]['date']) : new DateTimeImmutable('today');
 $calendarStart = $calendarAnchor->modify('first day of this month');
 $calendarLeading = (int) $calendarStart->format('N') - 1;
@@ -109,8 +113,11 @@ $latest = $activity[0]['timestamp'] ?? null;
       <?php
         $projectActivity = portal_activity_for_project($project['id'], $activity);
         $lastProjectUpdate = $projectActivity[0] ?? null;
+        $dailyProjectActivity = $dailyEntriesByProduct[strtolower($project['domain'])] ?? $dailyEntriesByProduct[strtolower($project['name'])] ?? [];
+        $lastDailyUpdate = $dailyProjectActivity[0] ?? null;
+        if ($lastDailyUpdate && (!$lastProjectUpdate || substr((string) $lastProjectUpdate['timestamp'], 0, 10) < $lastDailyUpdate['date'])) $lastProjectUpdate = ['timestamp' => $lastDailyUpdate['date'], 'title' => $lastDailyUpdate['title'] ?? 'Daily log update'];
         $freshness = portal_freshness($lastProjectUpdate['timestamp'] ?? null);
-        $updates30d = count(array_filter($projectActivity, static fn(array $item): bool => portal_date($item['timestamp'])->getTimestamp() >= time() - 2592000));
+        $updates30d = count(array_filter($projectActivity, static fn(array $item): bool => portal_date($item['timestamp'])->getTimestamp() >= time() - 2592000)) + count(array_filter($dailyProjectActivity, static fn(array $item): bool => portal_date($item['date'])->getTimestamp() >= time() - 2592000));
         $projectVisitors = (int) ($posthogMetrics[$project['id']]['visitors'] ?? 0);
         $projectRevenue = (float) ($posthogMetrics[$project['id']]['revenue'] ?? 0);
         $activityText = strtolower(implode(' ', array_map(static fn(array $item): string => ($item['title'] ?? '') . ' ' . ($item['detail'] ?? ''), $projectActivity)));
@@ -158,18 +165,18 @@ $latest = $activity[0]['timestamp'] ?? null;
     <aside class="priority-rail" aria-label="Founder planning rail">
       <section class="priorities-panel">
         <div class="rail-kicker">Ordered queue</div><h2>Things to ship</h2><p>Highest priority first. Managed from the source data.</p>
-        <div class="priority-list"><?php if (!$ideas): ?><div class="rail-empty">No priorities recorded.</div><?php endif; ?><?php foreach ($ideas as $idea): $rawPriority = strtoupper((string) ($idea['priority'] ?? '')); $priority = in_array($rawPriority, ['P0','P1','P2'], true) ? $rawPriority : strtoupper((string) ($idea['stage'] ?? $rawPriority ?: 'NEXT')); ?><article><span class="priority-badge"><?= htmlspecialchars($priority) ?></span><div><strong><?= htmlspecialchars(preg_replace('/^(P\d|PARKED|WATCHLIST)\s*·\s*/i', '', (string) $idea['title'])) ?></strong><small><?= htmlspecialchars((string) ($idea['vertical'] ?? 'Unclassified')) ?><?php if (!empty($idea['ship_by'])): ?> · <?= htmlspecialchars((new DateTimeImmutable($idea['ship_by']))->format('M j')) ?><?php endif; ?></small></div></article><?php endforeach; ?></div>
+        <div class="priority-list"><?php if (!$ideas): ?><div class="rail-empty">No priorities recorded.</div><?php endif; ?><?php foreach ($ideas as $idea): $rawPriority = strtoupper((string) ($idea['priority'] ?? '')); $priority = in_array($rawPriority, ['P0','P1','P2'], true) ? $rawPriority : strtoupper((string) ($idea['stage'] ?? $rawPriority ?: 'NEXT')); $priorityClass = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $priority)); ?><article class="priority-<?= htmlspecialchars($priorityClass) ?>"><span class="priority-badge"><?= htmlspecialchars($priority) ?></span><div><strong><?= htmlspecialchars(preg_replace('/^(P\d|PARKED|WATCHLIST)\s*·\s*/i', '', (string) $idea['title'])) ?></strong><small><?= htmlspecialchars((string) ($idea['vertical'] ?? 'Unclassified')) ?><?php if (!empty($idea['ship_by'])): ?> · <?= htmlspecialchars((new DateTimeImmutable($idea['ship_by']))->format('M j')) ?><?php endif; ?></small></div></article><?php endforeach; ?></div>
       </section>
       <section class="coverage-panel">
         <div class="rail-kicker">Completed actions</div><h2>Vertical coverage</h2>
-        <div class="coverage-list"><?php if (!$verticalCoverage): ?><div class="rail-empty">No daily-log activity yet.</div><?php endif; ?><?php foreach ($verticalCoverage as $vertical => $count): ?><div><span><?= htmlspecialchars($vertical) ?></span><strong><?= $count ?></strong></div><?php endforeach; ?></div>
+        <div class="coverage-list"><?php if (!$verticalCoverage): ?><div class="rail-empty">No daily-log activity yet.</div><?php endif; ?><?php foreach ($verticalCoverage as $vertical => $count): ?><div><span><?= htmlspecialchars($vertical) ?></span><i><b style="width:<?= $maxVerticalCount ? round(($count / $maxVerticalCount) * 100) : 0 ?>%"></b></i><strong><?= $count ?></strong></div><?php endforeach; ?></div>
       </section>
     </aside></div>
 
     <section class="section-head log-calendar-heading"><div><span>03</span><h2>Daily logs</h2></div><p>Factual activity from the daily record.</p></section>
     <section class="daily-log-panel">
       <div class="month-calendar"><header><strong><?= htmlspecialchars($calendarAnchor->format('F Y')) ?></strong><span><?= count($dailyLogByDate) ?> active <?= count($dailyLogByDate) === 1 ? 'day' : 'days' ?></span></header><div class="weekdays"><?php foreach (['M','T','W','T','F','S','S'] as $weekday): ?><span><?= $weekday ?></span><?php endforeach; ?></div><div class="calendar-grid"><?php for ($blank = 0; $blank < $calendarLeading; $blank++): ?><span class="calendar-blank"></span><?php endfor; ?><?php for ($dayNumber = 1; $dayNumber <= $calendarDays; $dayNumber++): $date = $calendarStart->format('Y-m-') . str_pad((string) $dayNumber, 2, '0', STR_PAD_LEFT); $dayData = $dailyLogByDate[$date] ?? null; ?><button type="button" class="calendar-day<?= $dayData ? ' has-activity' : '' ?>" data-log-date="<?= $date ?>" <?= $dayData ? '' : 'disabled' ?>><span><?= $dayNumber ?></span><?php if ($dayData): ?><i></i><small><?= count($dayData['entries']) ?></small><?php endif; ?></button><?php endfor; ?></div></div>
-      <div class="day-detail" id="day-detail"><?php if (!$dailyLog): ?><div class="empty"><strong>No daily logs yet.</strong><p>Add entries to storage/daily-log.json to build the calendar.</p></div><?php else: ?><?php foreach ($dailyLogByDate as $date => $dayData): ?><section data-log-detail="<?= htmlspecialchars($date) ?>" <?= $date === array_key_first($dailyLogByDate) ? '' : 'hidden' ?>><header><div><span>Selected day</span><h3><?= htmlspecialchars((new DateTimeImmutable($date))->format('D · M j, Y')) ?></h3></div><strong><?= count($dayData['entries']) ?> actions</strong></header><div class="day-entries"><?php foreach ($dayData['entries'] as $entry): ?><article><span><?= htmlspecialchars((string) ($entry['kind'] ?? 'activity')) ?> · <?= htmlspecialchars((string) ($entry['vertical'] ?? 'Unclassified')) ?></span><strong><?= htmlspecialchars((string) ($entry['title'] ?? 'Untitled activity')) ?></strong><small><?= htmlspecialchars((string) ($entry['product'] ?? '—')) ?><?php if (!empty($entry['priority'])): ?> · <?= htmlspecialchars((string) $entry['priority']) ?><?php endif; ?></small></article><?php endforeach; ?></div><?php if ($dayData['tomorrow_target'] !== ''): ?><p class="tomorrow-target"><strong>Next →</strong> <?= htmlspecialchars($dayData['tomorrow_target']) ?></p><?php endif; ?></section><?php endforeach; ?><?php endif; ?></div>
+      <div class="day-detail" id="day-detail"><?php if (!$dailyLog): ?><div class="empty"><strong>No daily logs yet.</strong><p>Add entries to storage/daily-log.json to build the calendar.</p></div><?php else: ?><?php foreach ($dailyLogByDate as $date => $dayData): ?><section data-log-detail="<?= htmlspecialchars($date) ?>" <?= $date === array_key_first($dailyLogByDate) ? '' : 'hidden' ?>><header><div><span>Selected day</span><h3><?= htmlspecialchars((new DateTimeImmutable($date))->format('D · M j, Y')) ?></h3></div><strong><?= count($dayData['entries']) ?> actions</strong></header><div class="day-entries"><?php foreach ($dayData['entries'] as $entry): $kindClass = strtolower(preg_replace('/[^a-z0-9]+/i', '-', (string) ($entry['kind'] ?? 'activity'))); ?><article class="kind-<?= htmlspecialchars($kindClass) ?>"><span><b><?= htmlspecialchars((string) ($entry['kind'] ?? 'activity')) ?></b> · <?= htmlspecialchars((string) ($entry['vertical'] ?? 'Unclassified')) ?></span><strong><?= htmlspecialchars((string) ($entry['title'] ?? 'Untitled activity')) ?></strong><small><?= htmlspecialchars((string) ($entry['product'] ?? '—')) ?><?php if (!empty($entry['priority'])): ?> · <?= htmlspecialchars((string) $entry['priority']) ?><?php endif; ?></small></article><?php endforeach; ?></div><?php if ($dayData['tomorrow_target'] !== ''): ?><p class="tomorrow-target"><strong>Next →</strong> <?= htmlspecialchars($dayData['tomorrow_target']) ?></p><?php endif; ?></section><?php endforeach; ?><?php endif; ?></div>
     </section>
   </main>
 
