@@ -36,7 +36,7 @@ The example uses PostHog US hosts. EU projects should use the EU hosts shown in 
 
 The planning rail can show the next six calendar blocks without putting Google credentials in browser code. In Google Calendar, open **Settings → Integrate calendar**, copy the **Secret address in iCal format**, and add it as `calendar_ics_url` in the private `builtbylt.php` file. Treat that URL like a password and never commit it. The dashboard reads it server-side and does not modify calendar events.
 
-Upcoming ideas are stored in `storage/ideas.json`, alongside the protected runtime data. Add Claude-scraped ideas through the visible Ideas to ship form; no scraper credentials are required by the portal.
+Upcoming priorities are stored in `storage/ideas.json` and rendered as a read-only, priority-ordered queue. Daily activity is stored in `storage/daily-log.json`; the dashboard derives vertical coverage and its activity calendar directly from those entries.
 
 ## Deployment behavior
 
@@ -50,4 +50,5 @@ Upcoming ideas are stored in `storage/ideas.json`, alongside the protected runti
 - The activity API requires the authenticated session.
 - Storage and configuration files are blocked from direct web access by `.htaccess`.
 - Keep HTTPS enabled in Hostinger so session cookies are secure.
+
 
