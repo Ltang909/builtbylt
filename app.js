@@ -28,24 +28,11 @@ document.querySelectorAll('.filter').forEach((filter) => filter.addEventListener
 const tick = () => { const clock = document.querySelector('#clock'); if (clock) clock.textContent = new Intl.DateTimeFormat('en-CA', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date()); };
 tick(); setInterval(tick, 1000);
 
-// BuiltByLT is a read/decision surface. Priorities are managed through ChatGPT,
-// so remove the manual task queue and idea-entry UI while preserving the priority list.
-const taskQueue = document.querySelector('.ship-queue');
-if (taskQueue) {
-  const heading = taskQueue.previousElementSibling;
-  if (heading?.classList.contains('section-head')) heading.remove();
-  taskQueue.remove();
-}
-const ideaForm = document.querySelector('#idea-form');
-if (ideaForm) ideaForm.remove();
-const ideasPanel = document.querySelector('.ideas-panel');
-if (ideasPanel) {
-  const intro = ideasPanel.querySelector('p');
-  if (intro) intro.textContent = 'Prioritized with ChatGPT. Scan the queue; change it by asking.';
-  ideasPanel.querySelectorAll('.idea-list article').forEach((article) => {
-    const strong = article.querySelector('strong');
-    const raw = strong?.textContent || '';
-    const priority = raw.match(/^(P\d|PARKED|WATCHLIST)/i)?.[1]?.toUpperCase();
-    if (priority) article.dataset.priority = priority;
-  });
-}
+const logDays = document.querySelectorAll('[data-log-date]');
+logDays.forEach((button) => button.addEventListener('click', () => {
+  logDays.forEach((day) => day.classList.remove('active'));
+  button.classList.add('active');
+  document.querySelectorAll('[data-log-detail]').forEach((detail) => { detail.hidden = detail.dataset.logDetail !== button.dataset.logDate; });
+}));
+document.querySelector('[data-log-date]:not([disabled])')?.classList.add('active');
+
