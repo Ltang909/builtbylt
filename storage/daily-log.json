@@ -16,5 +16,29 @@
       {"product":"Ops / Job Search","vertical":"Career / Job Search","kind":"waste","title":"Too much time spent reviewing Claude-found job descriptions","impact":"Lost time","priority":"fix tomorrow","next":"Tighten screening so only high-confidence matches reach manual review.","minutes":null,"return":null},
       {"product":"Operating system","vertical":"Internal / Founder Ops","kind":"shipped","title":"Daily factual changelog ritual started","impact":"Accountability + focus","priority":"daily","minutes":null,"return":null}
     ]
+  },
+  {
+    "date":"2026-09-18",
+    "tomorrow_target":null,
+    "entries":[
+      {"product":"Ops / Job Search","vertical":"Career / Job Search","kind":"shipped","title":"Applied to 4 jobs by about 10:45 AM","impact":"Job-search pipeline","priority":"ongoing","minutes":null,"return":null},
+      {"product":"WellFinder","vertical":"Local Services / Discovery","kind":"shipped","title":"Built swiping functionality and a staging environment","impact":"Product + iteration","priority":"separate project","minutes":null,"return":null},
+      {"product":"WellFinder","vertical":"Local Services / Discovery","kind":"miss","title":"Ended the day with a lot of slop: the swiping feature is smooth but the UI is terrible","impact":"Product quality","priority":"needs work","minutes":null,"return":null},
+      {"product":"Ops / AI capacity","vertical":"Internal / Founder Ops","kind":"waste","title":"Hit Codex + Work credit limits around 11:50 AM and Claude limit around 11:55 AM","impact":"Lost execution capacity","priority":"process issue","minutes":null,"return":null},
+      {"product":"Ops / Claude","vertical":"Internal / Founder Ops","kind":"miss","title":"Claude job listings were often old/stale and dynamically unreliable","impact":"Job-search efficiency","priority":"fix process","next":"Require stronger freshness verification before surfacing listings.","minutes":null,"return":null},
+      {"product":"Ops / Claude","vertical":"Internal / Founder Ops","kind":"shipped","title":"Installed CLI and Git in Claude","impact":"Development workflow","priority":"shipped","minutes":null,"return":null},
+      {"product":"Higgsfield","vertical":"Cross-portfolio / Distribution","kind":"decision","title":"Bought Higgsfield to start generating video content for social distribution","impact":"Distribution experiment","priority":"test","minutes":null,"return":null},
+      {"product":"Higgsfield","vertical":"Cross-portfolio / Distribution","kind":"miss","title":"The Higgsfield video is alright, but prefer not to launch with it; purchase seems like a potential waste of money unfortunately","impact":"Content quality + spend efficiency","priority":"reassess","minutes":null,"return":null},
+      {"product":"Stripe","vertical":"Cross-portfolio / Monetization","kind":"shipped","title":"Signed up for Stripe and started integration work","impact":"Monetization infrastructure","priority":"P0","minutes":null,"return":null},
+      {"product":"Stripe","vertical":"Cross-portfolio / Monetization","kind":"waste","title":"Stripe integration took a shockingly long amount of time; still have to prompt the build and deploy Bum Bum site work to continue and fix it","impact":"Lost velocity + unfinished monetization setup","priority":"P0","minutes":null,"return":null},
+      {"product":"Subscription Cut","vertical":"Consumer / Subscriptions","kind":"miss","title":"subscription-cut.builtbylt.com isn't what I expected from the prompt","impact":"Product quality","priority":"needs work","minutes":null,"return":null},
+      {"product":"Leave It to Bum Bum","vertical":"SMB Tools / Brand","kind":"shipped","title":"Bought leaveittobumbum.com; I think this is cool branding","impact":"Brand asset + positioning","priority":"core brand","minutes":null,"return":null},
+      {"product":"Leave It to Bum Bum","vertical":"SMB Tools / Brand","kind":"miss","title":"leaveittobumbum.com needs a lot of work; the content isn't where I want it to be","impact":"Brand + product quality","priority":"needs work","minutes":null,"return":null},
+      {"product":"BuiltByLT","vertical":"SMB Tools / Portfolio","kind":"decision","title":"Shift BuiltByLT toward a consumer-facing SMB toolbox, with WellFinder remaining a separate project outside this scope","impact":"Portfolio positioning + monetization direction","priority":"strategic","minutes":null,"return":null},
+      {"product":"BuiltByLT","vertical":"SMB Tools / Portfolio","kind":"decision","title":"Lean toward free tool usage with paid usage after a threshold, with higher tiers potentially unlocking fast feature builds","impact":"Business model","priority":"strategic","minutes":null,"return":null},
+      {"product":"Leave It to Bum Bum","vertical":"SMB Tools / Brand","kind":"decision","title":"Brand and social content should resonate with Gen Z / younger millennial owner-operators who are digitally fluent but operationally overwhelmed","impact":"ICP + creative direction","priority":"strategic","minutes":null,"return":null},
+      {"product":"leontang.ca","vertical":"Personal Brand / Portfolio","kind":"shipped","title":"Fixed the back-and-forth chat feature","impact":"Visitor interaction + product quality","priority":"shipped","minutes":null,"return":null},
+      {"product":"Operating system","vertical":"Internal / Founder Ops","kind":"reflection","title":"High output, low polish: ending the day with a lot of slop across several builds despite clearer direction around BuiltByLT, Bum Bum, monetization and distribution","impact":"Quality + focus + execution efficiency","priority":"learn","minutes":null,"return":null}
+    ]
   }
 ]
