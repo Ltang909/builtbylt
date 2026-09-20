@@ -6,6 +6,10 @@ return [
     'timezone' => 'America/Toronto',
     // Optional: Google Calendar "Secret address in iCal format". Keep this private.
     'calendar_ics_url' => '',
+    // Voice notes relay (loom-ish "Send to Notion" -> api/voice-notes.php).
+    // Generate with: php -r "echo password_hash(bin2hex(random_bytes(24)), PASSWORD_DEFAULT), PHP_EOL;"
+    // Paste the RAW token (before hashing) into the voice notes settings page once.
+    'voice_notes_token_hash' => '',
     'posthog' => [
         // Server-side query access. Create a Personal API key with Query Read only.
         'personal_api_key' => 'phx_PASTE_QUERY_READ_KEY_HERE',
