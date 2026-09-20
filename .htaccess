@@ -13,6 +13,10 @@ DirectoryIndex index.php
 </FilesMatch>
 
 RewriteEngine On
+
+# Make the Authorization header visible to PHP (bearer auth for api/voice-notes.php).
+RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
 RewriteRule ^storage(?:/|$) - [F,L]
 
 
