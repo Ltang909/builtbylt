@@ -10,6 +10,11 @@ return [
     // Generate with: php -r "echo password_hash(bin2hex(random_bytes(24)), PASSWORD_DEFAULT), PHP_EOL;"
     // Paste the RAW token (before hashing) into the voice notes settings page once.
     'voice_notes_token_hash' => '',
+    // iPhone voice note transcription (loom-ish -> api/voice-transcribe.php).
+    // Free key from https://console.groq.com/keys (no credit card). The key
+    // never leaves the server: the browser sends audio to this relay, and
+    // the relay calls Groq's Whisper API with the key.
+    'groq_api_key' => '',
     'posthog' => [
         // Server-side query access. Create a Personal API key with Query Read only.
         'personal_api_key' => 'phx_PASTE_QUERY_READ_KEY_HERE',
