@@ -168,11 +168,6 @@ $latest = $activity[0]['timestamp'] ?? null;
     </div>
 
     <aside class="priority-rail" aria-label="Founder planning rail">
-      <section class="priorities-panel">
-        <div class="rail-kicker">Ordered queue</div><h2>Things to ship</h2><p>Highest priority first. Managed from the source data.</p>
-        <div class="panel-key" aria-label="Priority color key"><span class="key-p0">P0</span><span class="key-p1">P1</span><span class="key-p2">P2</span><span class="key-parked">Parked</span></div>
-        <div class="priority-list"><?php if (!$ideas): ?><div class="rail-empty">No priorities recorded.</div><?php endif; ?><?php foreach ($ideas as $idea): $rawPriority = strtoupper((string) ($idea['priority'] ?? '')); $priority = in_array($rawPriority, ['P0','P1','P2'], true) ? $rawPriority : strtoupper((string) ($idea['stage'] ?? $rawPriority ?: 'NEXT')); $priorityClass = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $priority)); ?><article class="priority-<?= htmlspecialchars($priorityClass) ?>"><span class="priority-badge"><?= htmlspecialchars($priority) ?></span><div><strong><?= htmlspecialchars(preg_replace('/^(P\d|PARKED|WATCHLIST)\s*·\s*/i', '', (string) $idea['title'])) ?></strong><small><?= htmlspecialchars((string) ($idea['vertical'] ?? 'Unclassified')) ?><?php if (!empty($idea['ship_by'])): ?> · <?= htmlspecialchars((new DateTimeImmutable($idea['ship_by']))->format('M j')) ?><?php endif; ?></small></div></article><?php endforeach; ?></div>
-      </section>
       <section class="coverage-panel">
         <div class="rail-kicker">Completed actions</div><h2>Vertical coverage</h2>
         <div class="coverage-list"><?php if (!$verticalCoverage): ?><div class="rail-empty">No daily-log activity yet.</div><?php endif; ?><?php foreach ($verticalCoverage as $vertical => $count): ?><div><span><?= htmlspecialchars($vertical) ?></span><i><b style="width:<?= $maxVerticalCount ? round(($count / $maxVerticalCount) * 100) : 0 ?>%"></b></i><strong><?= $count ?></strong></div><?php endforeach; ?></div>
