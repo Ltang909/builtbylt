@@ -9,10 +9,11 @@ declare(strict_types=1);
  * Squarespace form POSTs here instead and this script forwards the
  * payload to Attio server-side, where CORS does not apply.
  *
- *   POST /api/attio-relay.php   {"name","email","company","message"}
+ *   POST /api/attio-relay.php   {"name","email","company","message",
+ *                               "city","plan_type","target_date","guest_count"}
  *
  * Security: the destination is hardcoded (not an open relay), only the
- * four expected fields are forwarded with length caps, name/email are
+ * expected fields are forwarded with length caps, name/email are
  * validated, and submissions are throttled per IP.
  */
 
@@ -81,10 +82,14 @@ if (!is_array($data)) {
 }
 
 $payload = [
-    'name'    => substr(trim((string)($data['name'] ?? '')), 0, 200),
-    'email'   => substr(trim((string)($data['email'] ?? '')), 0, 200),
-    'company' => substr(trim((string)($data['company'] ?? '')), 0, 200),
-    'message' => substr(trim((string)($data['message'] ?? '')), 0, 5000),
+    'name'        => substr(trim((string)($data['name'] ?? '')), 0, 200),
+    'email'       => substr(trim((string)($data['email'] ?? '')), 0, 200),
+    'company'     => substr(trim((string)($data['company'] ?? '')), 0, 200),
+    'message'     => substr(trim((string)($data['message'] ?? '')), 0, 5000),
+    'city'        => substr(trim((string)($data['city'] ?? '')), 0, 200),
+    'plan_type'   => substr(trim((string)($data['plan_type'] ?? '')), 0, 200),
+    'target_date' => substr(trim((string)($data['target_date'] ?? '')), 0, 200),
+    'guest_count' => substr(trim((string)($data['guest_count'] ?? '')), 0, 50),
 ];
 if ($payload['name'] === '' || !filter_var($payload['email'], FILTER_VALIDATE_EMAIL)) {
     http_response_code(422);
