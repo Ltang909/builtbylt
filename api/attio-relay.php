@@ -13,9 +13,20 @@ declare(strict_types=1);
  *                               "city","plan_type","target_date","guest_count"}
  *
  * Security: the destination is hardcoded (not an open relay), only the
- * expected fields are forwarded with length caps, name/email are
- * validated, and submissions are throttled per IP.
+ * expected fields are forwarded with length caps, name/email/target
+ * date/guest count/city are mandatory, personal email providers are
+ * rejected, and submissions are throttled per IP.
  */
+
+$PERSONAL_DOMAINS = [
+    'gmail.com', 'googlemail.com',
+    'yahoo.com', 'yahoo.ca', 'yahoo.co.uk', 'ymail.com',
+    'hotmail.com', 'hotmail.ca', 'hotmail.co.uk',
+    'outlook.com', 'outlook.ca', 'live.com', 'live.ca', 'msn.com',
+    'aol.com', 'icloud.com', 'me.com', 'mac.com',
+    'protonmail.com', 'proton.me', 'pm.me',
+    'gmx.com', 'gmx.net', 'mail.com', 'yandex.com',
+];
 
 $ALLOWED_ORIGINS = [
     'https://www.quartermaster.studio',
@@ -66,6 +77,16 @@ function rl_throttle(string $ip): bool
     return $data['n'] <= $max;
 }
 
+function is_personal_email(string $email): bool
+{
+    global $PERSONAL_DOMAINS;
+    $at = strrpos($email, '@');
+    if ($at === false) {
+        return false;
+    }
+    return in_array(strtolower(substr($email, $at + 1)), $PERSONAL_DOMAINS, true);
+}
+
 $ip = (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown');
 if (!rl_throttle($ip)) {
     http_response_code(429);
@@ -94,6 +115,25 @@ $payload = [
 if ($payload['name'] === '' || !filter_var($payload['email'], FILTER_VALIDATE_EMAIL)) {
     http_response_code(422);
     echo json_encode(['ok' => false, 'error' => 'invalid_fields']);
+    exit;
+}
+// Mandatory: name, email, target date, guest count, event city.
+// Email must be a work address (no free personal providers).
+foreach (['name', 'email', 'target_date', 'guest_count', 'city'] as $req) {
+    if ($payload[$req] === '') {
+        http_response_code(422);
+        echo json_encode(['ok' => false, 'error' => 'missing_' . $req]);
+        exit;
+    }
+}
+if (is_personal_email($payload['email'])) {
+    http_response_code(422);
+    echo json_encode(['ok' => false, 'error' => 'personal_email']);
+    exit;
+}
+if (!ctype_digit($payload['guest_count']) || (int)$payload['guest_count'] < 1) {
+    http_response_code(422);
+    echo json_encode(['ok' => false, 'error' => 'invalid_guest_count']);
     exit;
 }
 
