@@ -4,19 +4,21 @@ declare(strict_types=1);
 /**
  * Waitlist relay for quartermaster.studio.
  *
+ * Captures a work email address only.
+ *
  * Attio's incoming webhook does not accept cross-site browser posts
  * (its CORS policy only allows https://app.attio.com), so the
  * Squarespace waitlist form POSTs here instead and this script forwards
- * the payload to Attio server-side, where CORS does not apply.
+ * the signup to Attio server-side, where CORS does not apply.
  *
- *   POST /api/waitlist-relay.php   {"name","email","company","city",
- *                                   "interest","notes"}
+ *   POST /api/waitlist-relay.php   {"email"}
  *
- * The Attio workflow's Parse JSON step currently maps only
- * name/email/company/message, so waitlist details (city, interest,
- * notes) are packed into the message field with a "Waitlist signup"
- * prefix. Name and a work email are mandatory; personal email
- * providers are rejected. Submissions are throttled per IP.
+ * Tagging: the Attio workflow's Parse JSON step currently maps only
+ * name/email/company/message, so the "waitlist" tag rides in the
+ * message field as the exact string "waitlist". In Attio, filter on
+ * message = "waitlist", or map a dedicated tag field in the workflow
+ * later. Personal email providers are rejected. Submissions are
+ * throttled per IP.
  */
 
 $PERSONAL_DOMAINS = [
@@ -34,8 +36,6 @@ $ALLOWED_ORIGINS = [
     'https://quartermaster.studio',
 ];
 $ATTIO_WEBHOOK = 'https://hooks.attio.com/w/273e79ee-fa63-4cc1-9451-70a764f4737a/af6babff-46a7-46bf-a92f-3389a9e30023';
-
-$ALLOWED_INTERESTS = ['attend', 'host', 'both', 'unsure'];
 
 $origin = (string)($_SERVER['HTTP_ORIGIN'] ?? '');
 if (in_array($origin, $ALLOWED_ORIGINS, true)) {
@@ -105,16 +105,10 @@ if (!is_array($data)) {
     exit;
 }
 
-$name     = substr(trim((string)($data['name'] ?? '')), 0, 200);
-$email    = substr(trim((string)($data['email'] ?? '')), 0, 200);
-$company  = substr(trim((string)($data['company'] ?? '')), 0, 200);
-$city     = substr(trim((string)($data['city'] ?? '')), 0, 200);
-$interest = substr(trim((string)($data['interest'] ?? '')), 0, 50);
-$notes    = substr(trim((string)($data['notes'] ?? '')), 0, 2000);
-
-if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+$email = substr(trim((string)($data['email'] ?? '')), 0, 200);
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     http_response_code(422);
-    echo json_encode(['ok' => false, 'error' => 'invalid_fields']);
+    echo json_encode(['ok' => false, 'error' => 'invalid_email']);
     exit;
 }
 if (is_personal_email($email)) {
@@ -122,34 +116,12 @@ if (is_personal_email($email)) {
     echo json_encode(['ok' => false, 'error' => 'personal_email']);
     exit;
 }
-if ($interest !== '' && !in_array($interest, $ALLOWED_INTERESTS, true)) {
-    http_response_code(422);
-    echo json_encode(['ok' => false, 'error' => 'invalid_interest']);
-    exit;
-}
-
-$interest_labels = [
-    'attend' => 'Attending a dinner',
-    'host'   => 'Hosting a dinner',
-    'both'   => 'Attending and hosting',
-    'unsure' => 'Not sure yet',
-];
-$lines = ['Waitlist signup'];
-if ($city !== '') {
-    $lines[] = 'City: ' . $city;
-}
-if ($interest !== '') {
-    $lines[] = 'Interested in: ' . $interest_labels[$interest];
-}
-if ($notes !== '') {
-    $lines[] = 'Notes: ' . $notes;
-}
 
 $payload = [
-    'name'    => $name,
+    'name'    => '',
     'email'   => $email,
-    'company' => $company,
-    'message' => implode("\n", $lines),
+    'company' => '',
+    'message' => 'waitlist',
 ];
 
 $ch = curl_init($ATTIO_WEBHOOK);
