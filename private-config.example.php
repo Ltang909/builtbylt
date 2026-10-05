@@ -25,5 +25,21 @@ return [
         'project_api_key' => 'phc_PASTE_PROJECT_KEY_HERE',
         'capture_host' => 'https://us.i.posthog.com',
     ],
+    // Quartermaster buyer dashboard (api/qm-event.php reads Attio live).
+    // Create at Attio Workspace settings -> Developers -> new integration
+    // (or reuse an existing one) and paste its API key here. The key never
+    // leaves the server: the dashboard page calls qm-event.php, which calls
+    // Attio server-side. Needs "Read access to the List Entries scope".
+    'attio_api_key' => '',
+    // Buyer-link signing for qm-event.php (?key=HMAC(record_id, secret)).
+    // Generate with: php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
+    // Keep empty (and qm_require_signed_keys=false) until buyer links go out.
+    'qm_dashboard_secret' => '',
+    'qm_require_signed_keys' => false,
+    'qm_allowed_origins' => [
+        'https://www.quartermaster.studio',
+        'https://quartermaster.studio',
+        'https://builtbylt.com',
+    ],
 ];
 
