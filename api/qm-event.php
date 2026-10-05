@@ -261,11 +261,27 @@ if ($listId !== '') {
         $cItems = $rv['company'] ?? [];
         if (is_array($cItems) && $cItems) $cid = record_ref_id($cItems[0]);
         $follow = v1($lv, 'follow_up_state');
-        $fl = strtolower($follow);
+        // Translate Attio's Attendee Status vocabulary into the dashboard's:
+        // Confirmed / Awaiting / Declined / Attended / No-show.
+        $statusRaw = v1($lv, 'attendee_status');
+        $statusKey = strtolower(trim($statusRaw));
+        $statusMap = [
+            'accepted'                   => 'Confirmed',
+            'pre event notes shared'     => 'Confirmed',
+            'invited'                    => 'Awaiting',
+            'responded/not yet accepted' => 'Awaiting',
+            'attended'                   => 'Attended',
+            'no-showed'                  => 'No-show',
+            'declined'                   => 'Declined',
+        ];
+        $status = $statusMap[$statusKey] ?? ($statusRaw !== '' ? $statusRaw : 'Unknown');
+        // "Pre Event Notes Shared" means the brief went out: count it as done.
+        $fl = strtolower($follow . ' ' . $statusRaw);
         $followState = 'pending';
         foreach (['shar', 'sent', 'done', 'complet'] as $k) {
             if (str_contains($fl, $k)) { $followState = 'done'; break; }
         }
+        if ($follow === '' && $followState === 'done') $follow = 'Brief shared';
         $pointsRaw = v1($lv, 'conversation_points');
         $points = [];
         foreach (preg_split('/\r\n|\r|\n/', $pointsRaw) as $line) {
@@ -277,7 +293,7 @@ if ($listId !== '') {
             'name'        => person_name($rv),
             'title'       => v1($rv, 'job_title'),
             'company'     => $cid !== '' ? ($companyNames[$cid] ?? '') : '',
-            'status'      => v1($lv, 'attendee_status') !== '' ? v1($lv, 'attendee_status') : 'Unknown',
+            'status'      => $status,
             'seat'        => $seatRaw !== '' ? $seatRaw : null,
             'follow'      => $follow,
             'followState' => $followState,
