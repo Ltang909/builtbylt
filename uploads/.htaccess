@@ -1,0 +1,3 @@
+# Uploaded creative images are served only through ../api/image.php,
+# which checks the panel session. Nothing in here is directly reachable.
+Require all denied
