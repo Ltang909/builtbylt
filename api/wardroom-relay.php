@@ -33,6 +33,8 @@ $PERSONAL_DOMAINS = [
 $ALLOWED_ORIGINS = [
     'https://www.quartermaster.studio',
     'https://quartermaster.studio',
+    'https://www.thewardroom.ai',
+    'https://thewardroom.ai',
 ];
 $ATTIO_WEBHOOK = 'https://hooks.attio.com/w/273e79ee-fa63-4cc1-9451-70a764f4737a/af6babff-46a7-46bf-a92f-3389a9e30023';
 
