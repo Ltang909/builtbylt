@@ -87,7 +87,7 @@ function is_personal_email(string $email): bool
     return in_array(strtolower(substr($email, $at + 1)), $PERSONAL_DOMAINS, true);
 }
 
-function rl_slack_notify(string $text): void
+function rl_slack_notify(string $title, array $fields): void
 {
     // Optional Slack ping, configured server-side only: the webhook
     // URL is a secret and never lives in this repo. Create
@@ -105,11 +105,29 @@ function rl_slack_notify(string $text): void
     if (strpos($hook, 'https://hooks.slack.com/') !== 0) {
         return;
     }
+    $lines = [];
+    foreach ($fields as $f) {
+        $v = trim((string)$f[1]);
+        if ($v !== '') {
+            $v = str_replace(['&', '<', '>'], ['&amp;', '&lt;', '&gt;'], $v);
+            $lines[] = '*' . $f[0] . ':* ' . $v;
+        }
+    }
+    $payload = [
+        'text'   => $title,
+        'blocks' => [
+            ['type' => 'header',
+             'text' => ['type' => 'plain_text', 'text' => $title]],
+            ['type' => 'section',
+             'text' => ['type' => 'mrkdwn', 'text' => implode("
+", $lines)]],
+        ],
+    ];
     $ch = curl_init($hook);
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-        CURLOPT_POSTFIELDS     => json_encode(['text' => $text]),
+        CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 2,
     ]);
@@ -182,15 +200,15 @@ curl_close($ch);
 
 $ok = $code >= 200 && $code < 300;
 if ($ok) {
-    $bits = array_filter([
-        $payload['name'],
-        $payload['company'],
-        $payload['city'],
-        $payload['target_date'],
-        $payload['guest_count'] . ' guests',
-        $payload['plan_type'],
+    rl_slack_notify('New Quartermaster contact', [
+        ['Name', $payload['name']],
+        ['Company', $payload['company']],
+        ['Email', $payload['email']],
+        ['City', $payload['city']],
+        ['Target date', $payload['target_date']],
+        ['Guests', $payload['guest_count']],
+        ['Plan', $payload['plan_type']],
     ]);
-    rl_slack_notify('New Quartermaster contact: ' . implode(' \u00b7 ', $bits) . ' \u00b7 ' . $payload['email']);
 }
 http_response_code($ok ? 200 : 502);
 echo json_encode(['ok' => $ok, 'attio_status' => $code, 'error' => $ok ? null : ($err !== '' ? 'forward_failed' : 'attio_rejected')]);
