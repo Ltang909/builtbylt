@@ -179,10 +179,14 @@ if (is_personal_email($payload['email'])) {
     echo json_encode(['ok' => false, 'error' => 'personal_email']);
     exit;
 }
+// The form invites a rough answer here, so a fuzzy guest count
+// ("about 20", "10-12") must never cost the lead: keep the visitor's
+// words in the message, send Attio no number, and show what they
+// typed in the Slack ping.
+$guestsDisplay = $payload['guest_count'];
 if (!ctype_digit($payload['guest_count']) || (int)$payload['guest_count'] < 1) {
-    http_response_code(422);
-    echo json_encode(['ok' => false, 'error' => 'invalid_guest_count']);
-    exit;
+    $payload['message'] = trim($payload['message'] . "\nGuest count as entered: " . $payload['guest_count']);
+    $payload['guest_count'] = '';
 }
 
 $ch = curl_init($ATTIO_WEBHOOK);
@@ -206,7 +210,7 @@ if ($ok) {
         ['Email', $payload['email']],
         ['City', $payload['city']],
         ['Target date', $payload['target_date']],
-        ['Guests', $payload['guest_count']],
+        ['Guests', $guestsDisplay],
         ['Plan', $payload['plan_type']],
     ]);
 }
