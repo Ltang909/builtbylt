@@ -87,6 +87,36 @@ function is_personal_email(string $email): bool
     return in_array(strtolower(substr($email, $at + 1)), $PERSONAL_DOMAINS, true);
 }
 
+function rl_slack_notify(string $text): void
+{
+    // Optional Slack ping, configured server-side only: the webhook
+    // URL is a secret and never lives in this repo. Create
+    // domains/builtbylt.com/private/relay-config.php returning
+    // ['slack_webhook' => 'https://hooks.slack.com/services/...'].
+    // Missing file or empty value means no notification. Fires only
+    // after Attio accepts, and the result is ignored on purpose: a
+    // Slack outage must never affect a form submission.
+    $cfgFile = dirname(__DIR__, 2) . '/private/relay-config.php';
+    if (!is_file($cfgFile)) {
+        return;
+    }
+    $cfg = require $cfgFile;
+    $hook = is_array($cfg) ? (string)($cfg['slack_webhook'] ?? '') : '';
+    if (strpos($hook, 'https://hooks.slack.com/') !== 0) {
+        return;
+    }
+    $ch = curl_init($hook);
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_POSTFIELDS     => json_encode(['text' => $text]),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 2,
+    ]);
+    curl_exec($ch);
+    curl_close($ch);
+}
+
 $ip = (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown');
 if (!rl_throttle($ip)) {
     http_response_code(429);
@@ -151,5 +181,16 @@ $err = curl_error($ch);
 curl_close($ch);
 
 $ok = $code >= 200 && $code < 300;
+if ($ok) {
+    $bits = array_filter([
+        $payload['name'],
+        $payload['company'],
+        $payload['city'],
+        $payload['target_date'],
+        $payload['guest_count'] . ' guests',
+        $payload['plan_type'],
+    ]);
+    rl_slack_notify('New Quartermaster contact: ' . implode(' \u00b7 ', $bits) . ' \u00b7 ' . $payload['email']);
+}
 http_response_code($ok ? 200 : 502);
 echo json_encode(['ok' => $ok, 'attio_status' => $code, 'error' => $ok ? null : ($err !== '' ? 'forward_failed' : 'attio_rejected')]);
