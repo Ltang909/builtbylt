@@ -13,9 +13,9 @@ declare(strict_types=1);
  *                               "city","plan_type","target_date","guest_count"}
  *
  * Security: the destination is hardcoded (not an open relay), only the
- * expected fields are forwarded with length caps, name/email/target
- * date/guest count/city are mandatory, personal email providers are
- * rejected, and submissions are throttled per IP.
+ * expected fields are forwarded with length caps, name/email/city
+ * are mandatory; target date and guest count are optional, personal
+ * email providers are rejected, and submissions are throttled per IP.
  */
 
 $PERSONAL_DOMAINS = [
@@ -165,9 +165,10 @@ if ($payload['name'] === '' || !filter_var($payload['email'], FILTER_VALIDATE_EM
     echo json_encode(['ok' => false, 'error' => 'invalid_fields']);
     exit;
 }
-// Mandatory: name, email, target date, guest count, event city.
+// Mandatory: name, email, event city. Target date and guest count
+// are optional, matching the form's labels.
 // Email must be a work address (no free personal providers).
-foreach (['name', 'email', 'target_date', 'guest_count', 'city'] as $req) {
+foreach (['name', 'email', 'city'] as $req) {
     if ($payload[$req] === '') {
         http_response_code(422);
         echo json_encode(['ok' => false, 'error' => 'missing_' . $req]);
@@ -184,7 +185,7 @@ if (is_personal_email($payload['email'])) {
 // words in the message, send Attio no number, and show what they
 // typed in the Slack ping.
 $guestsDisplay = $payload['guest_count'];
-if (!ctype_digit($payload['guest_count']) || (int)$payload['guest_count'] < 1) {
+if ($payload['guest_count'] !== '' && (!ctype_digit($payload['guest_count']) || (int)$payload['guest_count'] < 1)) {
     $payload['message'] = trim($payload['message'] . "\nGuest count as entered: " . $payload['guest_count']);
     $payload['guest_count'] = '';
 }
