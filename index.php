@@ -27,7 +27,7 @@ require_page_auth($pdo);
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <title>Creative Testing System — Control Panel (Universal)</title>
-<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="app.css?v=20261102-1">
 </head>
 <body>
 <header>
