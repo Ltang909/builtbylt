@@ -388,40 +388,45 @@ function obe_seed_demo(PDO $pdo): void {
     $qm = (int)$pdo->lastInsertId();
     $insProfile->execute([
         $qm,
-        'Executive event management for B2B companies: intimate executive '
-            . 'dinners and roundtables planned and run end to end, from '
-            . 'guest sourcing and invitations to venue, hosting, and '
-            . 'follow-up.',
+        'The Quartermaster platform: software for B2B marketing teams '
+            . 'who run executive dinners and roundtables. It tracks every '
+            . 'registration, manages guest approval against your ICP, '
+            . 'plans seating, briefs your team, and drafts next-morning '
+            . 'follow-ups, all in one workspace.',
         'Marketing leaders at B2B SaaS companies: CMOs, VP Marketing, '
             . 'heads of field marketing, and demand generation leaders who '
             . 'need real conversations with senior executives at target '
             . 'accounts.',
         json_encode([
-            'Executive dinners and roundtables planned and run end to end',
-            'Guest lists built around the accounts and titles the client wants in the room',
-            'A managed service: sourcing, invitations, venue, hosting, and follow-up handled for the client',
+            'See every dinner registration by person and by account, and approve the guests who fit your ICP',
+            'A briefing on every guest before the night: why they are at the table, and conversation starters matched to your target accounts',
+            'Every seat planned against a target account, with your rep seated beside the guests they need to meet',
+            'The morning after, every guest already has a follow-up draft with the topics they raised and the next step',
+            'Attendance and outcomes land in your CRM: Attio, HubSpot, or Salesforce',
         ]),
         json_encode([
-            'Operator led: run by a marketer who has owned pipeline targets',
-            'Guest quality over room size: small rooms, senior titles',
-            'Technology assisted sourcing and briefing, with human review before anything is sent',
+            'Built only for executive dinners and roundtables, not generic event management',
+            'You send every invite: drafts are written in your own Gmail, and the platform never emails a guest itself',
+            'AI suggests and explains, but never changes a guest status on its own: a human approves every guest',
+            'Runs on your own accounts (Apollo, Gmail, Luma, your CRM), and your guest list stays yours, exportable any time',
         ]),
         json_encode([
             'Executive dinners alongside major industry conferences',
-            'Regional field marketing events when entering a new market',
+            'Regional field marketing dinners when entering a new market',
             'Account based roundtables for a named target account list',
         ]),
-        'Quartermaster plans and runs executive dinners and roundtables '
-            . 'for B2B marketing teams, handling sourcing, invitations, '
-            . 'venue, and follow-up so marketing leaders can focus on the '
-            . 'conversations in the room.',
+        'Quartermaster is the platform for executive dinners that fill '
+            . 'your pipeline: track registrations, approve the right '
+            . 'guests, brief your team, plan every seat, and follow up '
+            . 'the next morning, all in one place.',
         'Concise and conversational. Operator tone: specific, plain, no '
             . 'hype, no buzzwords. Short sentences. Reference only the '
             . 'real signal provided. One clear ask: a short introductory '
             . 'call.',
-        json_encode(['https://quartermaster.studio']),
-        'Seeded by hand from the Quartermaster demo brief. Run Website '
-            . 'Analysis in the engine to refresh this from the live site.',
+        json_encode(['https://quartermaster.studio/platform']),
+        'Seeded by hand from quartermaster.studio/platform (the platform '
+            . 'offering). Run Website Analysis in the engine to refresh '
+            . 'this from the live site.',
         'draft',
     ]);
     $insIcp->execute([
