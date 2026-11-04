@@ -159,6 +159,38 @@ function lint_creative_flags(array $creative, array $corpus,
             ];
         }
     }
+    // Google Responsive Display caps (Update 11.0): Google enforces
+    // CHARACTER limits and rejects over-limit fields at upload, so
+    // these are hard caps, not style guidance. Only enforced on the
+    // fields the display mapping actually sends: headline (30),
+    // description as long headline (90), primary text as a
+    // description (90).
+    $charCaps = [
+        'headline'     => ['Headline', 30],
+        'description'  => ['Description (display long headline)', 90],
+        'primary_text' => ['Primary text (display description)', 90],
+    ];
+    foreach ($charCaps as $field => $cap) {
+        $text = trim((string)($creative[$field] ?? ''));
+        if ($text === '') {
+            continue;
+        }
+        $len = function_exists('mb_strlen')
+            ? mb_strlen($text) : strlen($text);
+        if ($len > $cap[1]) {
+            $flags[] = [
+                'kind' => 'display',
+                'field' => $field,
+                'short' => $field . ' ' . $len . ' chars (display max '
+                    . $cap[1] . ')',
+                'message' => $cap[0] . ' runs ' . $len
+                    . ' characters; Google Responsive Display caps '
+                    . 'this field at ' . $cap[1] . ' and rejects '
+                    . 'over-limit uploads. Shorten it for the '
+                    . 'display set.',
+            ];
+        }
+    }
     return $flags;
 }
 

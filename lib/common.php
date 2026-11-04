@@ -17,6 +17,7 @@
 // PHP < 8.0, and every endpoint/page funnels through this file, so
 // the definitions must land before anything else can call them.
 require_once __DIR__ . '/polyfills.php';
+require_once __DIR__ . '/display.php';
 require_once __DIR__ . '/lint.php';
 require_once __DIR__ . '/ad_templates.php';
 require_once __DIR__ . '/guardrails.php';
@@ -264,6 +265,16 @@ function creative_with_verdicts(PDO $pdo, array $creative): array {
     // off-allowlist CTA) ride every creative on read — see
     // lib/lint.php for why these are code, not prompt prose.
     $creative['lint_flags'] = lint_flags_for($pdo, $creative);
+    // Update 11.0: Google Responsive Display readiness rides the
+    // creative the same way (spec + asset list). Additive only —
+    // a failure here must never break the creative read.
+    try {
+        $creative['display_spec'] = display_spec($pdo, $creative);
+        $creative['display_assets'] = display_assets_for($pdo, $creative);
+    } catch (Throwable $e) {
+        $creative['display_spec'] = null;
+        $creative['display_assets'] = [];
+    }
     return $creative;
 }
 

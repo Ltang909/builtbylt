@@ -570,6 +570,20 @@ function verdictChips(c){
     + (v.local_note ? `<br>Panel's own check: ${esc(v.local_verdict || "")} — ${esc(v.local_note)}` : "")
     + `</div>`).join("") + "</div>";
 }
+function displayLine(c){
+  if (!c.display_spec) return "";
+  const fails = (c.display_spec.checks || []).filter(x => !x.ok && !x.empty);
+  const assets = c.display_assets || [];
+  const assetTxt = assets.length
+    ? assets.map(a => `<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.label)}</a>`).join(" · ")
+    : "no image yet";
+  return `<div class="meta" style="margin-top:6px">Display (Google RDA): `
+    + (fails.length
+      ? `<span class="chip fail">${fails.length} field(s) over Google limits</span>`
+      : `<span class="chip src">copy within Google limits</span>`)
+    + ` · ${assetTxt}`
+    + ` · <a href="api/display_export.php?creative_id=${c.id}">export packet</a></div>`;
+}
 function lintChips(c){
   if (!c.lint_flags || !c.lint_flags.length) return "";
   return c.lint_flags.map(f =>
@@ -590,6 +604,7 @@ function creativeCard(c, extraButtons){
     <div class="copy"><span class="lbl">CTA</span> ${esc(c.cta)} &nbsp; <span class="lbl">Offer</span> ${esc(c.offer_text)}</div>
     ${c.art_direction ? `<div class="copy"><span class="lbl">Art direction</span>\n${esc(c.art_direction)}</div>` : ""}
     ${verdictChips(c)}
+    ${displayLine(c)}
     <div style="margin-top:10px">${extraButtons || ""}</div>
   </div>`;
 }
@@ -989,6 +1004,7 @@ function queueCard(c){
     ${c.description ? `<div class="copy"><span class="lbl">Description</span>\n${esc(c.description)}</div>` : ""}
     ${c.art_direction ? `<div class="artdir"><span class="lbl">Art direction</span>${esc(c.art_direction)}</div>` : ""}
     ${verdictChips(c)}
+    ${displayLine(c)}
     <div style="margin-top:10px">${buttons}</div>
   </div>`;
 }
