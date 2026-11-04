@@ -46,8 +46,7 @@ function obe_signal_heuristic(string $text): array {
     };
     if (preg_match('/\b(hiring|hire|job|role|recruit|vacancy|opening)\b/',
                    $lower)) {
-        $add('greenhouse');
-        $add('lever');
+        $add('jobs');
         $add('careers');
         $detectability = 'observable';
     }
@@ -138,7 +137,9 @@ if ($action === 'structure') {
     if ($provider !== null) {
         $system = 'You convert a plain English buying signal '
             . 'description into detection rules. Available source '
-            . 'types: greenhouse and lever (public job board APIs), '
+            . 'types: jobs (public job board feeds: Greenhouse, '
+            . 'Lever, Ashby, Workable, SmartRecruiters, Recruitee, '
+            . 'Breezy, Teamtailor, Workday), '
             . 'careers (company careers pages), news (company news and '
             . 'announcement pages). Judge detectability honestly: '
             . '"observable" when a source shows the signal directly, '
@@ -175,7 +176,9 @@ if ($action === 'structure') {
         $result = obe_signal_heuristic($nlText);
         $mode = 'heuristic';
     }
-    $allowed = ['greenhouse', 'lever', 'careers', 'news'];
+    $allowed = ['jobs', 'greenhouse', 'lever', 'ashby', 'workable',
+                'smartrecruiters', 'recruitee', 'breezy', 'teamtailor',
+                'workday', 'careers', 'news'];
     $result['source_types'] = array_values(array_filter(
         $result['source_types'],
         function ($s) use ($allowed) {

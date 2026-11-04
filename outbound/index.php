@@ -30,7 +30,7 @@ if (!is_logged_in()) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Outbound Engine</title>
-<link rel="stylesheet" href="app.css?v=6">
+<link rel="stylesheet" href="app.css?v=7">
 </head>
 <body>
 <header>
@@ -68,6 +68,6 @@ if (!is_logged_in()) {
   </div>
 </div>
 <div id="toast" class="toast hidden"></div>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

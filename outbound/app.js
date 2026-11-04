@@ -698,10 +698,20 @@ async function renderIcp() {
   }
   html += '<p class="muted small">Signals marked "cannot detect '
     + 'reliably" have no public source among the current detectors '
-    + '(Greenhouse, Lever, careers pages, news). They stay visible so '
+    + '(public job boards, careers pages, news). They stay visible so '
     + 'nobody mistakes them for live coverage.</p></div>';
 
   // Signal editor
+  const BOARD_TYPES = ['jobs', 'greenhouse', 'lever', 'ashby',
+    'workable', 'smartrecruiters', 'recruitee', 'breezy',
+    'teamtailor', 'workday'];
+  const srcIncludes = (list, val) => {
+    const arr = list || [];
+    if (val === 'jobs') {
+      return arr.some((x) => BOARD_TYPES.indexOf(x) >= 0);
+    }
+    return arr.indexOf(val) >= 0;
+  };
   const srcBox = (val, label) => '<label class="checkline">'
     + '<input type="checkbox" name="sSrc" value="' + val + '"> ' + label
     + '</label>';
@@ -714,8 +724,9 @@ async function renderIcp() {
     + '<span class="muted small">Suggests sources, keywords, and an honest detectability rating for your review.</span></div>'
     + '<div id="sigStructMsg"></div>'
     + '<div class="formrow"><div><span class="muted small">Source types</span>'
-    + srcBox('greenhouse', 'Greenhouse job boards')
-    + srcBox('lever', 'Lever job boards')
+    + srcBox('jobs', 'Job boards (Greenhouse, Lever, Ashby, '
+      + 'Workable, SmartRecruiters, Recruitee, Breezy, Teamtailor, '
+      + 'Workday)')
     + srcBox('careers', 'Careers pages')
     + srcBox('news', 'News and announcements')
     + '</div>'
@@ -901,7 +912,7 @@ async function renderIcp() {
     $('#sigIcp').value = s && s.icp_id ? String(s.icp_id) : '';
     $('#sigEnabled').checked = s ? !!s.enabled : true;
     document.querySelectorAll('input[name="sSrc"]').forEach((cb) => {
-      cb.checked = s ? (s.source_types || []).indexOf(cb.value) >= 0 : false;
+      cb.checked = s ? srcIncludes(s.source_types, cb.value) : false;
     });
     $('#sigFormTitle').textContent = s ? 'Edit signal' : 'New signal';
   };
@@ -939,7 +950,7 @@ async function renderIcp() {
           { nl_text: nl, confirmed }));
       if (resp === null) { return; }
       document.querySelectorAll('input[name="sSrc"]').forEach((cb) => {
-        cb.checked = (resp.source_types || []).indexOf(cb.value) >= 0;
+        cb.checked = srcIncludes(resp.source_types, cb.value);
       });
       $('#sigKeywords').value = (resp.keywords || []).join(', ');
       $('#sigDetect').value = resp.detectability || 'inferred';
@@ -1000,6 +1011,10 @@ async function renderDiscovery() {
     return days + ' days ago';
   };
   const typeLabel = { greenhouse: 'Greenhouse board', lever: 'Lever board',
+    ashby: 'Ashby board', workable: 'Workable board',
+    smartrecruiters: 'SmartRecruiters board', recruitee: 'Recruitee board',
+    breezy: 'Breezy board', teamtailor: 'Teamtailor board',
+    workday: 'Workday board',
     news: 'News', careers: 'Careers page' };
   const feedByCompany = {};
   (feed.observations || []).forEach((o) => {
@@ -1903,7 +1918,9 @@ async function renderSettings() {
       : present(false, 'no key saved')) + '</p>'
     + '<p class="muted small">Without a key, Apollo search and '
     + 'enrichment are unavailable. Discovery still runs on CSV import '
-    + 'and the free Greenhouse and Lever board APIs.</p>'
+    + 'and the free public job board feeds (Greenhouse, Lever, '
+    + 'Ashby, Workable, SmartRecruiters, Recruitee, Breezy, '
+    + 'Teamtailor, Workday).</p>'
     + '<label class="f"><span>Apollo API key</span>'
     + '<input type="text" id="setApolloKey" autocomplete="off" placeholder="Paste key to save"></label>'
     + '<div class="btnrow"><button class="btn" id="setApolloSave">Save Apollo key</button>'

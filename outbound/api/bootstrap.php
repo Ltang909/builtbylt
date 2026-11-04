@@ -913,8 +913,24 @@ function obe_fetch_page_evidence(string $url): ?array {
 }
 
 /**
+ * Every supported job board type. Signals opt into boards as a
+ * family: naming any one of these (or the generic 'jobs') makes a
+ * signal match postings from all of them.
+ */
+function obe_board_types(): array {
+    return ['greenhouse', 'lever', 'ashby', 'workable',
+            'smartrecruiters', 'recruitee', 'breezy', 'teamtailor',
+            'workday'];
+}
+
+/**
  * Detect a public job board in a URL. Returns
- * ['type' => 'greenhouse'|'lever', 'token' => string] or null.
+ * ['type' => <board type>, 'token' => string] or null. Every board
+ * here exposes a free public feed (no key, no account), verified
+ * live against real customer boards in November 2026; Workable's
+ * widget feed is the one exception, written to its documented
+ * shape. Workday tokens pack host|tenant|site because its public
+ * CXS endpoint needs all three.
  */
 function obe_board_from_url(string $url): ?array {
     if (preg_match('#(?:boards|job-boards)\.greenhouse\.io/([A-Za-z0-9_\-]+)#',
@@ -923,6 +939,51 @@ function obe_board_from_url(string $url): ?array {
     }
     if (preg_match('#jobs\.lever\.co/([A-Za-z0-9_\-]+)#', $url, $m)) {
         return ['type' => 'lever', 'token' => $m[1]];
+    }
+    if (preg_match('#jobs\.ashbyhq\.com/([A-Za-z0-9_\-]+)#', $url, $m)) {
+        return ['type' => 'ashby', 'token' => $m[1]];
+    }
+    if (preg_match('#apply\.workable\.com/([A-Za-z0-9_\-]+)#', $url, $m)) {
+        return ['type' => 'workable', 'token' => $m[1]];
+    }
+    if (preg_match('#(?:jobs|careers)\.smartrecruiters\.com/([A-Za-z0-9_\-]+)#',
+                   $url, $m)) {
+        return ['type' => 'smartrecruiters', 'token' => $m[1]];
+    }
+    $deny = ['www', 'app', 'api', 'support', 'help', 'blog', 'go'];
+    if (preg_match('#([A-Za-z0-9\-]+)\.recruitee\.com#', $url, $m)
+        && !in_array(strtolower($m[1]), $deny, true)) {
+        return ['type' => 'recruitee', 'token' => strtolower($m[1])];
+    }
+    if (preg_match('#([A-Za-z0-9\-]+)\.breezy\.hr#', $url, $m)
+        && !in_array(strtolower($m[1]), $deny, true)) {
+        return ['type' => 'breezy', 'token' => strtolower($m[1])];
+    }
+    if (preg_match('#([A-Za-z0-9\-]+)\.teamtailor\.com#', $url, $m)
+        && !in_array(strtolower($m[1]), $deny, true)) {
+        return ['type' => 'teamtailor', 'token' => strtolower($m[1])];
+    }
+    if (preg_match('#(([A-Za-z0-9\-]+)\.wd\d+\.myworkdayjobs\.com)#',
+                   $url, $m)) {
+        $host = $m[1];
+        $tenant = strtolower($m[2]);
+        $path = (string)(parse_url($url, PHP_URL_PATH) ?? '');
+        $parts = array_values(array_filter(
+            explode('/', $path),
+            function ($p) { return $p !== ''; }));
+        $site = '';
+        foreach ($parts as $part) {
+            if (preg_match('/^[a-z]{2}-[A-Za-z]{2}$/', $part)) {
+                continue; // locale segment, e.g. en-US
+            }
+            $site = $part;
+            break;
+        }
+        if ($site !== '' && strtolower($site) !== 'job') {
+            return ['type' => 'workday',
+                    'token' => $host . '|' . $tenant . '|' . $site];
+        }
+        return null;
     }
     return null;
 }
@@ -1265,6 +1326,230 @@ function obe_fetch_board_jobs(string $type, string $token): array {
                                          ?? ($cat['team'] ?? '')),
                 'location' => (string)($cat['location'] ?? ''),
                 'url' => (string)($j['hostedUrl'] ?? ''),
+                'posted' => $posted,
+            ];
+        }
+        return $jobs;
+    }
+    if ($type === 'ashby') {
+        $res = obe_http('https://api.ashbyhq.com/posting-api/job-board/'
+                        . urlencode($token),
+                        ['timeout' => 20, 'follow' => true]);
+        if ($res['error'] !== null || $res['status'] !== 200) {
+            throw new Exception('Ashby board fetch failed (HTTP '
+                                . $res['status'] . ')');
+        }
+        $data = json_decode($res['body'], true);
+        foreach ((isset($data['jobs']) && is_array($data['jobs']))
+                 ? $data['jobs'] : [] as $j) {
+            $jobs[] = [
+                'title' => (string)($j['title'] ?? ''),
+                'department' => (string)($j['departmentName']
+                    ?? ($j['department'] ?? '')),
+                'location' => (string)($j['location']
+                    ?? ($j['locationName'] ?? '')),
+                'url' => (string)($j['jobUrl']
+                    ?? ($j['applyUrl'] ?? '')),
+                'posted' => (string)($j['publishedAt'] ?? ''),
+            ];
+        }
+        return $jobs;
+    }
+    if ($type === 'workable') {
+        $res = obe_http('https://apply.workable.com/api/v1/widget/accounts/'
+                        . urlencode($token) . '/jobs',
+                        ['timeout' => 20, 'follow' => true]);
+        if ($res['error'] !== null || $res['status'] !== 200) {
+            throw new Exception('Workable board fetch failed (HTTP '
+                                . $res['status'] . ')');
+        }
+        $data = json_decode($res['body'], true);
+        $list = isset($data['jobs']) && is_array($data['jobs'])
+            ? $data['jobs'] : (is_array($data) ? $data : []);
+        foreach ($list as $j) {
+            $locParts = array_filter([
+                (string)($j['city'] ?? ''),
+                (string)($j['state'] ?? ''),
+                (string)($j['country'] ?? ''),
+            ]);
+            $jobs[] = [
+                'title' => (string)($j['title'] ?? ''),
+                'department' => (string)($j['department'] ?? ''),
+                'location' => implode(', ', $locParts),
+                'url' => (string)($j['url'] ?? ''),
+                'posted' => (string)($j['published_on']
+                    ?? ($j['created_at'] ?? '')),
+            ];
+        }
+        return $jobs;
+    }
+    if ($type === 'smartrecruiters') {
+        $res = obe_http('https://api.smartrecruiters.com/v1/companies/'
+                        . urlencode($token) . '/postings?limit=100',
+                        ['timeout' => 20, 'follow' => true]);
+        if ($res['error'] !== null || $res['status'] !== 200) {
+            throw new Exception('SmartRecruiters fetch failed (HTTP '
+                                . $res['status'] . ')');
+        }
+        $data = json_decode($res['body'], true);
+        foreach ((isset($data['content']) && is_array($data['content']))
+                 ? $data['content'] : [] as $j) {
+            $loc = isset($j['location']) && is_array($j['location'])
+                ? $j['location'] : [];
+            $locText = (string)($loc['fullLocation'] ?? '');
+            if ($locText === '') {
+                $locText = implode(', ', array_filter([
+                    (string)($loc['city'] ?? ''),
+                    (string)($loc['country'] ?? ''),
+                ]));
+            }
+            $jobs[] = [
+                'title' => (string)($j['name'] ?? ''),
+                'department' => isset($j['department']['label'])
+                    ? (string)$j['department']['label'] : '',
+                'location' => $locText,
+                'url' => 'https://jobs.smartrecruiters.com/' . $token
+                    . '/' . (string)($j['id'] ?? ''),
+                'posted' => (string)($j['releasedDate'] ?? ''),
+            ];
+        }
+        return $jobs;
+    }
+    if ($type === 'recruitee') {
+        $res = obe_http('https://' . $token . '.recruitee.com/api/offers/',
+                        ['timeout' => 20, 'follow' => true]);
+        if ($res['error'] !== null || $res['status'] !== 200) {
+            throw new Exception('Recruitee board fetch failed (HTTP '
+                                . $res['status'] . ')');
+        }
+        $data = json_decode($res['body'], true);
+        foreach ((isset($data['offers']) && is_array($data['offers']))
+                 ? $data['offers'] : [] as $j) {
+            if (isset($j['status']) && $j['status'] !== 'published') {
+                continue;
+            }
+            $jobs[] = [
+                'title' => (string)($j['title'] ?? ''),
+                'department' => (string)($j['department'] ?? ''),
+                'location' => (string)($j['location'] ?? ''),
+                'url' => (string)($j['careers_url'] ?? ''),
+                'posted' => (string)($j['published_at']
+                    ?? ($j['created_at'] ?? '')),
+            ];
+        }
+        return $jobs;
+    }
+    if ($type === 'breezy') {
+        $res = obe_http('https://' . $token . '.breezy.hr/json',
+                        ['timeout' => 20, 'follow' => true]);
+        if ($res['error'] !== null || $res['status'] !== 200) {
+            throw new Exception('Breezy board fetch failed (HTTP '
+                                . $res['status'] . ')');
+        }
+        $data = json_decode($res['body'], true);
+        foreach (is_array($data) ? $data : [] as $j) {
+            if (!is_array($j)) {
+                continue;
+            }
+            $loc = isset($j['location']) && is_array($j['location'])
+                ? $j['location'] : [];
+            $locText = (string)($loc['name'] ?? '');
+            if ($locText === '') {
+                $locText = implode(', ', array_filter([
+                    (string)($loc['city'] ?? ''),
+                    (string)(isset($loc['state']['name'])
+                        ? $loc['state']['name'] : ''),
+                    (string)(isset($loc['country']['name'])
+                        ? $loc['country']['name'] : ''),
+                ]));
+            }
+            $jobs[] = [
+                'title' => (string)($j['name'] ?? ($j['title'] ?? '')),
+                'department' => (string)($j['department'] ?? ''),
+                'location' => $locText,
+                'url' => (string)($j['url'] ?? ''),
+                'posted' => (string)($j['published_date'] ?? ''),
+            ];
+        }
+        return $jobs;
+    }
+    if ($type === 'teamtailor') {
+        $res = obe_http('https://' . $token . '.teamtailor.com/jobs.rss',
+                        ['timeout' => 20, 'follow' => true]);
+        if ($res['error'] !== null || $res['status'] !== 200) {
+            throw new Exception('Teamtailor feed fetch failed (HTTP '
+                                . $res['status'] . ')');
+        }
+        $prev = libxml_use_internal_errors(true);
+        $xml = simplexml_load_string($res['body']);
+        libxml_use_internal_errors($prev);
+        if ($xml === false || !isset($xml->channel)) {
+            throw new Exception('Teamtailor feed parse failed');
+        }
+        foreach ($xml->channel->item as $item) {
+            $jobs[] = [
+                'title' => (string)$item->title,
+                'department' => '',
+                'location' => '',
+                'url' => (string)$item->link,
+                'posted' => (string)$item->pubDate,
+            ];
+        }
+        return $jobs;
+    }
+    if ($type === 'workday') {
+        $parts = explode('|', $token);
+        if (count($parts) !== 3) {
+            throw new Exception('Workday board token is malformed');
+        }
+        list($host, $tenant, $site) = $parts;
+        $postings = [];
+        for ($offset = 0; $offset < 100; $offset += 20) {
+            $res = obe_http('https://' . $host . '/wday/cxs/' . $tenant
+                            . '/' . $site . '/jobs', [
+                'method' => 'POST',
+                'timeout' => 20,
+                'follow' => true,
+                'headers' => ['Content-Type: application/json',
+                              'Accept: application/json'],
+                'body' => json_encode(['appliedFacets' => new stdClass(),
+                                       'limit' => 20,
+                                       'offset' => $offset,
+                                       'searchText' => '']),
+            ]);
+            if ($res['error'] !== null || $res['status'] !== 200) {
+                throw new Exception('Workday board fetch failed (HTTP '
+                                    . $res['status'] . ')');
+            }
+            $data = json_decode($res['body'], true);
+            $page = (isset($data['jobPostings'])
+                     && is_array($data['jobPostings']))
+                ? $data['jobPostings'] : [];
+            foreach ($page as $j) {
+                $postings[] = $j;
+            }
+            if (count($page) < 20) {
+                break;
+            }
+        }
+        foreach ($postings as $j) {
+            $posted = '';
+            $postedOn = (string)($j['postedOn'] ?? '');
+            if (preg_match('/today/i', $postedOn)) {
+                $posted = date('Y-m-d H:i:s');
+            } elseif (preg_match('/yesterday/i', $postedOn)) {
+                $posted = date('Y-m-d H:i:s', time() - 86400);
+            } elseif (preg_match('/(\d+)\+?\s*days?\s*ago/i',
+                                 $postedOn, $mm)) {
+                $posted = date('Y-m-d H:i:s',
+                               time() - ((int)$mm[1]) * 86400);
+            }
+            $jobs[] = [
+                'title' => (string)($j['title'] ?? ''),
+                'department' => '',
+                'location' => (string)($j['locationsText'] ?? ''),
+                'url' => 'https://' . $host
+                    . (string)($j['externalPath'] ?? ''),
                 'posted' => $posted,
             ];
         }
@@ -1647,7 +1932,15 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
             $haystack = strtolower($job['title'] . ' ' . $job['department']);
             foreach ($signals as $signal) {
                 $types = obe_json_field($signal['source_types_json'] ?? null);
-                if (!in_array((string)$company['board_type'], $types, true)) {
+                // Job boards are one family: a signal that named
+                // any board source (or the generic 'jobs') matches
+                // postings from every supported ATS, so signals
+                // written before a board type existed still cover
+                // companies on it.
+                if (!in_array((string)$company['board_type'], $types, true)
+                    && !in_array('jobs', $types, true)
+                    && count(array_intersect($types,
+                                             obe_board_types())) === 0) {
                     continue;
                 }
                 $keywords = obe_json_field($signal['keywords_json'] ?? null);
