@@ -208,42 +208,12 @@ if ($action === 'detect_boards') {
     if ($company === false) {
         json_out(['error' => 'unknown company_id'], 400);
     }
-    $found = null;
-    foreach ([$company['careers_url'], $company['website']] as $candidate) {
-        if (!empty($candidate)) {
-            $found = obe_board_from_url((string)$candidate);
-            if ($found !== null) {
-                break;
-            }
-        }
-    }
-    if ($found === null && !empty($company['careers_url'])) {
-        $res = obe_http((string)$company['careers_url'],
-                        ['timeout' => 12, 'follow' => true]);
-        if ($res['error'] === null && $res['body'] !== '') {
-            $found = obe_board_from_url($res['final_url']);
-            if ($found === null
-                && preg_match_all('/href=["\']([^"\']+)["\']/i',
-                                  $res['body'], $mm)) {
-                foreach ($mm[1] as $href) {
-                    $found = obe_board_from_url(html_entity_decode(
-                        (string)$href, ENT_QUOTES, 'UTF-8'));
-                    if ($found !== null) {
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    $found = obe_detect_board_for_company($pdo, $company);
     if ($found === null) {
         json_out(['detected' => false,
                   'message' => 'No Greenhouse or Lever board found in '
                       . 'the company URLs or on its careers page.']);
     }
-    $stmt = $pdo->prepare(
-        'UPDATE obe_companies SET board_type = ?, board_token = ? '
-        . 'WHERE id = ?');
-    $stmt->execute([$found['type'], $found['token'], $companyId]);
     json_out(['detected' => true, 'board_type' => $found['type'],
               'board_token' => $found['token']]);
 }
@@ -261,6 +231,135 @@ if ($action === 'run') {
         }
     }
     json_out(obe_run_discovery($pdo, $client, $icp));
+}
+
+if ($action === 'apollo_companies') {
+    $key = vault_key($pdo, 'apollo');
+    if ($key === null || $key === '') {
+        json_out(['error' => 'no_apollo_key',
+                  'message' => 'No Apollo API key is saved. Add one in '
+                      . 'Settings and Integrations to enable Apollo '
+                      . 'search.'], 400);
+    }
+    if (empty($data['confirmed'])) {
+        json_out([
+            'needs_confirm' => true,
+            'estimate' => [
+                'provider' => 'apollo',
+                'calls' => 1,
+                'credits' => 0,
+                'results' => 'Up to 25 companies per search',
+                'note' => 'Apollo company search is credit free. It '
+                    . 'fills the Companies list from your ICP filters; '
+                    . 'discovery then checks those companies for '
+                    . 'signals, and enrichment stays a separate '
+                    . 'manual step.',
+            ],
+        ]);
+    }
+    $icpId = isset($data['icp_id']) ? (int)$data['icp_id'] : 0;
+    $stmt = $pdo->prepare(
+        'SELECT * FROM obe_icp_profiles WHERE client_id = ? '
+        . ($icpId > 0 ? 'AND id = ? ' : '') . 'ORDER BY id LIMIT 1');
+    $stmt->execute($icpId > 0 ? [$clientId, $icpId] : [$clientId]);
+    $icp = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($icp === false) {
+        json_out(['error' => 'No ICP configured for this client yet.'], 400);
+    }
+    $filters = obe_json_field($icp['filters_json'] ?? null);
+    $payload = ['per_page' => 25, 'page' => 1];
+    if (!empty($filters['size_min']) || !empty($filters['size_max'])) {
+        $lo = !empty($filters['size_min']) ? (int)$filters['size_min'] : 1;
+        $hi = !empty($filters['size_max']) ? (int)$filters['size_max']
+                                           : 100000;
+        $payload['organization_num_employees_ranges'] = [$lo . ',' . $hi];
+    }
+    $geos = isset($filters['geos']) ? $filters['geos'] : [];
+    if (count($geos) > 0) {
+        $payload['organization_locations'] = $geos;
+    }
+    $industries = isset($filters['industries'])
+        ? $filters['industries'] : [];
+    if (count($industries) > 0) {
+        $payload['q_organization_keyword_tags'] = $industries;
+    }
+    $res = obe_http('https://api.apollo.io/api/v1/mixed_companies/search', [
+        'method' => 'POST',
+        'timeout' => 30,
+        'headers' => ['Content-Type: application/json',
+                      'Accept: application/json',
+                      'X-Api-Key: ' . $key],
+        'body' => json_encode($payload),
+    ]);
+    obe_usage($pdo, $clientId, 'apollo', 1, 0.0, 0.0,
+              'Company Search (credit free)');
+    if ($res['error'] !== null || $res['status'] < 200
+        || $res['status'] >= 300) {
+        json_out(['error' => 'apollo_failed',
+                  'message' => 'Apollo company search failed (HTTP '
+                      . $res['status'] . '). '
+                      . substr($res['body'], 0, 300)], 502);
+    }
+    $decoded = json_decode($res['body'], true);
+    $orgs = [];
+    if (isset($decoded['organizations'])
+        && is_array($decoded['organizations'])) {
+        $orgs = $decoded['organizations'];
+    } elseif (isset($decoded['companies'])
+        && is_array($decoded['companies'])) {
+        $orgs = $decoded['companies'];
+    }
+    $insCompany = $pdo->prepare(
+        'INSERT IGNORE INTO obe_companies (client_id, name, domain, '
+        . 'website, industry, size_band) VALUES (?, ?, ?, ?, ?, ?)');
+    $inserted = 0;
+    $skipped = 0;
+    foreach ($orgs as $org) {
+        $name = trim((string)($org['name'] ?? ''));
+        $domain = trim((string)($org['primary_domain'] ?? ''));
+        if ($domain === '' && !empty($org['website_url'])) {
+            $host = parse_url((string)$org['website_url'],
+                              PHP_URL_HOST);
+            $domain = $host !== null && $host !== false
+                ? (string)$host : '';
+        }
+        $domain = strtolower(preg_replace('/^www\./', '', $domain));
+        if ($name === '' || $domain === '') {
+            $skipped++;
+            continue;
+        }
+        $sizeBand = null;
+        if (isset($org['estimated_num_employees'])
+            && (int)$org['estimated_num_employees'] > 0) {
+            $emp = (int)$org['estimated_num_employees'];
+            if ($emp < 50) {
+                $sizeBand = '1-50';
+            } elseif ($emp <= 500) {
+                $sizeBand = '50-500';
+            } elseif ($emp <= 1000) {
+                $sizeBand = '500-1000';
+            } else {
+                $sizeBand = '1000+';
+            }
+        }
+        $insCompany->execute([
+            $clientId, $name, $domain,
+            'https://' . $domain,
+            isset($org['industry']) && $org['industry'] !== ''
+                ? (string)$org['industry'] : null,
+            $sizeBand,
+        ]);
+        if ($insCompany->rowCount() > 0) {
+            $inserted++;
+        } else {
+            $skipped++;
+        }
+    }
+    obe_log_run($pdo, $clientId, 'apollo',
+                'Apollo company search: ' . count($orgs) . ' found, '
+                . $inserted . ' added, ' . $skipped . ' skipped.');
+    json_out(['found' => count($orgs), 'inserted' => $inserted,
+              'skipped' => $skipped]);
 }
 
 if ($action === 'apollo_search') {

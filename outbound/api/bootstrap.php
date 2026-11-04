@@ -928,6 +928,221 @@ function obe_board_from_url(string $url): ?array {
 }
 
 /**
+ * Try to find a company's public Greenhouse or Lever board from its
+ * own URLs. Checks, in order: a board URL used directly as the
+ * careers or website URL, the careers page itself (including its
+ * links), then the website homepage (a board link, or a careers
+ * link followed one level deep). When a board is found it is saved
+ * on the company row and returned as ['type' => ..., 'token' => ...].
+ * Returns null when nothing is found.
+ */
+function obe_detect_board_for_company(PDO $pdo, array $company): ?array {
+    foreach ([$company['careers_url'] ?? '', $company['website'] ?? '']
+             as $candidate) {
+        if (!empty($candidate)) {
+            $found = obe_board_from_url((string)$candidate);
+            if ($found !== null) {
+                $stmt = $pdo->prepare(
+                    'UPDATE obe_companies SET board_type = ?, '
+                    . 'board_token = ? WHERE id = ?');
+                $stmt->execute([$found['type'], $found['token'],
+                                (int)$company['id']]);
+                return $found;
+            }
+        }
+    }
+    $pages = [];
+    if (!empty($company['careers_url'])) {
+        $pages[] = (string)$company['careers_url'];
+    }
+    if (!empty($company['website'])) {
+        $pages[] = (string)$company['website'];
+    }
+    $toFetch = [];
+    foreach ($pages as $pageUrl) {
+        $res = obe_http($pageUrl, ['timeout' => 12, 'follow' => true]);
+        if ($res['error'] !== null || $res['body'] === '') {
+            continue;
+        }
+        $found = obe_board_from_url($res['final_url']);
+        if ($found !== null) {
+            $stmt = $pdo->prepare(
+                'UPDATE obe_companies SET board_type = ?, '
+                . 'board_token = ? WHERE id = ?');
+            $stmt->execute([$found['type'], $found['token'],
+                            (int)$company['id']]);
+            return $found;
+        }
+        if (!preg_match_all('/href=["\']([^"\']+)["\']/i',
+                            $res['body'], $mm)) {
+            continue;
+        }
+        foreach ($mm[1] as $href) {
+            $href = html_entity_decode((string)$href, ENT_QUOTES,
+                                       'UTF-8');
+            $found = obe_board_from_url($href);
+            if ($found !== null) {
+                $stmt = $pdo->prepare(
+                    'UPDATE obe_companies SET board_type = ?, '
+                    . 'board_token = ? WHERE id = ?');
+                $stmt->execute([$found['type'], $found['token'],
+                                (int)$company['id']]);
+                return $found;
+            }
+            $lh = strtolower($href);
+            if ((strpos($lh, 'career') !== false
+                 || strpos($lh, '/jobs') !== false)
+                && strpos($href, '#') !== 0) {
+                $toFetch[] = $href;
+            }
+        }
+    }
+    foreach (array_slice(array_unique($toFetch), 0, 3) as $careersLink) {
+        if (strpos($careersLink, 'http') !== 0) {
+            $base = !empty($company['website'])
+                ? (string)$company['website'] : '';
+            if ($base === '') {
+                continue;
+            }
+            $parts = parse_url($base);
+            if (!isset($parts['scheme']) || !isset($parts['host'])) {
+                continue;
+            }
+            $careersLink = $parts['scheme'] . '://' . $parts['host']
+                . '/' . ltrim($careersLink, '/');
+        }
+        $res = obe_http($careersLink, ['timeout' => 12, 'follow' => true]);
+        if ($res['error'] !== null || $res['body'] === '') {
+            continue;
+        }
+        $found = obe_board_from_url($res['final_url']);
+        if ($found === null
+            && preg_match_all('/href=["\']([^"\']+)["\']/i',
+                              $res['body'], $mm2)) {
+            foreach ($mm2[1] as $href2) {
+                $found = obe_board_from_url(html_entity_decode(
+                    (string)$href2, ENT_QUOTES, 'UTF-8'));
+                if ($found !== null) {
+                    break;
+                }
+            }
+        }
+        if ($found !== null) {
+            $stmt = $pdo->prepare(
+                'UPDATE obe_companies SET board_type = ?, '
+                . 'board_token = ? WHERE id = ?');
+            $stmt->execute([$found['type'], $found['token'],
+                            (int)$company['id']]);
+            return $found;
+        }
+    }
+    return null;
+}
+
+/**
+ * Recent Google News items about a company that mention at least one
+ * of the given signals' keywords. One RSS fetch per call (free, no
+ * key). Returns up to 10 normalized items (title, summary, link,
+ * ts), or null when the feed could not be fetched or parsed.
+ */
+function obe_news_items(string $companyName, array $newsSignals): ?array {
+    $kws = [];
+    foreach ($newsSignals as $signal) {
+        $keywords = obe_json_field($signal['keywords_json'] ?? null);
+        foreach ($keywords as $kw) {
+            $kw = trim((string)$kw);
+            if ($kw !== '') {
+                $kws[] = $kw;
+            }
+        }
+    }
+    $kws = array_slice(array_unique($kws), 0, 3);
+    if (count($kws) === 0) {
+        return null;
+    }
+    $query = '"' . $companyName . '" (' . implode(' OR ', $kws) . ')';
+    $url = 'https://news.google.com/rss/search?q='
+        . urlencode($query) . '&hl=en-US&gl=US&ceid=US:en';
+    $res = obe_http($url, ['timeout' => 15, 'follow' => true]);
+    if ($res['error'] !== null || $res['body'] === '') {
+        return null;
+    }
+    $nameLc = strtolower($companyName);
+    $items = [];
+    if (function_exists('simplexml_load_string')) {
+        $xml = @simplexml_load_string($res['body']);
+        if ($xml !== false && isset($xml->channel->item)) {
+            foreach ($xml->channel->item as $item) {
+                $title = (string)$item->title;
+                $link = (string)$item->link;
+                $desc = strip_tags((string)$item->description);
+                if ($title === '' || $link === '') {
+                    continue;
+                }
+                if (strpos(strtolower($title . ' ' . $desc),
+                           $nameLc) === false) {
+                    continue;
+                }
+                $ts = isset($item->pubDate)
+                    ? strtotime((string)$item->pubDate) : false;
+                $items[] = [
+                    'title' => $title,
+                    'summary' => $desc,
+                    'link' => $link,
+                    'ts' => $ts !== false ? $ts : time(),
+                ];
+                if (count($items) >= 10) {
+                    break;
+                }
+            }
+        }
+        return $items;
+    }
+    if (preg_match_all('/<item>([\s\S]*?)<\/item>/',
+                       $res['body'], $blocks)) {
+        foreach ($blocks[1] as $block) {
+            if (!preg_match('/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/',
+                            $block, $mt)
+                || !preg_match('/<link>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/',
+                               $block, $ml)) {
+                continue;
+            }
+            $title = html_entity_decode(trim($mt[1]), ENT_QUOTES,
+                                        'UTF-8');
+            $link = html_entity_decode(trim($ml[1]), ENT_QUOTES,
+                                       'UTF-8');
+            $desc = '';
+            if (preg_match('/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/',
+                           $block, $md)) {
+                $desc = strip_tags(html_entity_decode(
+                    trim($md[1]), ENT_QUOTES, 'UTF-8'));
+            }
+            if ($title === '' || $link === '') {
+                continue;
+            }
+            if (strpos(strtolower($title . ' ' . $desc),
+                       $nameLc) === false) {
+                continue;
+            }
+            $ts = time();
+            if (preg_match('/<pubDate>([\s\S]*?)<\/pubDate>/',
+                           $block, $mp)) {
+                $parsed = strtotime(trim($mp[1]));
+                if ($parsed !== false) {
+                    $ts = $parsed;
+                }
+            }
+            $items[] = ['title' => $title, 'summary' => $desc,
+                        'link' => $link, 'ts' => $ts];
+            if (count($items) >= 10) {
+                break;
+            }
+        }
+    }
+    return $items;
+}
+
+/**
  * Fetch open jobs from a public Greenhouse or Lever board (both are
  * free, unauthenticated APIs). Normalized to title, department,
  * location, url, posted date. Throws Exception on failure.
@@ -1277,7 +1492,10 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
     $clientId = (int)$client['id'];
     $summary = [
         'companies_checked' => 0,
+        'boards_detected' => 0,
         'jobs_seen' => 0,
+        'news_checked' => 0,
+        'news_observations' => 0,
         'new_observations' => 0,
         'matches_scored' => 0,
         'queued' => 0,
@@ -1308,6 +1526,23 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
         . 'AND enabled = 1 AND (icp_id IS NULL OR icp_id = ?)');
     $stmt->execute([$clientId, $icpId]);
     $signals = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Companies that arrive from Apollo search or CSV import usually
+    // have no job board attached yet. Try to detect one automatically
+    // (bounded per run) so a single Run covers the full flow: find
+    // companies, locate their boards, then read them.
+    $stmt = $pdo->prepare(
+        'SELECT * FROM obe_companies WHERE client_id = ? '
+        . 'AND (board_token IS NULL OR board_token = \'\') '
+        . 'AND ((careers_url IS NOT NULL AND careers_url <> \'\') '
+        . 'OR (website IS NOT NULL AND website <> \'\')) '
+        . 'ORDER BY id LIMIT 25');
+    $stmt->execute([$clientId]);
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $cand) {
+        if (obe_detect_board_for_company($pdo, $cand) !== null) {
+            $summary['boards_detected']++;
+        }
+    }
 
     $stmt = $pdo->prepare(
         'SELECT * FROM obe_companies WHERE client_id = ? '
@@ -1383,6 +1618,73 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
         }
     }
 
+    // News pass: enabled signals that list the news source are checked
+    // against Google News RSS (free, no key) once per company. An item
+    // becomes an observation only when the headline or summary names
+    // the company AND matches one of the signal's own keywords, and it
+    // was published inside the signal's freshness window.
+    $newsSignals = [];
+    foreach ($signals as $signal) {
+        $types = obe_json_field($signal['source_types_json'] ?? null);
+        if (in_array('news', $types, true)) {
+            $newsSignals[] = $signal;
+        }
+    }
+    if (count($newsSignals) > 0) {
+        $stmt = $pdo->prepare(
+            'SELECT * FROM obe_companies WHERE client_id = ? '
+            . 'ORDER BY id LIMIT 25');
+        $stmt->execute([$clientId]);
+        $newsCompanies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $newsObsInsert = $pdo->prepare(
+            'INSERT INTO obe_signal_observations (client_id, company_id, '
+            . 'signal_id, source_type, source_url, evidence, confidence, '
+            . 'observed_at) VALUES (?, ?, ?, \'news\', ?, ?, 0.60, ?)');
+        foreach ($newsCompanies as $nc) {
+            $items = obe_news_items((string)$nc['name'], $newsSignals);
+            if ($items === null) {
+                continue;
+            }
+            $summary['news_checked']++;
+            foreach ($items as $item) {
+                foreach ($newsSignals as $signal) {
+                    $freshDays = (int)($signal['freshness_days'] ?? 30);
+                    if ($item['ts'] < time() - $freshDays * 86400) {
+                        continue;
+                    }
+                    $text = strtolower($item['title'] . ' '
+                                       . $item['summary']);
+                    $keywords = obe_json_field(
+                        $signal['keywords_json'] ?? null);
+                    $hit = false;
+                    foreach ($keywords as $kw) {
+                        $kw = strtolower(trim((string)$kw));
+                        if ($kw !== ''
+                            && strpos($text, $kw) !== false) {
+                            $hit = true;
+                            break;
+                        }
+                    }
+                    if (!$hit) {
+                        continue;
+                    }
+                    $obsExists->execute([(int)$nc['id'],
+                                         (int)$signal['id'],
+                                         $item['link']]);
+                    if ($obsExists->fetch(PDO::FETCH_ASSOC) !== false) {
+                        continue;
+                    }
+                    $newsObsInsert->execute([
+                        $clientId, (int)$nc['id'], (int)$signal['id'],
+                        $item['link'], $item['title'],
+                        date('Y-m-d H:i:s', $item['ts'])]);
+                    $summary['new_observations']++;
+                    $summary['news_observations']++;
+                }
+            }
+        }
+    }
+
     // Every company with at least one observation gets (re)scored.
     $stmt = $pdo->prepare(
         'SELECT DISTINCT company_id FROM obe_signal_observations '
@@ -1441,7 +1743,8 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
     obe_log_run($pdo, $clientId, 'discovery',
                 'Discovery run: ' . $summary['companies_checked']
                 . ' companies checked, ' . $summary['jobs_seen']
-                . ' jobs seen, ' . $summary['new_observations']
+                . ' jobs seen, ' . $summary['news_observations']
+                . ' news observations, ' . $summary['new_observations']
                 . ' new observations, ' . $summary['matches_scored']
                 . ' matches scored, ' . $summary['queued'] . ' queued.',
                 $summary);

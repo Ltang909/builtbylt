@@ -936,6 +936,8 @@ async function renderDiscovery() {
     + icps.map((i) => '<option value="' + i.id + '">' + esc(i.name) + '</option>').join('')
     + '</select></label></div>'
     + '<div class="btnrow"><button class="btn" id="dRun">Run discovery now</button>'
+    + '<button class="btn secondary" id="dCompanies"'
+    + (apolloReady ? '' : ' disabled') + '>Find companies on Apollo</button>'
     + '<button class="btn secondary" id="dApollo"'
     + (apolloReady ? '' : ' disabled') + '>Apollo people search</button></div>'
     + (apolloReady
@@ -1008,9 +1010,16 @@ async function renderDiscovery() {
         ? parseInt($('#dIcp').value, 10) : undefined;
       const s = await apiPost('discovery.php?action=run', { icp_id: icpId });
       msg.innerHTML = '<div class="ok">Discovery complete: '
-        + esc(s.companies_checked) + ' companies checked, '
+        + esc(s.companies_checked) + ' companies checked'
+        + (s.boards_detected ? ', ' + esc(s.boards_detected)
+          + ' boards auto-detected' : '')
+        + ', '
         + esc(s.jobs_seen) + ' jobs seen, ' + esc(s.new_observations)
-        + ' new signal observations, ' + esc(s.matches_scored)
+        + ' new signal observations'
+        + (s.news_checked ? ' (' + esc(s.news_observations || 0)
+          + ' from news across ' + esc(s.news_checked)
+          + ' companies)' : '')
+        + ', ' + esc(s.matches_scored)
         + ' matches scored, ' + esc(s.queued) + ' queued for '
         + 'enrichment.'
         + (s.errors && s.errors.length
@@ -1022,6 +1031,23 @@ async function renderDiscovery() {
     }
   };
   if (apolloReady) {
+    $('#dCompanies').onclick = async () => {
+      try {
+        const resp = await confirmedCall('Apollo company search',
+          (confirmed) => apiPost('discovery.php?action=apollo_companies', {
+            icp_id: $('#dIcp').value
+              ? parseInt($('#dIcp').value, 10) : undefined,
+            confirmed,
+          }));
+        if (resp === null) { return; }
+        toast('Apollo companies: ' + resp.found + ' found, '
+          + resp.inserted + ' added, ' + resp.skipped + ' skipped. '
+          + 'Run discovery to check them for signals.');
+        renderDiscovery();
+      } catch (err) {
+        $('#dRunMsg').innerHTML = errBox(err);
+      }
+    };
     $('#dApollo').onclick = async () => {
       try {
         const resp = await confirmedCall('Apollo people search',
