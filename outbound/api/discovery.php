@@ -53,6 +53,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         json_out($out);
     }
+    if ($view === 'feed') {
+        $obsStmt = $pdo->prepare(
+            'SELECT o.id, o.company_id, o.source_type, o.source_url, '
+            . 'o.evidence, o.confidence, o.observed_at, '
+            . 'co.name AS company_name, co.domain AS company_domain, '
+            . 's.name AS signal_name, s.freshness_days, '
+            . 's.detectability FROM obe_signal_observations o '
+            . 'JOIN obe_companies co ON co.id = o.company_id '
+            . 'JOIN obe_intent_signals s ON s.id = o.signal_id '
+            . 'WHERE o.client_id = ? '
+            . 'ORDER BY o.observed_at DESC, o.id DESC LIMIT 300');
+        $obsStmt->execute([$clientId]);
+        $observations = [];
+        foreach ($obsStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $row['id'] = (int)$row['id'];
+            $row['company_id'] = (int)$row['company_id'];
+            $row['freshness_days'] = (int)$row['freshness_days'];
+            $row['confidence'] = (float)$row['confidence'];
+            $row['live'] = strtotime((string)$row['observed_at'])
+                >= time() - $row['freshness_days'] * 86400;
+            $observations[] = $row;
+        }
+        $matchStmt = $pdo->prepare(
+            'SELECT company_id, MAX(score) AS best_score, '
+            . "MAX(CASE WHEN status = 'queued_enrich' THEN id END) "
+            . 'AS queued_match_id, '
+            . "MAX(CASE WHEN status = 'enriched' THEN 1 ELSE 0 END) "
+            . 'AS any_enriched, '
+            . '(SELECT COUNT(*) FROM obe_contacts ct '
+            . 'WHERE ct.company_id = obe_prospect_matches.company_id) '
+            . 'AS contacts FROM obe_prospect_matches '
+            . 'WHERE client_id = ? GROUP BY company_id');
+        $matchStmt->execute([$clientId]);
+        $matchByCompany = [];
+        foreach ($matchStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $matchByCompany[(int)$row['company_id']] = [
+                'best_score' => (int)$row['best_score'],
+                'queued_match_id' => $row['queued_match_id'] !== null
+                    ? (int)$row['queued_match_id'] : null,
+                'any_enriched' => (int)$row['any_enriched'] === 1,
+                'contacts' => (int)$row['contacts'],
+            ];
+        }
+        $totalCompanies = (int)obe_scalar(
+            $pdo, 'SELECT COUNT(*) FROM obe_companies '
+            . 'WHERE client_id = ?', [$clientId]);
+        $withObs = (int)obe_scalar(
+            $pdo, 'SELECT COUNT(DISTINCT company_id) '
+            . 'FROM obe_signal_observations WHERE client_id = ?',
+            [$clientId]);
+        json_out([
+            'observations' => $observations,
+            'matches' => $matchByCompany,
+            'total_companies' => $totalCompanies,
+            'companies_with_signals' => $withObs,
+            'companies_quiet' => max(0, $totalCompanies - $withObs),
+        ]);
+    }
     $sql = 'SELECT m.*, co.name AS company_name, co.domain AS company_domain, '
         . 'ct.first_name, ct.last_name, ct.title AS contact_title, '
         . 'ct.email AS contact_email, ct.linkedin_url, '
@@ -589,6 +647,111 @@ if ($action === 'enrich') {
                             'linkedin_url' => $r['linkedin_url']],
               'credits_used_this_month' => $used + 1,
               'credits_remaining' => $remaining - 1]);
+}
+
+if ($action === 'people_for_company') {
+    $key = vault_key($pdo, 'apollo');
+    if ($key === null || $key === '') {
+        json_out(['error' => 'no_apollo_key',
+                  'message' => 'No Apollo API key is saved. Add one in '
+                      . 'Settings and Integrations.'], 400);
+    }
+    $companyId = isset($data['company_id']) ? (int)$data['company_id'] : 0;
+    $stmt = $pdo->prepare(
+        'SELECT * FROM obe_companies WHERE id = ? AND client_id = ?');
+    $stmt->execute([$companyId, $clientId]);
+    $company = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($company === false) {
+        json_out(['error' => 'unknown company_id'], 400);
+    }
+    $icp = null;
+    $icpId = isset($data['icp_id']) ? (int)$data['icp_id'] : 0;
+    $stmt = $pdo->prepare(
+        'SELECT * FROM obe_icp_profiles WHERE client_id = ? '
+        . ($icpId > 0 ? 'AND id = ? ' : '') . 'ORDER BY id LIMIT 1');
+    $stmt->execute($icpId > 0 ? [$clientId, $icpId] : [$clientId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row !== false) {
+        $icp = $row;
+    }
+    $titles = [];
+    if ($icp !== null) {
+        $f = obe_json_field($icp['filters_json'] ?? null);
+        $titles = isset($f['titles']) ? $f['titles'] : [];
+    }
+    $domain = strtolower((string)$company['domain']);
+    $payload = ['per_page' => 10, 'page' => 1,
+                'organization_domains' => [$domain]];
+    if (count($titles) > 0) {
+        $payload['person_titles'] = $titles;
+    }
+    $res = obe_http('https://api.apollo.io/api/v1/mixed_people/search', [
+        'method' => 'POST',
+        'timeout' => 30,
+        'headers' => ['Content-Type: application/json',
+                      'Accept: application/json',
+                      'X-Api-Key: ' . $key],
+        'body' => json_encode($payload),
+    ]);
+    obe_usage($pdo, $clientId, 'apollo', 1, 0.0, 0.0,
+              'People search for one company (credit free)');
+    if ($res['error'] !== null || $res['status'] < 200
+        || $res['status'] >= 300) {
+        json_out(['error' => 'apollo_failed',
+                  'message' => 'Apollo people search failed (HTTP '
+                      . $res['status'] . '). '
+                      . substr($res['body'], 0, 300)], 502);
+    }
+    $decoded = json_decode($res['body'], true);
+    $people = isset($decoded['people']) && is_array($decoded['people'])
+        ? $decoded['people'] : [];
+    $findByApollo = $pdo->prepare(
+        'SELECT id FROM obe_contacts WHERE client_id = ? '
+        . 'AND apollo_id = ? LIMIT 1');
+    $insContact = $pdo->prepare(
+        'INSERT INTO obe_contacts (client_id, company_id, first_name, '
+        . 'last_name, title, email, linkedin_url, apollo_id) '
+        . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    $added = 0;
+    foreach ($people as $person) {
+        $org = isset($person['organization'])
+            && is_array($person['organization'])
+            ? $person['organization'] : [];
+        $orgDomain = obe_domain_from(
+            (string)($org['primary_domain'] ?? ''));
+        if ($orgDomain === '') {
+            $orgDomain = obe_domain_from(
+                (string)($org['website_url'] ?? ''));
+        }
+        if ($orgDomain !== $domain) {
+            continue;
+        }
+        $apolloId = isset($person['id']) ? (string)$person['id'] : '';
+        if ($apolloId !== '') {
+            $findByApollo->execute([$clientId, $apolloId]);
+            if ($findByApollo->fetch(PDO::FETCH_ASSOC) !== false) {
+                continue;
+            }
+        }
+        $insContact->execute([
+            $clientId, $companyId,
+            isset($person['first_name'])
+                ? (string)$person['first_name'] : null,
+            isset($person['last_name'])
+                ? (string)$person['last_name'] : null,
+            isset($person['title']) ? (string)$person['title'] : null,
+            null, null,
+            $apolloId !== '' ? $apolloId : null,
+        ]);
+        $added++;
+    }
+    if ($icp !== null) {
+        obe_run_discovery($pdo, ['id' => $clientId], $icp);
+    }
+    obe_log_run($pdo, $clientId, 'apollo_search',
+                'People search for ' . (string)$company['name']
+                . ': ' . $added . ' added.');
+    json_out(['found' => count($people), 'added' => $added]);
 }
 
 if ($action === 'pipeline') {

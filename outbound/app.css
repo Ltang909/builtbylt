@@ -262,3 +262,17 @@ a { color: #aeb3ff; }
 .looparrow.back { font-size: 15px; margin-right: 6px; }
 .loopback { color: var(--muted); font-size: 13px; margin: 2px 0 20px; }
 @media (prefers-reduced-motion: reduce) { .loopnode.moving { animation: none; } }
+
+/* Signal evidence feed */
+.feedgroup { border: 1px solid #2e3568; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; background: #171d3d; }
+.feedhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 6px; }
+.feedhead strong { font-size: 15px; }
+.feedactions { margin-left: auto; display: inline-flex; gap: 6px; }
+.feedobs { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 6px 0; border-top: 1px solid #232a52; font-size: 13px; }
+.feedobs .feedwhat { font-weight: 600; }
+.feedobs .feedmeta, .feedmeta { color: var(--muted); font-size: 12px; }
+.feedobs a { margin-left: auto; font-size: 12px; }
+.feedobs.stale { opacity: .45; }
+.advwrap { background: #1a1f42; border: 1px solid #2e3568; border-radius: 10px; margin-bottom: 16px; }
+.advwrap > summary { cursor: pointer; padding: 14px 16px; font-weight: 600; color: var(--muted); }
+.advwrap > .panel { border: 0; border-top: 1px solid #2e3568; border-radius: 0; margin: 0; box-shadow: none; }

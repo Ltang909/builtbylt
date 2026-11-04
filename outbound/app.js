@@ -991,7 +991,86 @@ function breakdownText(b) {
 async function renderDiscovery() {
   const el = viewEl();
   if (!state.activeClientId) {
-    el.innerHTML = '<h2>Prospect Discovery</h2>' + noClientNotice();
+    const ageText = (ts) => {
+    const then = new Date(String(ts).replace(' ', 'T')).getTime();
+    if (isNaN(then)) { return ''; }
+    const days = Math.floor((Date.now() - then) / 86400000);
+    if (days <= 0) { return 'today'; }
+    if (days === 1) { return 'yesterday'; }
+    return days + ' days ago';
+  };
+  const typeLabel = { greenhouse: 'Greenhouse board', lever: 'Lever board',
+    news: 'News', careers: 'Careers page' };
+  const feedByCompany = {};
+  (feed.observations || []).forEach((o) => {
+    if (!feedByCompany[o.company_id]) {
+      feedByCompany[o.company_id] = { id: o.company_id,
+        name: o.company_name, domain: o.company_domain, live: 0,
+        types: {}, obs: [] };
+    }
+    const g = feedByCompany[o.company_id];
+    g.obs.push(o);
+    if (o.live) { g.live++; g.types[o.source_type] = true; }
+  });
+  const feedGroups = Object.keys(feedByCompany)
+    .map((k) => feedByCompany[k])
+    .sort((a, b) => (b.live - a.live)
+      || String(b.obs[0].observed_at).localeCompare(
+        String(a.obs[0].observed_at)));
+  const feedGroupHtml = (g) => {
+    const fm = (feed.matches || {})[g.id] || {};
+    const badges = (g.live > 0
+      ? '<span class="badge good">' + g.live + ' live signal'
+        + (g.live === 1 ? '' : 's') + '</span>'
+      : '<span class="badge warn">no live signals</span>')
+      + Object.keys(g.types).map((tp) => '<span class="badge">'
+        + esc(typeLabel[tp] || tp) + '</span>').join('');
+    const scoreInfo = fm.best_score
+      ? '<span class="muted small">best score ' + fm.best_score
+        + ' / ' + (fm.contacts || 0) + ' contacts'
+        + (fm.any_enriched ? ' / enriched' : '') + '</span>'
+      : '';
+    const actions = '<span class="feedactions">'
+      + ((!fm.contacts || fm.contacts === 0) && apolloReady
+        ? '<button class="btn small" data-people="' + g.id
+          + '">Find people</button>' : '')
+      + (fm.queued_match_id
+        ? '<button class="btn small secondary" data-enrich="'
+          + fm.queued_match_id + '">Enrich top prospect</button>'
+        : '')
+      + '</span>';
+    const obsRows = g.obs.slice(0, 6).map((o) =>
+      '<div class="feedobs' + (o.live ? '' : ' stale') + '">'
+      + '<span class="feedwhat">' + esc(o.evidence) + '</span>'
+      + '<span class="feedmeta">' + esc(o.signal_name) + ' / '
+      + esc(typeLabel[o.source_type] || o.source_type) + ' / '
+      + ageText(o.observed_at)
+      + (o.live ? '' : ' / outside its ' + o.freshness_days
+        + ' day window') + '</span>'
+      + '<a href="' + esc(o.source_url) + '" target="_blank" '
+      + 'rel="noopener">source</a></div>').join('')
+      + (g.obs.length > 6
+        ? '<div class="feedmeta">plus ' + (g.obs.length - 6)
+          + ' older observations</div>' : '');
+    return '<div class="feedgroup"><div class="feedhead"><strong>'
+      + esc(g.name) + '</strong><span class="muted small">'
+      + esc(g.domain) + '</span>' + badges + scoreInfo + actions
+      + '</div>' + obsRows + '</div>';
+  };
+  const feedPanelHtml = '<div class="panel"><h3>Signal evidence</h3>'
+    + (feedGroups.length
+      ? feedGroups.map(feedGroupHtml).join('')
+        + (feed.companies_quiet
+          ? '<p class="muted small">' + feed.companies_quiet + ' of '
+            + feed.total_companies + ' companies are quiet: no '
+            + 'signals recorded for them. They live in the company '
+            + 'list under Advanced below.</p>' : '')
+      : '<p class="empty">No signal evidence yet. Run discovery or '
+        + 'Process all companies, and anything that fires shows up '
+        + 'here with its source link.</p>')
+    + '</div>';
+
+  el.innerHTML = '<h2>Prospect Discovery</h2>' + noClientNotice();
     return;
   }
   const settings = await apiGet('settings.php');
@@ -1000,6 +1079,7 @@ async function renderDiscovery() {
   const companies = await apiGet('discovery.php', { view: 'companies' });
   const prospects = await apiGet('discovery.php', { view: 'prospects' });
   const watchlist = await apiGet('discovery.php', { view: 'watchlist' });
+  const feed = await apiGet('discovery.php', { view: 'feed' });
   const apolloReady = settings.integrations.apollo.present;
 
   const prospectRows = (list, showEnrich) => list.map((m) =>
@@ -1020,11 +1100,9 @@ async function renderDiscovery() {
     + '</div></td></tr>').join('');
 
   el.innerHTML = '<h2>Prospect Discovery</h2>'
-    + '<p class="viewsub">Discovery runs on free sources first: public '
-    + 'Greenhouse and Lever job boards are read directly, matched '
-    + 'against your enabled signals, and every claimed signal keeps '
-    + 'its source link as evidence. Apollo adds people search when a '
-    + 'key is saved.</p>'
+    + '<p class="viewsub">What fired, where, and when. Every signal '
+    + 'below carries its source link as evidence. Companies, job '
+    + 'boards and imports live under Advanced at the bottom.</p>'
     + '<div class="panel"><h3>Run discovery</h3>'
     + '<div class="formrow"><label class="f"><span>ICP</span>'
     + '<select id="dIcp">'
@@ -1044,6 +1122,9 @@ async function renderDiscovery() {
         + 'API key is saved in Settings and Integrations. CSV import '
         + 'below works without it.</p>')
     + '<div id="dRunMsg"></div></div>'
+    + feedPanelHtml
+    + '<details class="advwrap"><summary>Advanced: company list, '
+    + 'boards and import</summary>'
     + '<div class="panel"><h3>Companies</h3>'
     + (companies.length
       ? '<table><thead><tr><th>Company</th><th>Domain</th><th>Careers</th>'
@@ -1081,7 +1162,7 @@ async function renderDiscovery() {
     + '<label class="f"><span>CSV file</span>'
     + '<input type="file" id="csvFile" accept=".csv,text/csv"></label></div>'
     + '<div class="btnrow"><button class="btn secondary" id="csvGo">Import file</button></div>'
-    + '<div id="csvMsg"></div></div>'
+    + '<div id="csvMsg"></div></div></details>'
     + '<div class="panel"><h3>Ranked prospects</h3>'
     + (prospects.length
       ? '<table><thead><tr><th>Score</th><th>Company</th><th>Contact</th>'
@@ -1208,6 +1289,20 @@ async function renderDiscovery() {
           : r.message);
         renderDiscovery();
       } catch (err) { toast(err.message); }
+    };
+  });
+  el.querySelectorAll('[data-people]').forEach((b) => {
+    b.onclick = async () => {
+      b.disabled = true;
+      try {
+        const r = await apiPost('discovery.php?action=people_for_company', {
+          company_id: parseInt(b.dataset.people, 10),
+          icp_id: $('#dIcp').value
+            ? parseInt($('#dIcp').value, 10) : undefined,
+        });
+        toast('People search: ' + r.added + ' added for this company.');
+        renderDiscovery();
+      } catch (err) { toast(err.message); b.disabled = false; }
     };
   });
   el.querySelectorAll('[data-enrich]').forEach((b) => {

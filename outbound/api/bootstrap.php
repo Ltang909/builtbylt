@@ -986,6 +986,18 @@ function obe_apollo_enrich_match(PDO $pdo, int $clientId, array $match,
 }
 
 /**
+ * Run a one-column aggregate query and return the raw value.
+ * (reports.php defines the same helper for its own requests; this
+ * copy serves the other engine endpoints.)
+ */
+function obe_scalar(PDO $pdo, string $sql, array $params) {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $val = $stmt->fetchColumn();
+    return $val === false ? null : $val;
+}
+
+/**
  * Try to find a company's public Greenhouse or Lever board from its
  * own URLs. Checks, in order: a board URL used directly as the
  * careers or website URL, the careers page itself (including its
