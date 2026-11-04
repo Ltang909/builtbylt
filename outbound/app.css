@@ -243,3 +243,22 @@ a { color: #aeb3ff; }
 .kv { display: grid; grid-template-columns: 190px 1fr; gap: 4px 14px; margin: 8px 0; }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; }
+
+/* Dashboard pipeline loop */
+.loopflow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 18px 0 10px; }
+.loopnode { position: relative; flex: 1 1 150px; max-width: 210px; text-align: left; background: #1a1f42; border: 1px solid #2e3568; border-radius: 10px; padding: 12px 12px 10px; color: var(--text); cursor: pointer; font: inherit; display: flex; flex-direction: column; gap: 3px; }
+.loopnode:hover { border-color: #5B62F9; }
+.loopnode .loopnum { font-size: 11px; color: var(--muted); letter-spacing: .08em; }
+.loopnode .looptitle { font-weight: 600; font-size: 14px; }
+.loopnode .loopcount { font-size: 19px; font-weight: 700; margin-top: 2px; }
+.loopnode .loopsub { font-size: 12px; color: var(--muted); }
+.loopnode.pending { border-color: #a86f12; }
+.loopnode.moving { animation: looppulse 2.2s ease-in-out infinite; }
+@keyframes looppulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(91, 98, 249, 0); } 50% { box-shadow: 0 0 0 3px rgba(91, 98, 249, .45); } }
+.loopbadge { position: absolute; top: 8px; right: 8px; font-size: 10px; padding: 2px 7px; border-radius: 999px; }
+.loopbadge.pending { background: #a86f12; color: #fff; }
+.loopbadge.moving { background: #2e3568; color: #aeb3ff; }
+.looparrow { align-self: center; color: var(--muted); font-size: 18px; }
+.looparrow.back { font-size: 15px; margin-right: 6px; }
+.loopback { color: var(--muted); font-size: 13px; margin: 2px 0 20px; }
+@media (prefers-reduced-motion: reduce) { .loopnode.moving { animation: none; } }

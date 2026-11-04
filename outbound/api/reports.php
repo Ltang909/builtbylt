@@ -345,8 +345,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $stmt->execute([$clientId]);
     $byIcp = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Pipeline loop stages for the dashboard: live totals plus a
+    // 24h recency flag per stage (is anything moving) and the counts
+    // that are waiting on the user (what is pending). Snapshot based,
+    // ignores the date range on purpose.
+    $dayAgo = date('Y-m-d H:i:s', time() - 86400);
+    $profileStmt = $pdo->prepare(
+        'SELECT status FROM obe_client_profiles WHERE client_id = ?');
+    $profileStmt->execute([$clientId]);
+    $profileRow = $profileStmt->fetch(PDO::FETCH_ASSOC);
+    $stages = [
+        'profile_status' => $profileRow !== false
+            ? (string)$profileRow['status'] : 'missing',
+        'icps' => (int)obe_scalar(
+            $pdo, 'SELECT COUNT(*) FROM obe_icp_profiles '
+            . 'WHERE client_id = ?', [$clientId]),
+        'signals_enabled' => (int)obe_scalar(
+            $pdo, 'SELECT COUNT(*) FROM obe_intent_signals '
+            . 'WHERE client_id = ? AND enabled = 1', [$clientId]),
+        'companies_new_24h' => (int)obe_scalar(
+            $pdo, 'SELECT COUNT(*) FROM obe_companies '
+            . 'WHERE client_id = ? AND created_at >= ?',
+            [$clientId, $dayAgo]),
+        'observations' => (int)obe_scalar(
+            $pdo, 'SELECT COUNT(*) FROM obe_signal_observations '
+            . 'WHERE client_id = ?', [$clientId]),
+        'observations_24h' => (int)obe_scalar(
+            $pdo, 'SELECT COUNT(*) FROM obe_signal_observations '
+            . 'WHERE client_id = ? AND created_at >= ?',
+            [$clientId, $dayAgo]),
+        'matches' => (int)obe_scalar(
+            $pdo, 'SELECT COUNT(*) FROM obe_prospect_matches '
+            . 'WHERE client_id = ?', [$clientId]),
+        'queued_enrich' => (int)obe_scalar(
+            $pdo, 'SELECT COUNT(*) FROM obe_prospect_matches '
+            . "WHERE client_id = ? AND status = 'queued_enrich'",
+            [$clientId]),
+        'matches_24h' => (int)obe_scalar(
+            $pdo, 'SELECT COUNT(*) FROM obe_prospect_matches '
+            . 'WHERE client_id = ? AND updated_at >= ?',
+            [$clientId, $dayAgo]),
+        'messages_pending' => (int)obe_scalar(
+            $pdo, 'SELECT COUNT(*) FROM obe_messages '
+            . "WHERE client_id = ? AND status = 'pending'",
+            [$clientId]),
+        'messages_24h' => (int)obe_scalar(
+            $pdo, 'SELECT COUNT(*) FROM obe_messages '
+            . 'WHERE client_id = ? AND updated_at >= ?',
+            [$clientId, $dayAgo]),
+        'last_run_at' => obe_scalar(
+            $pdo, 'SELECT MAX(created_at) FROM obe_job_runs '
+            . 'WHERE client_id = ?', [$clientId]),
+    ];
+
     json_out([
         'metrics' => $metrics,
+        'stages' => $stages,
         'usage' => $usage,
         'breakdowns' => [
             'by_signal' => $bySignal,

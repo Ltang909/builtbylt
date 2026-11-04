@@ -299,19 +299,123 @@ async function renderDashboard() {
   const client = activeClient();
   const report = await apiGet('reports.php');
   const m = report.metrics;
-  const counts = client && client.counts ? client.counts : {};
+  const s = report.stages || {};
+  const go = (view) => "location.hash='#/" + view + "/"
+    + state.activeClientId + "'";
+  const stageNode = (opts) => {
+    let cls = 'loopnode';
+    if (opts.moving) { cls += ' moving'; }
+    if (opts.pending) { cls += ' pending'; }
+    let badge = '';
+    if (opts.pending) {
+      badge = '<span class="loopbadge pending">'
+        + esc(opts.pending) + '</span>';
+    } else if (opts.moving) {
+      badge = '<span class="loopbadge moving">active</span>';
+    }
+    return '<button type="button" class="' + cls + '" '
+      + 'onclick="' + opts.go + '">'
+      + '<span class="loopnum">' + opts.num + '</span>'
+      + '<span class="looptitle">' + opts.title + '</span>'
+      + '<span class="loopcount">' + opts.count + '</span>'
+      + '<span class="loopsub">' + opts.sub + '</span>'
+      + badge + '</button>';
+  };
+  const arrow = '<span class="looparrow" aria-hidden="true">&#8594;</span>';
+  const nodes = [
+    stageNode({
+      num: '1', title: 'Client profile', view: 'icp',
+      go: go('icp'),
+      count: s.profile_status === 'confirmed' ? 'Confirmed'
+        : (s.profile_status === 'draft' ? 'Draft' : 'Not set'),
+      sub: 'Grounds every draft',
+      pending: s.profile_status === 'draft'
+        ? 'draft to confirm' : null,
+    }),
+    arrow,
+    stageNode({
+      num: '2', title: 'ICP and signals', view: 'icp',
+      go: go('icp'),
+      count: (s.icps || 0) + ' ICP / ' + (s.signals_enabled || 0)
+        + ' signals on',
+      sub: 'Who fits, what to watch',
+      pending: !(s.icps > 0) ? 'needs an ICP' : null,
+    }),
+    arrow,
+    stageNode({
+      num: '3', title: 'Companies', view: 'discovery',
+      go: go('discovery'),
+      count: m.companies_discovered,
+      sub: 'Apollo, import, manual',
+      moving: (s.companies_new_24h || 0) > 0,
+    }),
+    arrow,
+    stageNode({
+      num: '4', title: 'Signals seen', view: 'discovery',
+      go: go('discovery'),
+      count: s.observations || 0,
+      sub: 'Jobs and news evidence',
+      moving: (s.observations_24h || 0) > 0,
+    }),
+    arrow,
+    stageNode({
+      num: '5', title: 'Prospects scored', view: 'discovery',
+      go: go('discovery'),
+      count: s.matches || 0,
+      sub: m.contacts_qualified + ' at 75 or above',
+      moving: (s.matches_24h || 0) > 0,
+      pending: (s.queued_enrich || 0) > 0
+        ? (s.queued_enrich) + ' to enrich' : null,
+    }),
+    arrow,
+    stageNode({
+      num: '6', title: 'Enriched', view: 'discovery',
+      go: go('discovery'),
+      count: m.contacts_enriched,
+      sub: m.email_coverage_pct + '% email coverage',
+    }),
+    arrow,
+    stageNode({
+      num: '7', title: 'Outreach review', view: 'queue',
+      go: go('queue'),
+      count: (s.messages_pending || 0) + ' awaiting',
+      sub: m.messages_approved + ' approved / ' + m.emails_sent
+        + ' sent',
+      moving: (s.messages_24h || 0) > 0,
+      pending: (s.messages_pending || 0) > 0
+        ? (s.messages_pending) + ' to review' : null,
+    }),
+    arrow,
+    stageNode({
+      num: '8', title: 'Replies and meetings', view: 'reporting',
+      go: go('reporting'),
+      count: m.replies + ' replies',
+      sub: m.positive_replies + ' positive / ' + m.meetings
+        + ' meetings',
+    }),
+  ];
   const card = (num, lbl) => '<div class="card"><div class="num">'
     + esc(num) + '</div><div class="lbl">' + esc(lbl) + '</div></div>';
   el.innerHTML = '<h2>Dashboard</h2>'
-    + '<p class="viewsub">Workspace: <strong>' + esc(client ? client.name : '')
-    + '</strong>. Every number below comes from this workspace only.</p>'
+    + '<p class="viewsub">Workspace: <strong>'
+    + esc(client ? client.name : '')
+    + '</strong>. The loop below is live: click any stage to open it. '
+    + 'A pulsing outline means something moved there in the last 24 '
+    + 'hours. An amber badge means the stage is waiting on you.</p>'
+    + '<div class="loopflow">' + nodes.join('') + '</div>'
+    + '<div class="loopback"><span class="looparrow back" '
+    + 'aria-hidden="true">&#8626;</span> Outcomes feed the next pass: '
+    + 'reporting shows which signals and segments earn replies, and '
+    + 'approved changes land back on the ICP and signals in stage 2.'
+    + (s.last_run_at
+      ? ' Last discovery activity: ' + esc(s.last_run_at) + '.' : '')
+    + '</div>'
     + '<div class="cards">'
     + card(m.companies_discovered, 'Companies discovered')
     + card(m.contacts_discovered, 'Contacts discovered')
     + card(m.contacts_qualified, 'Contacts qualified (score 75+)')
     + card(m.contacts_enriched, 'Contacts enriched')
     + card(m.email_coverage_pct + '%', 'Email coverage')
-    + card(counts.queued_messages || 0, 'Messages awaiting review')
     + card(m.messages_approved, 'Messages approved')
     + card(m.emails_sent, 'Emails sent')
     + card(m.replies, 'Replies received')
@@ -319,16 +423,7 @@ async function renderDashboard() {
     + card(m.meetings, 'Meetings booked')
     + card(m.api_credits, 'API credits used')
     + card('$' + m.est_cost, 'Estimated provider cost')
-    + '</div>'
-    + '<div class="panel"><h3>How a prospect flows through</h3>'
-    + '<p class="muted">1. Set the client profile, ICP, and intent '
-    + 'signals. 2. Import companies or run Apollo search, detect job '
-    + 'boards, then run discovery: public Greenhouse and Lever boards '
-    + 'are checked for the signals you configured, and every match is '
-    + 'scored with the evidence attached. 3. Qualified prospects '
-    + '(75+) can be enriched within the monthly credit budget you set. '
-    + '4. Drafts are generated only from stored evidence and wait in '
-    + 'the Outreach Queue for your approval. Nothing sends itself.</p></div>';
+    + '</div>';
 }
 
 // --- Clients --------------------------------------------------------------------------
