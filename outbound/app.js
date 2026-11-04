@@ -935,7 +935,8 @@ async function renderDiscovery() {
     + '<select id="dIcp">'
     + icps.map((i) => '<option value="' + i.id + '">' + esc(i.name) + '</option>').join('')
     + '</select></label></div>'
-    + '<div class="btnrow"><button class="btn" id="dRun">Run discovery now</button>'
+    + '<div class="btnrow"><button class="btn" id="dPipeline">Process all companies</button>'
+    + '<button class="btn secondary" id="dRun">Run discovery now</button>'
     + '<button class="btn secondary" id="dCompanies"'
     + (apolloReady ? '' : ' disabled') + '>Find companies on Apollo</button>'
     + '<button class="btn secondary" id="dApollo"'
@@ -1002,6 +1003,35 @@ async function renderDiscovery() {
       : '<p class="empty">Watchlist is empty.</p>')
     + '</div>';
 
+  $('#dPipeline').onclick = async () => {
+    const msg = $('#dRunMsg');
+    try {
+      const resp = await confirmedCall('Process all companies',
+        (confirmed) => apiPost('discovery.php?action=pipeline', {
+          icp_id: $('#dIcp').value
+            ? parseInt($('#dIcp').value, 10) : undefined,
+          confirmed,
+        }));
+      if (resp === null) { return; }
+      msg.innerHTML = '<div class="ok">Pipeline complete: '
+        + esc(resp.companies_checked) + ' companies checked, '
+        + esc(resp.new_observations) + ' new signal observations, '
+        + esc(resp.people_added) + ' people found at signal '
+        + 'companies, ' + esc(resp.matches_scored) + ' matches '
+        + 'scored, ' + esc(resp.enriched) + ' prospects enriched'
+        + (resp.skipped_budget
+          ? ', ' + esc(resp.skipped_budget) + ' left unenriched by '
+            + 'the monthly budget cap' : '')
+        + '. Credits used this month: '
+        + esc(resp.credits_used_this_month) + '.'
+        + (resp.errors && resp.errors.length
+          ? '<br>Errors: ' + esc(resp.errors.join(' | ')) : '')
+        + '</div>';
+      setTimeout(() => renderDiscovery(), 1200);
+    } catch (err) {
+      msg.innerHTML = errBox(err);
+    }
+  };
   $('#dRun').onclick = async () => {
     const msg = $('#dRunMsg');
     msg.innerHTML = '<p class="muted">Running. Fetching boards and scoring...</p>';

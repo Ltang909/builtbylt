@@ -928,6 +928,64 @@ function obe_board_from_url(string $url): ?array {
 }
 
 /**
+ * Enrich one contact through Apollo People Match (about 1 credit).
+ * The API call itself is the charge event, so usage is logged here,
+ * exactly once per call, for both the single-prospect endpoint and
+ * the bulk pipeline. Returns ['ok' => bool, ...] and updates the
+ * contact row plus the match status on success.
+ */
+function obe_apollo_enrich_match(PDO $pdo, int $clientId, array $match,
+                                 string $key): array {
+    $payload = ['reveal_personal_emails' => false,
+                'reveal_phone_number' => false];
+    if (!empty($match['apollo_id'])) {
+        $payload['id'] = (string)$match['apollo_id'];
+    } else {
+        $payload['first_name'] = (string)($match['first_name'] ?? '');
+        $payload['last_name'] = (string)($match['last_name'] ?? '');
+        $payload['organization_name'] = (string)$match['company_name'];
+        if (!empty($match['company_domain'])
+            && strpos((string)$match['company_domain'], 'name-') !== 0) {
+            $payload['domain'] = (string)$match['company_domain'];
+        }
+    }
+    $res = obe_http('https://api.apollo.io/api/v1/people/match', [
+        'method' => 'POST',
+        'timeout' => 30,
+        'headers' => ['Content-Type: application/json',
+                      'Accept: application/json',
+                      'X-Api-Key: ' . $key],
+        'body' => json_encode($payload),
+    ]);
+    if ($res['error'] !== null || $res['status'] < 200
+        || $res['status'] >= 300) {
+        return ['ok' => false,
+                'error' => 'Apollo enrichment failed (HTTP '
+                    . $res['status'] . '). '
+                    . substr($res['body'], 0, 300)];
+    }
+    $decoded = json_decode($res['body'], true);
+    $person = isset($decoded['person']) && is_array($decoded['person'])
+        ? $decoded['person'] : [];
+    $email = isset($person['email']) && (string)$person['email'] !== ''
+        ? (string)$person['email'] : ($match['email'] ?? null);
+    $linkedin = isset($person['linkedin_url'])
+        && (string)$person['linkedin_url'] !== ''
+        ? (string)$person['linkedin_url']
+        : ($match['linkedin_url'] ?? null);
+    $upd = $pdo->prepare(
+        'UPDATE obe_contacts SET email = ?, linkedin_url = ? '
+        . 'WHERE id = ?');
+    $upd->execute([$email, $linkedin, (int)$match['ct_id']]);
+    $upd = $pdo->prepare(
+        'UPDATE obe_prospect_matches SET status = ? WHERE id = ?');
+    $upd->execute(['enriched', (int)$match['id']]);
+    obe_usage($pdo, $clientId, 'apollo', 1, 1.0, 0.0,
+              'People match enrichment for match ' . (int)$match['id']);
+    return ['ok' => true, 'email' => $email, 'linkedin_url' => $linkedin];
+}
+
+/**
  * Try to find a company's public Greenhouse or Lever board from its
  * own URLs. Checks, in order: a board URL used directly as the
  * careers or website URL, the careers page itself (including its

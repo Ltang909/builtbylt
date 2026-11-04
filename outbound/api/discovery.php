@@ -470,8 +470,7 @@ if ($action === 'apollo_search') {
             isset($person['title']) ? (string)$person['title'] : null,
             null,
             null,
-            isset($person['linkedin_url'])
-                ? (string)$person['linkedin_url'] : null,
+            null,
             $apolloId !== '' ? $apolloId : null,
         ]);
         $inserted++;
@@ -538,55 +537,214 @@ if ($action === 'enrich') {
                       . 'is used up for this month. Raise it in Settings '
                       . 'to continue.'], 409);
     }
-    $payload = ['reveal_personal_emails' => false,
-                'reveal_phone_number' => false];
-    if (!empty($match['apollo_id'])) {
-        $payload['id'] = (string)$match['apollo_id'];
-    } else {
-        $payload['first_name'] = (string)($match['first_name'] ?? '');
-        $payload['last_name'] = (string)($match['last_name'] ?? '');
-        $payload['organization_name'] = (string)$match['company_name'];
-        if (!empty($match['company_domain'])
-            && strpos((string)$match['company_domain'], 'name-') !== 0) {
-            $payload['domain'] = (string)$match['company_domain'];
-        }
-    }
-    $res = obe_http('https://api.apollo.io/api/v1/people/match', [
-        'method' => 'POST',
-        'timeout' => 30,
-        'headers' => ['Content-Type: application/json',
-                      'Accept: application/json',
-                      'X-Api-Key: ' . $key],
-        'body' => json_encode($payload),
-    ]);
-    if ($res['error'] !== null || $res['status'] < 200
-        || $res['status'] >= 300) {
+    $r = obe_apollo_enrich_match($pdo, $clientId, $match, $key);
+    if (!$r['ok']) {
         json_out(['error' => 'apollo_failed',
-                  'message' => 'Apollo enrichment failed (HTTP '
-                      . $res['status'] . '). '
-                      . substr($res['body'], 0, 300)], 502);
+                  'message' => $r['error']], 502);
     }
-    $decoded = json_decode($res['body'], true);
-    $person = isset($decoded['person']) && is_array($decoded['person'])
-        ? $decoded['person'] : [];
-    $email = isset($person['email']) && (string)$person['email'] !== ''
-        ? (string)$person['email'] : $match['email'];
-    $linkedin = isset($person['linkedin_url'])
-        && (string)$person['linkedin_url'] !== ''
-        ? (string)$person['linkedin_url'] : $match['linkedin_url'];
-    $upd = $pdo->prepare(
-        'UPDATE obe_contacts SET email = ?, linkedin_url = ? WHERE id = ?');
-    $upd->execute([$email, $linkedin, (int)$match['ct_id']]);
-    $upd = $pdo->prepare(
-        'UPDATE obe_prospect_matches SET status = ? WHERE id = ?');
-    $upd->execute(['enriched', $matchId]);
-    obe_usage($pdo, $clientId, 'apollo', 1, 1.0, 0.0,
-              'People match enrichment for match ' . $matchId);
     json_out(['enriched' => true,
-              'contact' => ['id' => (int)$match['ct_id'], 'email' => $email,
-                            'linkedin_url' => $linkedin],
+              'contact' => ['id' => (int)$match['ct_id'],
+                            'email' => $r['email'],
+                            'linkedin_url' => $r['linkedin_url']],
               'credits_used_this_month' => $used + 1,
               'credits_remaining' => $remaining - 1]);
+}
+
+if ($action === 'pipeline') {
+    $key = vault_key($pdo, 'apollo');
+    if ($key === null || $key === '') {
+        json_out(['error' => 'no_apollo_key',
+                  'message' => 'No Apollo API key is saved. Add one in '
+                      . 'Settings and Integrations to enable the '
+                      . 'pipeline.'], 400);
+    }
+    $icpId = isset($data['icp_id']) ? (int)$data['icp_id'] : 0;
+    $stmt = $pdo->prepare(
+        'SELECT * FROM obe_icp_profiles WHERE client_id = ? '
+        . ($icpId > 0 ? 'AND id = ? ' : '') . 'ORDER BY id LIMIT 1');
+    $stmt->execute($icpId > 0 ? [$clientId, $icpId] : [$clientId]);
+    $icp = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($icp === false) {
+        json_out(['error' => 'No ICP configured for this client yet.'], 400);
+    }
+    $settings = obe_client_settings($pdo, $clientId);
+    $used = obe_apollo_credits_used($pdo, $clientId);
+    $remaining = $settings['enrichment_budget_credits'] - $used;
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*) AS n FROM obe_companies WHERE client_id = ?');
+    $stmt->execute([$clientId]);
+    $companyCount = (int)$stmt->fetch(PDO::FETCH_ASSOC)['n'];
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(DISTINCT m.id) AS n FROM obe_prospect_matches m '
+        . 'JOIN obe_contacts ct ON ct.id = m.contact_id '
+        . "WHERE m.client_id = ? AND m.status IN ('queued_enrich') "
+        . 'AND ct.email IS NULL AND ct.linkedin_url IS NULL');
+    $stmt->execute([$clientId]);
+    $queuedNow = (int)$stmt->fetch(PDO::FETCH_ASSOC)['n'];
+    if (empty($data['confirmed'])) {
+        json_out([
+            'needs_confirm' => true,
+            'estimate' => [
+                'provider' => 'apollo',
+                'calls' => 'Signal scan and people search are credit free',
+                'credits' => min($queuedNow, max(0, (int)$remaining)),
+                'budget_credits' => $settings['enrichment_budget_credits'],
+                'credits_used_this_month' => $used,
+                'credits_remaining' => $remaining,
+                'note' => 'One run over ' . $companyCount . ' companies: '
+                    . 'boards and news are scanned for signals, people '
+                    . 'are searched at the companies showing signals, '
+                    . 'everyone is rescored, and prospects at 75+ are '
+                    . 'enriched. Enrichment is about 1 credit each and '
+                    . 'stops at your monthly budget. The credit figure '
+                    . 'is the currently queued count; prospects the '
+                    . 'run itself qualifies can add more, still '
+                    . 'inside the same budget cap.',
+            ],
+        ]);
+    }
+    $clientRow = ['id' => $clientId];
+    $sum1 = obe_run_discovery($pdo, $clientRow, $icp);
+
+    // People phase: companies with signal evidence but no contacts
+    // get an Apollo people search scoped to the company. Every
+    // returned person is verified against the company's domain
+    // before being stored, so a loose search can never attach
+    // strangers to the company.
+    $filters = obe_json_field($icp['filters_json'] ?? null);
+    $titles = isset($filters['titles']) ? $filters['titles'] : [];
+    $stmt = $pdo->prepare(
+        'SELECT co.* FROM obe_companies co WHERE co.client_id = ? '
+        . 'AND EXISTS (SELECT 1 FROM obe_signal_observations o '
+        . 'WHERE o.company_id = co.id) '
+        . 'AND NOT EXISTS (SELECT 1 FROM obe_contacts ct '
+        . 'WHERE ct.company_id = co.id) ORDER BY co.id LIMIT 8');
+    $stmt->execute([$clientId]);
+    $targets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $findByApollo = $pdo->prepare(
+        'SELECT id FROM obe_contacts WHERE client_id = ? '
+        . 'AND apollo_id = ? LIMIT 1');
+    $insContact = $pdo->prepare(
+        'INSERT INTO obe_contacts (client_id, company_id, first_name, '
+        . 'last_name, title, email, linkedin_url, apollo_id) '
+        . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    $peopleAdded = 0;
+    $peopleErrors = [];
+    foreach ($targets as $target) {
+        $domain = strtolower((string)$target['domain']);
+        $payload = ['per_page' => 10, 'page' => 1,
+                    'organization_domains' => [$domain]];
+        if (count($titles) > 0) {
+            $payload['person_titles'] = $titles;
+        }
+        $res = obe_http(
+            'https://api.apollo.io/api/v1/mixed_people/search', [
+                'method' => 'POST',
+                'timeout' => 30,
+                'headers' => ['Content-Type: application/json',
+                              'Accept: application/json',
+                              'X-Api-Key: ' . $key],
+                'body' => json_encode($payload),
+            ]);
+        obe_usage($pdo, $clientId, 'apollo', 1, 0.0, 0.0,
+                  'Pipeline people search (credit free)');
+        if ($res['error'] !== null || $res['status'] < 200
+            || $res['status'] >= 300) {
+            $peopleErrors[] = (string)$target['name']
+                . ': people search failed (HTTP ' . $res['status']
+                . ')';
+            continue;
+        }
+        $decoded = json_decode($res['body'], true);
+        $people = isset($decoded['people'])
+            && is_array($decoded['people']) ? $decoded['people'] : [];
+        foreach ($people as $person) {
+            $org = isset($person['organization'])
+                && is_array($person['organization'])
+                ? $person['organization'] : [];
+            $orgDomain = obe_domain_from(
+                (string)($org['primary_domain'] ?? ''));
+            if ($orgDomain === '') {
+                $orgDomain = obe_domain_from(
+                    (string)($org['website_url'] ?? ''));
+            }
+            if ($orgDomain !== $domain) {
+                continue;
+            }
+            $apolloId = isset($person['id'])
+                ? (string)$person['id'] : '';
+            if ($apolloId !== '') {
+                $findByApollo->execute([$clientId, $apolloId]);
+                if ($findByApollo->fetch(PDO::FETCH_ASSOC) !== false) {
+                    continue;
+                }
+            }
+            $insContact->execute([
+                $clientId, (int)$target['id'],
+                isset($person['first_name'])
+                    ? (string)$person['first_name'] : null,
+                isset($person['last_name'])
+                    ? (string)$person['last_name'] : null,
+                isset($person['title'])
+                    ? (string)$person['title'] : null,
+                null, null,
+                $apolloId !== '' ? $apolloId : null,
+            ]);
+            $peopleAdded++;
+        }
+    }
+
+    // Rescore so the people just found get matches, then enrich the
+    // qualified queue inside the remaining budget, best score first.
+    $sum2 = obe_run_discovery($pdo, $clientRow, $icp);
+    $stmt = $pdo->prepare(
+        'SELECT m.*, ct.id AS ct_id, ct.first_name, ct.last_name, '
+        . 'ct.email, ct.linkedin_url, ct.apollo_id, '
+        . 'co.name AS company_name, co.domain AS company_domain '
+        . 'FROM obe_prospect_matches m '
+        . 'JOIN obe_contacts ct ON ct.id = m.contact_id '
+        . 'JOIN obe_companies co ON co.id = m.company_id '
+        . "WHERE m.client_id = ? AND m.status = 'queued_enrich' "
+        . 'AND ct.email IS NULL AND ct.linkedin_url IS NULL '
+        . 'ORDER BY m.score DESC LIMIT 50');
+    $stmt->execute([$clientId]);
+    $candidates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $enriched = 0;
+    $skippedBudget = 0;
+    $enrichErrors = [];
+    foreach ($candidates as $cand) {
+        if ($remaining < 1) {
+            $skippedBudget++;
+            continue;
+        }
+        $r = obe_apollo_enrich_match($pdo, $clientId, $cand, $key);
+        if ($r['ok']) {
+            $enriched++;
+            $remaining -= 1;
+        } else {
+            $enrichErrors[] = (string)$cand['company_name']
+                . ': ' . $r['error'];
+        }
+    }
+    obe_log_run($pdo, $clientId, 'pipeline',
+                'Pipeline run: ' . $peopleAdded . ' people added, '
+                . $enriched . ' enriched, ' . $skippedBudget
+                . ' left unenriched by the budget cap.');
+    json_out([
+        'companies_checked' => $sum1['companies_checked'],
+        'boards_detected' => $sum1['boards_detected'],
+        'jobs_seen' => $sum1['jobs_seen'],
+        'news_checked' => $sum1['news_checked'],
+        'new_observations' => $sum2['new_observations'],
+        'matches_scored' => $sum2['matches_scored'],
+        'queued' => $sum2['queued'],
+        'people_added' => $peopleAdded,
+        'enriched' => $enriched,
+        'skipped_budget' => $skippedBudget,
+        'credits_used_this_month' => $used + $enriched,
+        'errors' => array_merge($sum1['errors'], $peopleErrors,
+                                $enrichErrors),
+    ]);
 }
 
 json_out(['error' => 'unknown action'], 400);
