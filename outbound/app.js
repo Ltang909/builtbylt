@@ -1002,7 +1002,36 @@ function breakdownText(b) {
 async function renderDiscovery() {
   const el = viewEl();
   if (!state.activeClientId) {
-    const ageText = (ts) => {
+    el.innerHTML = '<h2>Prospect Discovery</h2>' + noClientNotice();
+    return;
+  }
+  const settings = await apiGet('settings.php');
+  state.settings = settings;
+  const icps = await apiGet('icps.php');
+  const companies = await apiGet('discovery.php', { view: 'companies' });
+  const prospects = await apiGet('discovery.php', { view: 'prospects' });
+  const watchlist = await apiGet('discovery.php', { view: 'watchlist' });
+  const feed = await apiGet('discovery.php', { view: 'feed' });
+  const apolloReady = settings.integrations.apollo.present;
+
+  const prospectRows = (list, showEnrich) => list.map((m) =>
+    '<tr><td>' + scoreBadge(m.score) + '</td>'
+    + '<td><strong>' + esc(m.company_name) + '</strong><br>'
+    + '<span class="muted small">' + esc(m.company_domain || '') + '</span></td>'
+    + '<td>' + esc(m.contact_name || '(company level, no contact yet)')
+    + '<br><span class="muted small">' + esc(m.contact_title || '') + '</span></td>'
+    + '<td>' + statusBadge(m.status) + '<br><span class="muted small">'
+    + esc(breakdownText(m.breakdown)) + '</span></td>'
+    + '<td><div class="btnrow">'
+    + (m.contact_id
+      ? '<button class="btn small" data-draft="' + m.id + '">Draft message</button>'
+      : '')
+    + (showEnrich && m.contact_id
+      ? '<button class="btn small secondary" data-enrich="' + m.id + '">Enrich</button>'
+      : '')
+    + '</div></td></tr>').join('');
+
+  const ageText = (ts) => {
     const then = new Date(String(ts).replace(' ', 'T')).getTime();
     if (isNaN(then)) { return ''; }
     const days = Math.floor((Date.now() - then) / 86400000);
@@ -1084,35 +1113,6 @@ async function renderDiscovery() {
         + 'Process all companies, and anything that fires shows up '
         + 'here with its source link.</p>')
     + '</div>';
-
-  el.innerHTML = '<h2>Prospect Discovery</h2>' + noClientNotice();
-    return;
-  }
-  const settings = await apiGet('settings.php');
-  state.settings = settings;
-  const icps = await apiGet('icps.php');
-  const companies = await apiGet('discovery.php', { view: 'companies' });
-  const prospects = await apiGet('discovery.php', { view: 'prospects' });
-  const watchlist = await apiGet('discovery.php', { view: 'watchlist' });
-  const feed = await apiGet('discovery.php', { view: 'feed' });
-  const apolloReady = settings.integrations.apollo.present;
-
-  const prospectRows = (list, showEnrich) => list.map((m) =>
-    '<tr><td>' + scoreBadge(m.score) + '</td>'
-    + '<td><strong>' + esc(m.company_name) + '</strong><br>'
-    + '<span class="muted small">' + esc(m.company_domain || '') + '</span></td>'
-    + '<td>' + esc(m.contact_name || '(company level, no contact yet)')
-    + '<br><span class="muted small">' + esc(m.contact_title || '') + '</span></td>'
-    + '<td>' + statusBadge(m.status) + '<br><span class="muted small">'
-    + esc(breakdownText(m.breakdown)) + '</span></td>'
-    + '<td><div class="btnrow">'
-    + (m.contact_id
-      ? '<button class="btn small" data-draft="' + m.id + '">Draft message</button>'
-      : '')
-    + (showEnrich && m.contact_id
-      ? '<button class="btn small secondary" data-enrich="' + m.id + '">Enrich</button>'
-      : '')
-    + '</div></td></tr>').join('');
 
   el.innerHTML = '<h2>Prospect Discovery</h2>'
     + '<p class="viewsub">What fired, where, and when. Every signal '
