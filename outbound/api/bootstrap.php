@@ -1048,14 +1048,18 @@ function obe_apollo_enrich_match(PDO $pdo, int $clientId, array $match,
 
 /**
  * Run a one-column aggregate query and return the raw value.
- * (reports.php defines the same helper for its own requests; this
- * copy serves the other engine endpoints.)
+ * reports.php declares its own copy, so this one is guarded: an
+ * unguarded duplicate is a fatal "cannot declare function" error
+ * (it took the dashboard down on 2026-11-04). Guard any future
+ * shared helper the same way when an endpoint already defines it.
  */
-function obe_scalar(PDO $pdo, string $sql, array $params) {
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $val = $stmt->fetchColumn();
-    return $val === false ? null : $val;
+if (!function_exists('obe_scalar')) {
+    function obe_scalar(PDO $pdo, string $sql, array $params) {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $val = $stmt->fetchColumn();
+        return $val === false ? null : $val;
+    }
 }
 
 /**
