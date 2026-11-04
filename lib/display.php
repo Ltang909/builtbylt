@@ -213,3 +213,87 @@ function display_assets_for(PDO $pdo, array $creative): array {
     ];
     return $assets;
 }
+
+/**
+ * The landscape asset's JPEG bytes for a creative, deriving and
+ * caching the file on first use. Shared by api/display_image.php
+ * (serves it) and the Google Ads push (uploads it). Returns
+ * ['ok' => true, 'bytes' => string, 'path' => relative path] or
+ * ['ok' => false, 'error' => string, 'status' => int].
+ */
+function display_landscape_bytes(PDO $pdo, array $creative): array {
+    if (empty($creative['image_path'])) {
+        return ['ok' => false, 'status' => 404,
+                'error' => 'creative has no image'];
+    }
+    $cid = (int)$creative['id'];
+    $wsid = (int)$creative['workspace_id'];
+    $rel = 'uploads/ws' . $wsid . '/' . $cid . '_landscape.jpg';
+    $abs = PANEL_ROOT . '/' . $rel;
+    if (is_file($abs)) {
+        $bytes = @file_get_contents($abs);
+        if ($bytes !== false) {
+            return ['ok' => true, 'bytes' => $bytes, 'path' => $rel];
+        }
+    }
+    if (!function_exists('imagecreatefromstring')) {
+        return ['ok' => false, 'status' => 501,
+                'error' => 'Landscape derivation needs the GD '
+                    . 'extension, which this PHP does not have. '
+                    . 'The square asset still exports; Google Ads '
+                    . 'can crop it to 1.91:1 in the upload UI.'];
+    }
+    $srcAbs = realpath(PANEL_ROOT . '/'
+                       . (string)$creative['image_path']);
+    $uploadsRoot = realpath(PANEL_ROOT . '/uploads');
+    if ($srcAbs === false || $uploadsRoot === false
+        || strpos($srcAbs, $uploadsRoot) !== 0
+        || !is_file($srcAbs)) {
+        return ['ok' => false, 'status' => 404,
+                'error' => 'source image not found'];
+    }
+    $raw = @file_get_contents($srcAbs);
+    $src = $raw === false ? false : @imagecreatefromstring($raw);
+    if ($src === false) {
+        return ['ok' => false, 'status' => 500,
+                'error' => 'source image could not be read'];
+    }
+    $sw = imagesx($src);
+    $sh = imagesy($src);
+    $target = RDA_LANDSCAPE_W / RDA_LANDSCAPE_H;
+    if ($sw / $sh > $target) {
+        $cropW = (int)round($sh * $target);
+        $cropH = $sh;
+        $cropX = (int)(($sw - $cropW) / 2);
+        $cropY = 0;
+    } else {
+        $cropW = $sw;
+        $cropH = (int)round($sw / $target);
+        $cropX = 0;
+        $cropY = (int)(($sh - $cropH) / 2);
+    }
+    $dst = imagecreatetruecolor(RDA_LANDSCAPE_W, RDA_LANDSCAPE_H);
+    imagecopyresampled($dst, $src, 0, 0, $cropX, $cropY,
+                       RDA_LANDSCAPE_W, RDA_LANDSCAPE_H,
+                       $cropW, $cropH);
+    $wsDir = PANEL_ROOT . '/uploads/ws' . $wsid;
+    if (!is_dir($wsDir)) {
+        mkdir($wsDir, 0775, true);
+    }
+    $saved = @imagejpeg($dst, $abs, 90);
+    imagedestroy($src);
+    imagedestroy($dst);
+    if (!$saved) {
+        return ['ok' => false, 'status' => 500,
+                'error' => 'derived image could not be saved under '
+                    . 'uploads/'];
+    }
+    display_record_asset($pdo, $cid, 'landscape', $rel,
+                         RDA_LANDSCAPE_W, RDA_LANDSCAPE_H);
+    $bytes = @file_get_contents($abs);
+    if ($bytes === false) {
+        return ['ok' => false, 'status' => 500,
+                'error' => 'derived image saved but not readable'];
+    }
+    return ['ok' => true, 'bytes' => $bytes, 'path' => $rel];
+}

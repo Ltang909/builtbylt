@@ -127,7 +127,9 @@ const PROVIDER_ENV = [
     'anthropic' => 'ANTHROPIC_API_KEY',
     'notion' => 'NOTION_API_KEY',
 ];
-const PANEL_PROVIDERS = ['typesafe', 'openai', 'anthropic', 'notion', 'posthog'];
+const PANEL_PROVIDERS = ['typesafe', 'openai', 'anthropic', 'notion',
+    'posthog', 'google_ads_dev_token', 'google_oauth_client_id',
+    'google_oauth_client_secret'];
 
 /**
  * Key for a provider: vault first, environment second. Never logged,
@@ -274,6 +276,22 @@ function creative_with_verdicts(PDO $pdo, array $creative): array {
     } catch (Throwable $e) {
         $creative['display_spec'] = null;
         $creative['display_assets'] = [];
+    }
+    // Update 11.1: Google Ads pushes for this creative, when the
+    // pushes table exists. Additive only, same posture as above.
+    $creative['google_ads_pushes'] = [];
+    try {
+        if (panel_table_exists($pdo, 'creative_google_ads_pushes')) {
+            $ps = $pdo->prepare(
+                'SELECT id, customer_id, campaign_resource, '
+                . 'ad_resource, status, final_url, pushed_at '
+                . 'FROM creative_google_ads_pushes '
+                . 'WHERE creative_id = ? ORDER BY id DESC');
+            $ps->execute([(int)$creative['id']]);
+            $creative['google_ads_pushes'] = $ps->fetchAll(PDO::FETCH_ASSOC);
+        }
+    } catch (Throwable $e) {
+        $creative['google_ads_pushes'] = [];
     }
     return $creative;
 }

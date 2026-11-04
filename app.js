@@ -18,7 +18,7 @@ const SCOPED = ["experiments.php", "creatives.php", "performance.php", "learning
 let WS = null, workspaces = [], experiments = [], creatives = [],
     perfBoard = [], learnings = [], tokens = null, rules = [],
     guideline = null, keys = [], routing = [], ledger = [],
-    batchRows = [], panelSettings = null;
+    batchRows = [], panelSettings = null, gads = null;
 
 function api(path, opts){
   let url = API + path;
@@ -69,6 +69,7 @@ async function loadAll(){
   // settings_ready:false and defaults — the Settings cards show the
   // migration hint instead of breaking.
   panelSettings = await api("settings.php").catch(() => null);
+  gads = await api("google_ads.php?action=status&workspace_id=" + WS).catch(() => null);
   const st = await fetch(API + "status.php").then(r => r.json());
   $("#verifier-badge").textContent = "verifier: " + st.verifier;
   applyWorkspaceTheme();
@@ -572,6 +573,12 @@ function verdictChips(c){
 }
 function displayLine(c){
   if (!c.display_spec) return "";
+  const pushes = c.google_ads_pushes || [];
+  const pushTxt = pushes.length
+    ? ` · <span class="chip pass">in Google Ads: ${esc(pushes[0].campaign_resource || "")} (${esc(pushes[0].status || "")})</span>`
+    : (gads && gads.connection && gads.connection.customer_id
+      ? ` · <button class="btn secondary" style="padding:2px 8px" onclick="gadsPush(${c.id})">Push to Google Ads (paused)</button>`
+      : "");
   const fails = (c.display_spec.checks || []).filter(x => !x.ok && !x.empty);
   const assets = c.display_assets || [];
   const assetTxt = assets.length
@@ -582,7 +589,7 @@ function displayLine(c){
       ? `<span class="chip fail">${fails.length} field(s) over Google limits</span>`
       : `<span class="chip src">copy within Google limits</span>`)
     + ` · ${assetTxt}`
-    + ` · <a href="api/display_export.php?creative_id=${c.id}">export packet</a></div>`;
+    + ` · <a href="api/display_export.php?creative_id=${c.id}">export packet</a>${pushTxt}</div>`;
 }
 function lintChips(c){
   if (!c.lint_flags || !c.lint_flags.length) return "";
@@ -1480,7 +1487,7 @@ function renderSettings(){
 
   <div class="card"><h3>API keys (vault)</h3>
     <div class="formnote">Keys are stored server-side only, write-only: they are never rendered back — only a masked tail. A key set in the environment also counts as configured (source shown). Note: vault values live in this panel's MySQL database on your hosting; every vault endpoint is session-gated.</div>
-    ${keys.map(k => `<div class="rowline"><strong style="width:90px">${k.provider}</strong>
+    ${keys.map(k => `<div class="rowline"><strong style="width:150px">${esc(({google_ads_dev_token: "Google Ads dev token", google_oauth_client_id: "Google OAuth client ID", google_oauth_client_secret: "Google OAuth client secret"})[k.provider] || k.provider)}</strong>
       <span class="chip ${k.configured ? "pass" : "src"}">${k.configured ? "set" + (k.masked ? " " + esc(k.masked) : "") + (k.source ? " · " + esc(k.source) : "") : "not set"}</span>
       <input type="password" id="key-${k.provider}" placeholder="Paste ${k.provider} API key" style="flex:1;min-width:220px">
       <button class="btn" onclick="saveKey('${k.provider}')">Set / replace</button>
@@ -1534,6 +1541,10 @@ function renderSettings(){
     <div class="rowline"><input type="text" readonly value="${esc(cronUrl())}" style="flex:1;min-width:320px;font-size:12px">
     <button class="btn secondary" onclick="regenCronToken()">Regenerate token</button>
     <span class="msg" id="cron-msg"></span></div>
+  </div>
+
+  <div class="card"><h3>Google Ads — this workspace</h3>
+    ${gadsCard()}
   </div>
 
   <div class="card" style="border-color:var(--fail)"><h3>Danger zone — clear all data (this workspace)</h3>
@@ -1693,6 +1704,84 @@ async function saveRouting(task){
   const provider = document.getElementById("route-p-" + task).value.trim();
   const model = document.getElementById("route-m-" + task).value.trim();
   await fetch(API + "routing.php", jsonOpts({task, provider, model}));
+  loadAll();
+}
+
+// ---------- Google Ads (Update 11.1) ----------
+function gadsCard(){
+  if (!gads) return '<div class="empty">Google Ads status unavailable right now.</div>';
+  const cfg = gads.configured || {};
+  const conn = gads.connection;
+  const missing = [];
+  if (!cfg.dev_token) missing.push("developer token");
+  if (!cfg.client_id) missing.push("OAuth client ID");
+  if (!cfg.client_secret) missing.push("OAuth client secret");
+  let html = "";
+  if (missing.length){
+    html += `<div class="formnote">Not ready: the ${esc(missing.join(", "))} ${missing.length === 1 ? "is" : "are"} not in the API keys vault above yet. Those come from your Google Ads manager account (API Center) and your Google Cloud OAuth client. When you create the OAuth client, register this exact redirect URI:</div>
+    <div class="rowline"><input type="text" readonly value="${esc(gads.redirect_uri || "")}" style="flex:1;min-width:320px;font-size:12px"></div>`;
+  }
+  if (!conn){
+    html += `<div class="rowline"><button class="btn" ${cfg.ready ? "" : "disabled"} onclick="gadsConnect()">Connect this workspace's Google Ads account</button>
+    <span class="msg">Sign-in opens in a new tab; the account you sign in with is the one this workspace pushes from.</span></div>`;
+    return html;
+  }
+  html += `<div class="formnote">Connected ${esc(conn.connected_at || "")}. Pushes create PAUSED campaigns — nothing can spend until someone enables it inside Google Ads.</div>
+    <div class="rowline"><button class="btn secondary" onclick="gadsLoadCustomers()">Load my Google Ads accounts</button>
+    <select id="gads-customer" style="min-width:280px"><option value="${esc(conn.customer_id || "")}">${esc(conn.customer_id ? "Current: " + conn.customer_id : "Pick an account after loading")}</option></select></div>
+    <div class="rowline"><label style="font-size:12px;color:var(--muted)">Manager (login) customer ID, if the account sits under a manager<input type="text" id="gads-login" value="${esc(conn.login_customer_id || "")}" placeholder="1234567890" style="min-width:180px"></label>
+    <label style="font-size:12px;color:var(--muted);flex:1">Default landing page URL<input type="text" id="gads-final-url" value="${esc(conn.default_final_url || "")}" placeholder="https://example.com/landing" style="width:100%"></label></div>
+    <div class="rowline"><button class="btn" onclick="gadsSaveCustomer()">Save account choice</button>
+    <button class="btn danger" onclick="gadsDisconnect()">Disconnect</button>
+    <span class="msg" id="gads-msg"></span></div>`;
+  return html;
+}
+async function gadsConnect(){
+  const out = await api("google_ads.php?action=connect_url&workspace_id=" + WS);
+  if (out.error){ alert(out.error); return; }
+  window.open(out.url, "_blank");
+}
+async function gadsLoadCustomers(){
+  const out = await api("google_ads.php?action=customers&workspace_id=" + WS);
+  const sel = document.getElementById("gads-customer");
+  const msg = document.getElementById("gads-msg");
+  if (out.error){ if (msg) msg.textContent = out.error; return; }
+  const cur = (gads.connection || {}).customer_id || "";
+  sel.innerHTML = (out.customers || []).map(c =>
+    `<option value="${esc(c.id)}" ${String(c.id) === String(cur) ? "selected" : ""}>${esc(c.id)}${c.name ? " — " + esc(c.name) : ""}${c.test ? " (test account)" : ""}${c.manager ? " (manager)" : ""}</option>`).join("")
+    || '<option value="">No accounts found for this Google user</option>';
+  if (msg) msg.textContent = "Accounts loaded — pick one and Save.";
+}
+async function gadsSaveCustomer(){
+  const out = await api("google_ads.php", jsonOpts({action: "save_customer",
+    workspace_id: WS,
+    customer_id: (document.getElementById("gads-customer") || {}).value || "",
+    login_customer_id: (document.getElementById("gads-login") || {}).value || "",
+    default_final_url: (document.getElementById("gads-final-url") || {}).value || ""}));
+  if (out.error){ alert(out.error); return; }
+  gads.connection = out.connection;
+  const msg = document.getElementById("gads-msg");
+  if (msg) msg.textContent = "Saved.";
+  renderSettings();
+}
+async function gadsDisconnect(){
+  if (!confirm("Disconnect this workspace from Google Ads? Already-pushed campaigns stay as they are in Google Ads.")) return;
+  await api("google_ads.php", jsonOpts({action: "disconnect", workspace_id: WS}));
+  loadAll();
+}
+async function gadsPush(creativeId){
+  const prev = await api("google_ads.php", jsonOpts({action: "preview", creative_id: creativeId}));
+  if (!prev.ready){
+    alert("Not ready to push:\n- " + (prev.problems || []).join("\n- "));
+    return;
+  }
+  const url = prompt("Landing page URL for this ad (final URL):", prev.default_final_url || "https://");
+  if (!url) return;
+  const s = prev.spec || {};
+  if (!confirm(`Create a PAUSED Responsive Display campaign in Google Ads account ${prev.customer_id}?\n\nHeadline: ${s.headlines ? s.headlines[0] || "" : ""}\nBusiness: ${s.business_name || ""}\nFinal URL: ${url}\n\nEverything is created PAUSED — zero spend until you enable it in Google Ads.`)) return;
+  const out = await api("google_ads.php", jsonOpts({action: "push", creative_id: creativeId, final_url: url, confirm: true}));
+  if (out.error){ alert("Push failed: " + out.error); return; }
+  alert("Pushed. Campaign: " + out.push.campaign_resource + " (PAUSED).");
   loadAll();
 }
 
