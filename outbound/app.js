@@ -1071,8 +1071,16 @@ async function renderDiscovery() {
           }));
         if (resp === null) { return; }
         toast('Apollo companies: ' + resp.found + ' found, '
-          + resp.inserted + ' added, ' + resp.skipped + ' skipped. '
-          + 'Run discovery to check them for signals.');
+          + resp.inserted + ' added, ' + resp.skipped + ' skipped.'
+          + (resp.total_pages
+            ? ' Page ' + resp.page + ' of ' + resp.total_pages
+              + ' (' + resp.total_entries + ' companies match).'
+              + (resp.exhausted
+                ? ' That was the last page; the next search starts '
+                  + 'over from page 1.'
+                : ' Click again for the next page.')
+            : '')
+          + ' Run discovery to check them for signals.');
         renderDiscovery();
       } catch (err) {
         $('#dRunMsg').innerHTML = errBox(err);

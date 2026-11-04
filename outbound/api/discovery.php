@@ -267,19 +267,36 @@ if ($action === 'apollo_companies') {
         json_out(['error' => 'No ICP configured for this client yet.'], 400);
     }
     $filters = obe_json_field($icp['filters_json'] ?? null);
-    $payload = ['per_page' => 25, 'page' => 1];
+    $geos = isset($filters['geos']) ? $filters['geos'] : [];
+    $industries = isset($filters['industries'])
+        ? $filters['industries'] : [];
+    // Pagination cursor: every search used to re-read page 1, so
+    // repeat clicks returned the same companies and dedupe skipped
+    // them all. The cursor advances one page per search, resets
+    // when the ICP filters change, and wraps to page 1 once the
+    // result pool is exhausted.
+    $filterHash = md5(json_encode([
+        $icpId, $filters['size_min'] ?? null,
+        $filters['size_max'] ?? null, $geos, $industries]));
+    $cursorRaw = obe_setting($pdo, $clientId,
+                             'apollo_companies_cursor', null);
+    $cursor = $cursorRaw !== null
+        ? json_decode((string)$cursorRaw, true) : null;
+    $page = 1;
+    if (is_array($cursor) && ($cursor['hash'] ?? '') === $filterHash
+        && !empty($cursor['page'])) {
+        $page = max(1, (int)$cursor['page']);
+    }
+    $payload = ['per_page' => 25, 'page' => $page];
     if (!empty($filters['size_min']) || !empty($filters['size_max'])) {
         $lo = !empty($filters['size_min']) ? (int)$filters['size_min'] : 1;
         $hi = !empty($filters['size_max']) ? (int)$filters['size_max']
                                            : 100000;
         $payload['organization_num_employees_ranges'] = [$lo . ',' . $hi];
     }
-    $geos = isset($filters['geos']) ? $filters['geos'] : [];
     if (count($geos) > 0) {
         $payload['organization_locations'] = $geos;
     }
-    $industries = isset($filters['industries'])
-        ? $filters['industries'] : [];
     if (count($industries) > 0) {
         $payload['q_organization_keyword_tags'] = $industries;
     }
@@ -355,11 +372,35 @@ if ($action === 'apollo_companies') {
             $skipped++;
         }
     }
+    $totalPages = null;
+    $totalEntries = null;
+    if (isset($decoded['pagination'])
+        && is_array($decoded['pagination'])) {
+        $totalPages = isset($decoded['pagination']['total_pages'])
+            ? (int)$decoded['pagination']['total_pages'] : null;
+        $totalEntries = isset($decoded['pagination']['total_entries'])
+            ? (int)$decoded['pagination']['total_entries'] : null;
+    }
+    $exhausted = false;
+    if ($totalPages !== null) {
+        $exhausted = $page >= $totalPages;
+        $nextPage = $exhausted ? 1 : $page + 1;
+    } else {
+        $exhausted = count($orgs) < 25;
+        $nextPage = $exhausted ? 1 : $page + 1;
+    }
+    obe_set_setting($pdo, $clientId, 'apollo_companies_cursor',
+                    json_encode(['hash' => $filterHash,
+                                 'page' => $nextPage]));
     obe_log_run($pdo, $clientId, 'apollo',
-                'Apollo company search: ' . count($orgs) . ' found, '
-                . $inserted . ' added, ' . $skipped . ' skipped.');
+                'Apollo company search (page ' . $page . '): '
+                . count($orgs) . ' found, ' . $inserted . ' added, '
+                . $skipped . ' skipped.');
     json_out(['found' => count($orgs), 'inserted' => $inserted,
-              'skipped' => $skipped]);
+              'skipped' => $skipped, 'page' => $page,
+              'total_pages' => $totalPages,
+              'total_entries' => $totalEntries,
+              'exhausted' => $exhausted]);
 }
 
 if ($action === 'apollo_search') {
