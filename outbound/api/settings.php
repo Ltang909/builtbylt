@@ -59,6 +59,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'email' => $gmailConnected
                     && !empty($gmailToken['email'])
                     ? (string)$gmailToken['email'] : null,
+                'client_id_hint' => (function () use ($pdo,
+                        $clientId) {
+                    $cid = trim((string)obe_setting(
+                        $pdo, $clientId, 'gmail_client_id', ''));
+                    if ($cid === '') {
+                        return null;
+                    }
+                    $core = str_replace(
+                        '.apps.googleusercontent.com', '', $cid);
+                    return substr($core, 0, 12) . '...'
+                        . substr($core, -6);
+                })(),
                 'signature_cached' => obe_setting(
                     $pdo, $clientId, 'gmail_signature_html', null)
                     !== null,

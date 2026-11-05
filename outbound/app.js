@@ -1998,6 +1998,9 @@ async function renderSettings() {
     + '<p>Status: ' + (ig.gmail.connected
       ? present(true, 'connected' + (ig.gmail.email ? ' as ' + ig.gmail.email : ''))
       : present(false, 'not connected')) + '</p>'
+    + '<p>Saved client: ' + (ig.gmail.client_id_hint
+      ? esc(ig.gmail.client_id_hint)
+      : 'none saved') + '</p>'
     + '<p>Signature: ' + (ig.gmail.signature_cached
       ? present(true, 'synced from Gmail' + (ig.gmail.signature_fetched_at ? ' · last fetched ' + new Date(ig.gmail.signature_fetched_at * 1000).toLocaleString() : ''))
       : present(false, 'not synced yet — it is fetched the first time a draft or test send runs')) + '</p>'
