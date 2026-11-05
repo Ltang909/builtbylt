@@ -1487,7 +1487,7 @@ function renderSettings(){
 
   <div class="card"><h3>API keys (vault)</h3>
     <div class="formnote">Keys are stored server-side only, write-only: they are never rendered back — only a masked tail. A key set in the environment also counts as configured (source shown). Note: vault values live in this panel's MySQL database on your hosting; every vault endpoint is session-gated.</div>
-    ${keys.map(k => `<div class="rowline"><strong style="width:150px">${esc(({google_ads_dev_token: "Google Ads dev token", google_oauth_client_id: "Google OAuth client ID", google_oauth_client_secret: "Google OAuth client secret"})[k.provider] || k.provider)}</strong>
+    ${keys.map(k => `<div class="rowline"><strong style="width:150px">${esc(({google_ads_dev_token: "Google Ads dev token (legacy \u2014 not needed)", google_oauth_client_id: "Google OAuth client ID", google_oauth_client_secret: "Google OAuth client secret"})[k.provider] || k.provider)}</strong>
       <span class="chip ${k.configured ? "pass" : "src"}">${k.configured ? "set" + (k.masked ? " " + esc(k.masked) : "") + (k.source ? " · " + esc(k.source) : "") : "not set"}</span>
       <input type="password" id="key-${k.provider}" placeholder="Paste ${k.provider} API key" style="flex:1;min-width:220px">
       <button class="btn" onclick="saveKey('${k.provider}')">Set / replace</button>
@@ -1713,12 +1713,11 @@ function gadsCard(){
   const cfg = gads.configured || {};
   const conn = gads.connection;
   const missing = [];
-  if (!cfg.dev_token) missing.push("developer token");
   if (!cfg.client_id) missing.push("OAuth client ID");
   if (!cfg.client_secret) missing.push("OAuth client secret");
   let html = "";
   if (missing.length){
-    html += `<div class="formnote">Not ready: the ${esc(missing.join(", "))} ${missing.length === 1 ? "is" : "are"} not in the API keys vault above yet. Those come from your Google Ads manager account (API Center) and your Google Cloud OAuth client. When you create the OAuth client, register this exact redirect URI:</div>
+    html += `<div class="formnote">Not ready: the ${esc(missing.join(", "))} ${missing.length === 1 ? "is" : "are"} not in the API keys vault above yet. Those come from your Google Cloud OAuth client (Google Ads API access lives on that same Cloud project; there is no developer token to add). When you create the OAuth client, register this exact redirect URI:</div>
     <div class="rowline"><input type="text" readonly value="${esc(gads.redirect_uri || "")}" style="flex:1;min-width:320px;font-size:12px"></div>`;
   }
   if (!conn){

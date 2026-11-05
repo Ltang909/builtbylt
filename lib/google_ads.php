@@ -4,9 +4,12 @@
  * Responsive Display Ads.
  *
  * Credential model, matching the panel's BYOK posture:
- *   - The DEVELOPER TOKEN is the operator's own, one per panel,
- *     from their Google Ads manager account's API Center. Stored
- *     in the vault as provider 'google_ads_dev_token'.
+ *   - API ACCESS lives on the operator's Google Cloud project:
+ *     Google retired the developer token on 2026-09-09; access
+ *     levels attach to the project behind the OAuth client and
+ *     the old token header is ignored by the API. A legacy token
+ *     may still sit in the vault as 'google_ads_dev_token'; it is
+ *     sent only when present and is never required.
  *   - The OAUTH CLIENT (id + secret) is the operator's Google
  *     Cloud project, vault providers 'google_oauth_client_id' and
  *     'google_oauth_client_secret'.
@@ -28,9 +31,11 @@
  *
  * API version is one constant: Google retires versions roughly
  * yearly; bump GADS_API_VERSION when the API starts refusing it.
+ * v21 stopped working in fall 2026; v26 is current as of
+ * November 2026.
  */
 
-const GADS_API_VERSION = 'v21';
+const GADS_API_VERSION = 'v26';
 const GADS_API_BASE = 'https://googleads.googleapis.com';
 const GADS_SCOPE = 'https://www.googleapis.com/auth/adwords';
 
@@ -78,8 +83,9 @@ function gads_config(PDO $pdo): array {
         'dev_token_set' => $dev !== null && $dev !== '',
         'client_id_set' => $cid !== null && $cid !== '',
         'client_secret_set' => $secret !== null && $secret !== '',
-        'ready' => $dev !== null && $dev !== ''
-            && $cid !== null && $cid !== ''
+        // Since 2026-09-09 the OAuth pair is all that is
+        // required; the developer token is legacy, ignored.
+        'ready' => $cid !== null && $cid !== ''
             && $secret !== null && $secret !== '',
     ];
 }
@@ -257,15 +263,19 @@ function gads_api(PDO $pdo, array $conn, string $path,
     $cfg = gads_config($pdo);
     if (!$cfg['ready']) {
         throw new RuntimeException('Google credentials are '
-            . 'incomplete in the vault (developer token, OAuth '
-            . 'client id and secret are all required).');
+            . 'incomplete in the vault (OAuth client id and '
+            . 'secret are required).');
     }
     $token = gads_access_token($pdo, (string)$conn['refresh_token']);
     $headers = [
         'Content-Type: application/json',
         'Authorization: Bearer ' . $token,
-        'developer-token: ' . $cfg['dev_token'],
     ];
+    if ($cfg['dev_token_set']) {
+        // Legacy header: ignored by the API since 2026-09-09,
+        // sent only when an old token still sits in the vault.
+        $headers[] = 'developer-token: ' . $cfg['dev_token'];
+    }
     if (!empty($conn['login_customer_id'])) {
         $headers[] = 'login-customer-id: '
             . preg_replace('/\D/', '', (string)$conn['login_customer_id']);

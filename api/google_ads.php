@@ -61,8 +61,8 @@ if ($method === 'GET') {
         $url = gads_connect_url($pdo, $wsid);
         if ($url === null) {
             json_out(['error' => 'Google credentials are incomplete '
-                . 'in the vault: developer token, OAuth client id '
-                . 'and OAuth client secret must all be set first.'], 400);
+                . 'in the vault: OAuth client id and OAuth client '
+                . 'secret must both be set first.'], 400);
         }
         json_out(['url' => $url]);
     }
@@ -136,7 +136,7 @@ if ($action === 'preview' || $action === 'push') {
     $cfg = gads_config($pdo);
     if (!$cfg['ready']) {
         $problems[] = 'Google credentials are incomplete in the '
-            . 'vault (developer token, OAuth client id, secret).';
+            . 'vault (OAuth client id and secret).';
     }
     if ($conn === null) {
         $problems[] = 'This workspace is not connected to Google '
