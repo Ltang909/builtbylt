@@ -531,10 +531,22 @@ function obe_gmail_token(PDO $pdo, int $clientId): array {
     $tokenData = json_decode($tokenRes['body'], true);
     if ($tokenRes['error'] !== null || $tokenRes['status'] !== 200
         || empty($tokenData['access_token'])) {
+        // Surface Google's own error code (invalid_grant,
+        // invalid_client, ...): it names the cause, and it is a
+        // diagnostic string, never a credential.
+        $detail = '';
+        if (is_array($tokenData) && !empty($tokenData['error'])) {
+            $detail = ' Google said: ' . (string)$tokenData['error'];
+            if (!empty($tokenData['error_description'])) {
+                $detail .= ' — ' . substr(
+                    (string)$tokenData['error_description'], 0, 200);
+            }
+        }
         return ['ok' => false, 'error' => 'gmail_token_failed',
                 'status' => 502,
                 'message' => 'Refreshing the Gmail access token '
-                    . 'failed (HTTP ' . $tokenRes['status'] . ').'];
+                    . 'failed (HTTP ' . $tokenRes['status'] . ').'
+                    . $detail];
     }
     return ['ok' => true,
             'access_token' => (string)$tokenData['access_token'],
