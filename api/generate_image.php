@@ -39,7 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $data = read_json_body();
-if (empty($data['confirm'])) {
+$action = (string)($data['action'] ?? 'generate');
+if ($action !== 'estimate' && empty($data['confirm'])) {
     json_out(['error' => 'confirmation required',
               'hint' => 'Images are generated only as part of a '
                       . 'confirmed generation run. Nothing has run.'], 400);
@@ -77,13 +78,28 @@ $prompt = trim((string)($creative['image_prompt'] ?? '')) !== ''
     ? (string)$creative['image_prompt']
     : (string)($creative['art_direction'] ?? '');
 if (trim($prompt) === '') {
+    if ($action !== 'estimate') {
+        log_ledger($pdo, $wsid, 'art_gen', 'openai',
+            (string)(get_route($pdo, 'art_gen')['model']
+                     ?: 'gpt-image-2.5-sunburst'), 'error',
+            'creative #' . $cid . ': no image prompt or art '
+            . 'direction — nothing generated');
+    }
     json_out(['ok' => false, 'creative_id' => $cid,
               'error' => 'creative has no image prompt or art direction']);
+}
+if ($action === 'estimate') {
+    json_out(['ok' => true, 'creative_id' => $cid,
+              'cost_usd' => image_unit_price($quality, '1024x1024'),
+              'size' => '1024x1024', 'quality' => $quality]);
 }
 $artRoute = get_route($pdo, 'art_gen');
 $artModel = (string)($artRoute['model'] ?: 'gpt-image-2.5-sunburst');
 $apiKey = vault_key($pdo, 'openai');
 if ($apiKey === null) {
+    log_ledger($pdo, $wsid, 'art_gen', 'openai', $artModel, 'error',
+        'creative #' . $cid . ': no OpenAI key in the vault — '
+        . 'nothing generated');
     json_out(['ok' => false, 'creative_id' => $cid,
               'error' => 'No OpenAI key in the vault.'], 400);
 }

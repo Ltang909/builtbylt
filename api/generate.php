@@ -527,11 +527,19 @@ foreach ($variants as $v) {
     // 1:1 regardless of the format the copy model picked.
     $fmt = !empty($p['has_template']) ? '1:1' : (string)$v['format'];
     $fmtSlug = preg_replace('/[^A-Za-z0-9]/', '', $fmt);
+    $imgPrompt = trim((string)$v['image_prompt']);
+    $artDir = trim((string)$v['art_direction']);
+    if ($imgPrompt === '' && $artDir === '') {
+        // Never strand a creative prompt-less (the image endpoint
+        // refuses those, and until Nov 5 it refused silently):
+        // fall back to the variant's own copy as the image prompt.
+        $imgPrompt = trim($v['headline'] . ' — ' . $v['primary_text']);
+    }
     $ins->execute([
         $wsid, $experimentId, $batchId, $v['game_name'], $v['headline'],
         $v['primary_text'], $v['description'], $v['cta'], $v['offer_text'],
         'tmpl-gen-' . ($fmtSlug !== '' ? $fmtSlug : 'draft'),
-        $fmt, $v['art_direction'], $v['image_prompt'],
+        $fmt, $artDir, $imgPrompt,
     ]);
     $createdIds[] = (int)$pdo->lastInsertId();
 }

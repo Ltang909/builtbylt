@@ -584,6 +584,8 @@ function displayLine(c){
     ? assets.map(a => `<a class="dlink" href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.label)}</a>`).join(" · ")
     : "no image yet";
   const landAsset = assets.find(a => a.kind === "landscape");
+  const imgCtl = !assets.length
+    ? ` · <button class="btn secondary" style="padding:2px 8px" onclick="genImage(${c.id})">Generate image (AI)</button>` : "";
   const landCtl = !assets.length ? ""
     : landAsset && landAsset.generated
       ? ` · <span class="chip pass">landscape: AI-generated</span>`
@@ -593,7 +595,7 @@ function displayLine(c){
       ? `<span class="chip fail">${fails.length} field(s) over Google limits</span>`
       : `<span class="chip src">copy within Google limits</span>`)
     + ` · ${assetTxt}`
-    + ` · <a class="dlink" href="api/display_export.php?creative_id=${c.id}">export packet</a>${landCtl}${pushTxt}</div>`;
+    + ` · <a class="dlink" href="api/display_export.php?creative_id=${c.id}">export packet</a>${imgCtl}${landCtl}${pushTxt}</div>`;
 }
 // Update 11.5: standalone native-landscape generation for a
 // creative that only has the square (older creatives, or a batch
@@ -606,6 +608,16 @@ async function genLandscape(id){
   if (!confirm(`Generate a native landscape variant (1216x640) for creative #${id} with OpenAI?\nEstimated cost: $${Number(est.cost_usd).toFixed(4)}. Until it exists, the landscape asset is a center crop of the square.`)) return;
   const out = await api("generate_landscape.php", jsonOpts({creative_id: id, confirm: true})).catch(() => null);
   if (!out || !out.ok){ alert("Landscape generation failed: " + ((out && out.error) || "request failed")); return; }
+  loadAll();
+}
+async function genImage(id){
+  const est = await api("generate_image.php", jsonOpts({creative_id: id, action: "estimate"})).catch(() => null);
+  if (!est){ alert("Could not price the image generation."); return; }
+  if (est.already){ alert(`Creative #${id} already has an image.`); return; }
+  if (!est.ok){ alert("Image generation is blocked: " + (est.error || "unknown reason")); return; }
+  if (!confirm(`Generate the square image (1024x1024) for creative #${id} with the routed art model?\nEstimated cost: $${Number(est.cost_usd).toFixed(4)}.`)) return;
+  const out = await api("generate_image.php", jsonOpts({creative_id: id, confirm: true})).catch(() => null);
+  if (!out || !out.ok){ alert("Image generation failed: " + ((out && out.error) || "request failed")); return; }
   loadAll();
 }
 function lintChips(c){
@@ -865,6 +877,7 @@ async function genEstimate(expId){
   box.innerHTML = `<div class="formnote"><strong>Cost estimate</strong> (estimate — nothing has run, nothing charged):<br>`
     + out.lines.map(l => `${esc(l.item)}: ${cost(l.cost_usd)} <span class="chip src">estimate</span> — ${esc(l.detail)}`).join("<br>")
     + `<br><strong>Total estimate: ${cost(out.total_usd)}</strong> · ${esc(out.note)}`
+    + (i.images === 0 ? `<br><strong style="color:#e8b84b">Images is set to 0 — this run creates copy only, no art.</strong>` : "")
     + (out.learnings_count
         ? `<div class="meta" style="margin-top:4px">${out.learnings_count} workspace learnings will be included in this brief.</div>` : "")
     + `</div>`;
