@@ -415,6 +415,7 @@ function gads_push_creative(PDO $pdo, array $creative, array $conn,
 
     $ops = [
         ['campaignBudgetOperation' => ['create' => [
+            'resourceName' => $budgetRes,
             'name' => 'Panel RDA budget — creative #' . $cid
                 . ' — ' . $stamp,
             'amountMicros' => '1000000',
@@ -422,6 +423,7 @@ function gads_push_creative(PDO $pdo, array $creative, array $conn,
             'explicitlyShared' => false,
         ]]],
         ['campaignOperation' => ['create' => [
+            'resourceName' => $campaignRes,
             'name' => 'Panel RDA — ' . $spec['business_name']
                 . ' — creative #' . $cid . ' — ' . $stamp,
             'status' => 'PAUSED',
@@ -438,17 +440,20 @@ function gads_push_creative(PDO $pdo, array $creative, array $conn,
             'maximizeConversions' => new stdClass(),
         ]]],
         ['adGroupOperation' => ['create' => [
+            'resourceName' => $adGroupRes,
             'name' => 'Panel RDA — creative #' . $cid,
             'campaign' => $campaignRes,
             'status' => 'PAUSED',
             'type' => 'DISPLAY_STANDARD',
         ]]],
         ['assetOperation' => ['create' => [
+            'resourceName' => $landRes,
             'name' => 'creative-' . $cid . '-landscape-1200x628.jpg',
             'type' => 'IMAGE',
             'imageAsset' => ['data' => base64_encode($land['bytes'])],
         ]]],
         ['assetOperation' => ['create' => [
+            'resourceName' => $squareRes,
             'name' => 'creative-' . $cid . '-square',
             'type' => 'IMAGE',
             'imageAsset' => ['data' => base64_encode($squareBytes)],
