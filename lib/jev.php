@@ -46,7 +46,8 @@ const JEV_PASS_P = 0.9;
 const JEV_FAIL_P = 0.1;
 
 /** Short criteria string so Jev judges against the workspace's tokens. */
-function jev_criteria(array $rule, array $tokens): string {
+function jev_criteria(array $rule, array $tokens,
+                      ?array $creative = null): string {
     $rid = $rule['rule_id'];
     $bits = [];
     if ($rid === 'R1') {
@@ -65,6 +66,26 @@ function jev_criteria(array $rule, array $tokens): string {
         $bits[] = 'allowed CTAs: ' . json_encode($tokens['cta_allowlist'] ?? []);
     } elseif ($rid === 'R10') {
         $bits[] = 'approved brand colors: ' . json_encode($tokens['colors'] ?? []);
+    } elseif ($rid === 'R13') {
+        // Character counting is deterministic, so Jev is handed
+        // the measured lengths beside the caps instead of being
+        // asked to count for itself (Update 11.3).
+        $caps = ['headline' => 30, 'description' => 90,
+                 'primary_text' => 90];
+        $cfgR = (array)($rule['config'] ?? []);
+        $measured = [];
+        foreach ($caps as $f => $cap) {
+            $cap = (int)($cfgR[$f] ?? $cap);
+            $text = trim((string)($creative[$f] ?? ''));
+            $len = function_exists('mb_strlen')
+                ? mb_strlen($text) : strlen($text);
+            $measured[] = $f . ' ' . $len . '/' . $cap . ' chars';
+        }
+        $bits[] = 'Google Responsive Display Ads character caps, '
+            . 'with this creative\'s measured lengths: '
+            . implode('; ', $measured)
+            . '. Comply only if every measured length is at or '
+            . 'under its cap.';
     }
     $cfg = (array)($rule['config'] ?? []);
     if ($cfg) {
@@ -105,7 +126,7 @@ function jev_build_request(array $creative, array $tokens, array $rules,
                 'Does this creative COMPLY with rule %s (%s)? '
                 . 'Answer yes only if the creative fully satisfies the rule. '
                 . 'Criteria: %s',
-                $rid, $rule['name'] ?? $rid, jev_criteria($rule, $tokens)),
+                $rid, $rule['name'] ?? $rid, jev_criteria($rule, $tokens, $creative)),
         ];
     }
     $body = ['state' => $state, 'model' => JEV_MODEL, 'questions' => $questions];

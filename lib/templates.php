@@ -113,6 +113,9 @@ function sweeps_rule_defs(): array {
         ['R12', 'Template integrity', 'meta', [
             'require_template_id' => true,
         ]],
+        ['R13', 'Google Display length limits', 'text', [
+            'headline' => 30, 'description' => 90, 'primary_text' => 90,
+        ]],
     ];
 }
 

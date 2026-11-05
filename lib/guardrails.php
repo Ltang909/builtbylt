@@ -2,7 +2,7 @@
 /**
  * Token-driven guardrail engine (Step 3a) — PHP port of guardrails.py.
  *
- * Rules R1-R12 are parameterized checks. EVERY list, string, offer and
+ * Rules R1-R13 are parameterized checks. EVERY list, string, offer and
  * format comes from the workspace's brand tokens (brand_tokens table) plus
  * the rule's own per-workspace config (rules table). Nothing brand-specific
  * lives in this file — the sweeps-casino vocabulary exists only as template
@@ -28,7 +28,7 @@ const MOCK_CONF = 0.80;
 
 function rule_order(): array {
     $out = [];
-    for ($i = 1; $i <= 12; $i++) {
+    for ($i = 1; $i <= 13; $i++) {
         $out[] = 'R' . $i;
     }
     return $out;
@@ -328,6 +328,41 @@ function check_r12(array $creative, array $tokens, array $config, array $ctx): a
                     : 'No template_id: text may be baked into generated art.');
 }
 
+function check_r13(array $creative, array $tokens, array $config, array $ctx): array {
+    // Google Responsive Display Ads character caps (Update 11.3):
+    // the same three fields and caps the lint display flags and
+    // lib/display.php enforce. Config may override; defaults are
+    // Google's caps. offer_text is not judged here: an over-long
+    // offer is dropped from the display set, not a failure.
+    $caps = [
+        'headline'     => ['Headline', (int)($config['headline'] ?? 30)],
+        'description'  => ['Description (display long headline)',
+                           (int)($config['description'] ?? 90)],
+        'primary_text' => ['Primary text (display description)',
+                           (int)($config['primary_text'] ?? 90)],
+    ];
+    $over = [];
+    foreach ($caps as $field => $cap) {
+        $text = trim((string)($creative[$field] ?? ''));
+        if ($text === '') {
+            continue;
+        }
+        $len = function_exists('mb_strlen')
+            ? mb_strlen($text) : strlen($text);
+        if ($len > $cap[1]) {
+            $over[] = $field . ' ' . $len . ' chars (display max '
+                . $cap[1] . ')';
+        }
+    }
+    $ok = $over === [];
+    return make_verdict('R13', $ok, 'code', CODE_CONF,
+        $ok ? 'All copy fits the Google Display character caps '
+              . '(headline 30, description 90, primary text 90).'
+            : 'Over Google Display limits: ' . implode('; ', $over)
+              . '. Google rejects over-limit uploads; shorten '
+              . 'before this can push.');
+}
+
 /**
  * Return verdict dicts for one creative, for ENABLED rules only.
  *
@@ -341,6 +376,7 @@ function run_checks(array $creative, array $tokens, array $rules): array {
         'R4' => 'check_r4', 'R5' => 'check_r5', 'R6' => 'check_r6',
         'R7' => 'check_r7', 'R8' => 'check_r8', 'R9' => 'check_r9',
         'R10' => 'check_r10', 'R11' => 'check_r11', 'R12' => 'check_r12',
+        'R13' => 'check_r13',
     ];
     $text = combined_copy($creative);
     $ctx = ['text' => $text, 'lower' => strtolower($text)];

@@ -105,7 +105,38 @@ function get_tokens(PDO $pdo, int $wsid): array {
     ];
 }
 
+/**
+ * R13 (Google Display length limits, Update 11.3) shipped after
+ * the original R1-R12 set, so workspaces created earlier have no
+ * row for it. Insert it enabled, with Google's caps, the first
+ * time the workspace's rules are loaded; it can be disabled in
+ * Settings like any other rule.
+ */
+function ensure_display_rule(PDO $pdo, int $wsid): void {
+    static $done = [];
+    if (isset($done[$wsid])) {
+        return;
+    }
+    $done[$wsid] = true;
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*) FROM rules WHERE workspace_id = ? '
+        . "AND rule_id = 'R13'");
+    $stmt->execute([$wsid]);
+    if ((int)$stmt->fetchColumn() > 0) {
+        return;
+    }
+    $ins = $pdo->prepare(
+        'INSERT INTO rules (workspace_id, rule_id, name, type, '
+        . 'enabled, config_json) VALUES (?, ?, ?, ?, ?, ?)');
+    $ins->execute([$wsid, 'R13', 'Google Display length limits',
+                   'text', 1,
+                   json_encode(['headline' => 30,
+                                'description' => 90,
+                                'primary_text' => 90])]);
+}
+
 function get_rules(PDO $pdo, int $wsid): array {
+    ensure_display_rule($pdo, $wsid);
     $stmt = $pdo->prepare(
         'SELECT * FROM rules WHERE workspace_id = ? '
         . 'ORDER BY CAST(SUBSTRING(rule_id, 2) AS UNSIGNED)');

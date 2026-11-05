@@ -540,6 +540,15 @@ function build_generation_prompt(array $tokens, ?string $guidelineText,
         . 'templates fit two-line headlines and one-breath '
         . 'primaries. The panel flags over-length copy '
         . 'automatically.';
+    $lines[] = 'CHARACTER LIMITS (Google Display, hard caps: '
+        . 'Google rejects over-limit uploads, and the panel '
+        . 'verifies these as rule R13): headline at most 30 '
+        . 'characters; description at most 90 characters; primary '
+        . 'text at most 90 characters; offer_text at most 30 '
+        . 'characters (it runs as a second display headline, and '
+        . 'a longer offer is dropped from the display set). Count '
+        . 'characters as you write; when a line does not fit, '
+        . 'rewrite it shorter. Never submit copy over a cap.';
     // Template mode (Update 10.8): images render from the
     // workspace's fixed ad template — composition, palette,
     // typography and headline placement all belong to the template,
