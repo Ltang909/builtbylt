@@ -20,6 +20,15 @@
  */
 require __DIR__ . '/bootstrap.php';
 
+// Surface uncaught errors as JSON like every other error this API
+// returns, instead of a blank HTTP 500 the UI cannot explain.
+set_exception_handler(function (Throwable $e) {
+    json_out(['error' => 'server_error',
+              'message' => 'Server error: ' . get_class($e) . ': '
+                  . $e->getMessage() . ' at '
+                  . basename($e->getFile()) . ':' . $e->getLine()], 500);
+});
+
 function obe_match_out(PDO $pdo, array $row): array {
     $row['id'] = (int)$row['id'];
     $row['score'] = (int)$row['score'];
