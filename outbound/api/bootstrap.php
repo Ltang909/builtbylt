@@ -1034,10 +1034,17 @@ function obe_apollo_enrich_match(PDO $pdo, int $clientId, array $match,
         && (string)$person['linkedin_url'] !== ''
         ? (string)$person['linkedin_url']
         : ($match['linkedin_url'] ?? null);
+    $firstName = isset($person['first_name'])
+        && (string)$person['first_name'] !== ''
+        ? (string)$person['first_name'] : ($match['first_name'] ?? null);
+    $lastName = isset($person['last_name'])
+        && (string)$person['last_name'] !== ''
+        ? (string)$person['last_name'] : ($match['last_name'] ?? null);
     $upd = $pdo->prepare(
-        'UPDATE obe_contacts SET email = ?, linkedin_url = ? '
-        . 'WHERE id = ?');
-    $upd->execute([$email, $linkedin, (int)$match['ct_id']]);
+        'UPDATE obe_contacts SET email = ?, linkedin_url = ?, '
+        . 'first_name = ?, last_name = ? WHERE id = ?');
+    $upd->execute([$email, $linkedin, $firstName, $lastName,
+                   (int)$match['ct_id']]);
     $upd = $pdo->prepare(
         'UPDATE obe_prospect_matches SET status = ? WHERE id = ?');
     $upd->execute(['enriched', (int)$match['id']]);
@@ -2076,6 +2083,68 @@ function obe_find_or_create_company(PDO $pdo, int $clientId, string $name,
     $row['id'] = (int)$row['id'];
     $row['_created'] = true;
     return $row;
+}
+
+/**
+ * Comparison key for a company name: case, punctuation and legal
+ * suffixes ignored, so "Rogo, Inc." and "Rogo" compare equal.
+ */
+function obe_company_name_key(string $name): string {
+    $n = strtolower(trim($name));
+    $n = preg_replace('/[.,]/', ' ', $n);
+    $n = preg_replace('/\\b(inc|llc|ltd|limited|corp|corporation|company|co|group|holdings)\\b/', ' ', (string)$n);
+    $n = preg_replace('/\\s+/', ' ', (string)$n);
+    return trim((string)$n);
+}
+
+/** Find a client's company by name key; null when there is none. */
+function obe_find_company_by_name(PDO $pdo, int $clientId,
+                                  string $name): ?array {
+    $key = obe_company_name_key($name);
+    if ($key === '') {
+        return null;
+    }
+    $stmt = $pdo->prepare(
+        'SELECT * FROM obe_companies WHERE client_id = ?');
+    $stmt->execute([$clientId]);
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        if (obe_company_name_key((string)$row['name']) === $key) {
+            $row['id'] = (int)$row['id'];
+            return $row;
+        }
+    }
+    return null;
+}
+
+/**
+ * The organization of one Apollo people-search result, as a name and
+ * a domain. The legacy search embedded primary_domain / website_url;
+ * the current api_search returns only the name plus has_* flags, so
+ * the domain is usually empty and callers must fall back to matching
+ * the company by name.
+ */
+function obe_apollo_person_org(array $person): array {
+    $org = isset($person['organization'])
+           && is_array($person['organization'])
+        ? $person['organization'] : [];
+    $domain = obe_domain_from((string)($org['primary_domain'] ?? ''));
+    if ($domain === '') {
+        $domain = obe_domain_from((string)($org['website_url'] ?? ''));
+    }
+    return ['name' => trim((string)($org['name'] ?? '')),
+            'domain' => $domain];
+}
+
+/**
+ * A search result's last name, or null. api_search obfuscates last
+ * names (last_name_obfuscated, e.g. "Hu***n") and omits last_name;
+ * the masked value must never be stored as if it were the name.
+ * Enrichment fills the real name in later.
+ */
+function obe_apollo_person_last_name(array $person): ?string {
+    $ln = isset($person['last_name'])
+        ? trim((string)$person['last_name']) : '';
+    return $ln !== '' ? $ln : null;
 }
 
 // --- discovery routine (shared by discovery.php and cron.php) -----------------------

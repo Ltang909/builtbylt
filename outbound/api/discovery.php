@@ -539,21 +539,26 @@ if ($action === 'apollo_search') {
         . 'last_name, title, email, linkedin_url, apollo_id) '
         . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     foreach ($people as $person) {
-        $org = isset($person['organization'])
-               && is_array($person['organization'])
-            ? $person['organization'] : [];
-        $orgName = trim((string)($org['name'] ?? ''));
+        $org = obe_apollo_person_org($person);
+        $orgName = $org['name'];
         if ($orgName === '') {
             $skipped++;
             continue;
         }
-        $domain = obe_domain_from((string)($org['primary_domain'] ?? ''));
-        if ($domain === '') {
-            $domain = obe_domain_from((string)($org['website_url'] ?? ''));
+        if ($org['domain'] !== '') {
+            $company = obe_find_or_create_company(
+                $pdo, $clientId, $orgName, $org['domain'], null);
+        } else {
+            // api_search returns no company domain: attach to the
+            // workspace company with this name when there is one,
+            // else create it under a name key (the CSV import rule).
+            $company = obe_find_company_by_name($pdo, $clientId,
+                                                $orgName);
+            if ($company === null) {
+                $company = obe_find_or_create_company(
+                    $pdo, $clientId, $orgName, '', null);
+            }
         }
-        $company = obe_find_or_create_company(
-            $pdo, $clientId, $orgName, $domain,
-            isset($org['website_url']) ? (string)$org['website_url'] : null);
         $apolloId = isset($person['id']) ? (string)$person['id'] : '';
         if ($apolloId !== '') {
             $findByApollo->execute([$clientId, $apolloId]);
@@ -565,7 +570,7 @@ if ($action === 'apollo_search') {
         $insContact->execute([
             $clientId, (int)$company['id'],
             isset($person['first_name']) ? (string)$person['first_name'] : null,
-            isset($person['last_name']) ? (string)$person['last_name'] : null,
+            obe_apollo_person_last_name($person),
             isset($person['title']) ? (string)$person['title'] : null,
             null,
             null,
@@ -713,17 +718,19 @@ if ($action === 'people_for_company') {
         . 'last_name, title, email, linkedin_url, apollo_id) '
         . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     $added = 0;
+    $companyNameKey = obe_company_name_key((string)$company['name']);
     foreach ($people as $person) {
-        $org = isset($person['organization'])
-            && is_array($person['organization'])
-            ? $person['organization'] : [];
-        $orgDomain = obe_domain_from(
-            (string)($org['primary_domain'] ?? ''));
-        if ($orgDomain === '') {
-            $orgDomain = obe_domain_from(
-                (string)($org['website_url'] ?? ''));
+        $org = obe_apollo_person_org($person);
+        // api_search scopes by domain (current or previous employer)
+        // but returns no domain itself: keep the person when the
+        // returned domain matches, or when the organization name is
+        // this company. Anything else is a previous-employer hit.
+        $keep = $org['domain'] !== '' && $org['domain'] === $domain;
+        if (!$keep && $org['name'] !== ''
+            && obe_company_name_key($org['name']) === $companyNameKey) {
+            $keep = true;
         }
-        if ($orgDomain !== $domain) {
+        if (!$keep) {
             continue;
         }
         $apolloId = isset($person['id']) ? (string)$person['id'] : '';
@@ -737,8 +744,7 @@ if ($action === 'people_for_company') {
             $clientId, $companyId,
             isset($person['first_name'])
                 ? (string)$person['first_name'] : null,
-            isset($person['last_name'])
-                ? (string)$person['last_name'] : null,
+            obe_apollo_person_last_name($person),
             isset($person['title']) ? (string)$person['title'] : null,
             null, null,
             $apolloId !== '' ? $apolloId : null,
@@ -862,17 +868,15 @@ if ($action === 'pipeline') {
         $decoded = json_decode($res['body'], true);
         $people = isset($decoded['people'])
             && is_array($decoded['people']) ? $decoded['people'] : [];
+        $targetNameKey = obe_company_name_key((string)$target['name']);
         foreach ($people as $person) {
-            $org = isset($person['organization'])
-                && is_array($person['organization'])
-                ? $person['organization'] : [];
-            $orgDomain = obe_domain_from(
-                (string)($org['primary_domain'] ?? ''));
-            if ($orgDomain === '') {
-                $orgDomain = obe_domain_from(
-                    (string)($org['website_url'] ?? ''));
+            $org = obe_apollo_person_org($person);
+            $keep = $org['domain'] !== '' && $org['domain'] === $domain;
+            if (!$keep && $org['name'] !== ''
+                && obe_company_name_key($org['name']) === $targetNameKey) {
+                $keep = true;
             }
-            if ($orgDomain !== $domain) {
+            if (!$keep) {
                 continue;
             }
             $apolloId = isset($person['id'])
@@ -887,8 +891,7 @@ if ($action === 'pipeline') {
                 $clientId, (int)$target['id'],
                 isset($person['first_name'])
                     ? (string)$person['first_name'] : null,
-                isset($person['last_name'])
-                    ? (string)$person['last_name'] : null,
+                obe_apollo_person_last_name($person),
                 isset($person['title'])
                     ? (string)$person['title'] : null,
                 null, null,
