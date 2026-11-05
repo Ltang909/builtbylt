@@ -509,7 +509,7 @@ if ($action === 'apollo_search') {
                                            : 100000;
         $payload['organization_num_employees_ranges'] = [$lo . ',' . $hi];
     }
-    $res = obe_http('https://api.apollo.io/api/v1/mixed_people/search', [
+    $res = obe_http('https://api.apollo.io/api/v1/mixed_people/api_search', [
         'method' => 'POST',
         'timeout' => 30,
         'headers' => ['Content-Type: application/json',
@@ -681,11 +681,11 @@ if ($action === 'people_for_company') {
     }
     $domain = strtolower((string)$company['domain']);
     $payload = ['per_page' => 10, 'page' => 1,
-                'organization_domains' => [$domain]];
+                'q_organization_domains_list' => [$domain]];
     if (count($titles) > 0) {
         $payload['person_titles'] = $titles;
     }
-    $res = obe_http('https://api.apollo.io/api/v1/mixed_people/search', [
+    $res = obe_http('https://api.apollo.io/api/v1/mixed_people/api_search', [
         'method' => 'POST',
         'timeout' => 30,
         'headers' => ['Content-Type: application/json',
@@ -837,12 +837,12 @@ if ($action === 'pipeline') {
     foreach ($targets as $target) {
         $domain = strtolower((string)$target['domain']);
         $payload = ['per_page' => 10, 'page' => 1,
-                    'organization_domains' => [$domain]];
+                    'q_organization_domains_list' => [$domain]];
         if (count($titles) > 0) {
             $payload['person_titles'] = $titles;
         }
         $res = obe_http(
-            'https://api.apollo.io/api/v1/mixed_people/search', [
+            'https://api.apollo.io/api/v1/mixed_people/api_search', [
                 'method' => 'POST',
                 'timeout' => 30,
                 'headers' => ['Content-Type: application/json',
