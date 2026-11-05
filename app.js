@@ -1269,8 +1269,7 @@ async function decide(id, action){
 function renderLaunch(){
   const el = $("#tab-launch");
   const launched = creatives.filter(c => ["approved","launched","live","scale_proposed"].includes(c.status));
-  el.innerHTML = `<div class="banner">⚠ Meta connection pending Step 0: gambling permission + app review. Uploads simulated — approved creatives are staged here, nothing is sent to Meta.</div>`
-    + (launched.length ? "" : '<div class="empty">No approved creatives yet.</div>')
+  el.innerHTML = (launched.length ? "" : '<div class="empty">No approved creatives yet.</div>')
     + launched.map(c => creativeCard(c,
         `<span class="chip src">upload: simulated</span> <span class="chip src">utm_campaign: exp-${c.experiment_id}-creative-${c.id}</span>`
       )).join("");
