@@ -305,6 +305,28 @@ function obe_install(PDO $pdo): void {
             INDEX idx_ev_message (message_id),
             INDEX idx_ev_client (client_id, type)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS obe_tracked_links (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            client_id INT NOT NULL,
+            message_id INT NULL,
+            contact_id INT NULL,
+            token VARCHAR(32) NOT NULL,
+            target_url VARCHAR(1024) NOT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_token (token),
+            INDEX idx_tl_message (message_id),
+            INDEX idx_tl_contact (contact_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        "CREATE TABLE IF NOT EXISTS obe_link_clicks (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            token VARCHAR(32) NOT NULL,
+            client_id INT NOT NULL,
+            contact_id INT NULL,
+            clicked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            user_agent VARCHAR(255) NULL,
+            INDEX idx_lc_token (token),
+            INDEX idx_lc_client (client_id, clicked_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
         "CREATE TABLE IF NOT EXISTS obe_suppression (
             id INT AUTO_INCREMENT PRIMARY KEY,
             client_id INT NULL,
@@ -621,7 +643,37 @@ function obe_client_settings(PDO $pdo, int $clientId): array {
         'writing_guidelines' => (string)$get('writing_guidelines', ''),
         'default_tone' => (string)$get('default_tone', 'concise'),
         'message_length' => (int)$get('message_length', 120),
+        'test_email' => (string)$get('test_email', ''),
+        'outreach_link_url' => (string)$get('outreach_link_url', ''),
     ];
+}
+
+/** Get-or-create the tracked redirect URL for one message's
+ * outreach link (link tracking, Nov 2026). The token is the only
+ * credential: outbound/r.php resolves it publicly, records the
+ * click against the contact, and 302s to the target. One token
+ * per (client, message, target) so re-drafting reuses the link. */
+function obe_tracked_link_for(PDO $pdo, int $clientId,
+                              ?int $messageId, ?int $contactId,
+                              string $targetUrl): string {
+    if ($messageId !== null) {
+        $stmt = $pdo->prepare(
+            'SELECT token FROM obe_tracked_links WHERE client_id = ? '
+            . 'AND message_id = ? AND target_url = ? LIMIT 1');
+        $stmt->execute([$clientId, $messageId, $targetUrl]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row !== false) {
+            return 'https://builtbylt.com/outbound/r.php?t='
+                . $row['token'];
+        }
+    }
+    $token = bin2hex(random_bytes(8));
+    $ins = $pdo->prepare(
+        'INSERT INTO obe_tracked_links (client_id, message_id, '
+        . 'contact_id, token, target_url) VALUES (?, ?, ?, ?, ?)');
+    $ins->execute([$clientId, $messageId, $contactId, $token,
+                   $targetUrl]);
+    return 'https://builtbylt.com/outbound/r.php?t=' . $token;
 }
 
 /** Apollo credits already spent by this client in the current month. */

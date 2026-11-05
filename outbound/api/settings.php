@@ -144,6 +144,14 @@ if ($action === 'save_settings') {
         obe_set_setting($pdo, $clientId, 'writing_guidelines',
                         (string)$data['writing_guidelines']);
     }
+    if (isset($data['test_email'])) {
+        obe_set_setting($pdo, $clientId, 'test_email',
+                        trim((string)$data['test_email']));
+    }
+    if (isset($data['outreach_link_url'])) {
+        obe_set_setting($pdo, $clientId, 'outreach_link_url',
+                        trim((string)$data['outreach_link_url']));
+    }
     if (isset($data['gmail_client_id'])) {
         obe_set_setting($pdo, $clientId, 'gmail_client_id',
                         trim((string)$data['gmail_client_id']));

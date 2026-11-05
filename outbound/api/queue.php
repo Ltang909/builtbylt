@@ -262,6 +262,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         . 'JOIN obe_intent_signals s ON s.id = o.signal_id '
         . 'JOIN obe_prospect_matches pm2 ON pm2.company_id = o.company_id '
         . 'WHERE pm2.id = ? ORDER BY o.observed_at DESC LIMIT 1');
+    $clickStmt = $pdo->prepare(
+        'SELECT COUNT(*) AS n FROM obe_link_clicks c '
+        . 'JOIN obe_tracked_links l ON l.token = c.token '
+        . 'WHERE l.message_id = ?');
     $out = [];
     foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $row['id'] = (int)$row['id'];
@@ -269,6 +273,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $row['match_score'] = (int)$row['match_score'];
         $row['contact_name'] = trim((string)($row['first_name'] ?? '')
             . ' ' . (string)($row['last_name'] ?? ''));
+        $clickStmt->execute([(int)$row['id']]);
+        $crow = $clickStmt->fetch(PDO::FETCH_ASSOC);
+        $row['link_clicks'] = $crow === false ? 0 : (int)$crow['n'];
         $obsStmt->execute([(int)$row['match_id']]);
         $obs = $obsStmt->fetch(PDO::FETCH_ASSOC);
         $row['signal'] = $obs === false ? null : $obs;
@@ -490,6 +497,70 @@ if ($action === 'mark_sent') {
     json_out(['sent' => $id]);
 }
 
+/** Shared Gmail access: validate the saved connection and trade
+ * the refresh token for an access token. Returns
+ * ['ok' => true, 'access_token' => ..., 'email' => ...] or
+ * ['ok' => false, 'error' => ..., 'status' => ..., 'message' => ...]
+ * with the same error vocabulary the gmail_draft action has
+ * always used. */
+function obe_gmail_token(PDO $pdo, int $clientId): array {
+    $tokenRaw = obe_setting($pdo, $clientId, 'gmail_token', null);
+    $token = $tokenRaw !== null ? json_decode((string)$tokenRaw, true)
+                                : null;
+    if (!is_array($token) || empty($token['refresh_token'])) {
+        return ['ok' => false, 'error' => 'gmail_not_connected',
+                'status' => 400,
+                'message' => 'Create a Google Cloud OAuth client, '
+                    . 'add its client id and secret plus a refresh '
+                    . 'token in Settings and Integrations, then '
+                    . 'connect.'];
+    }
+    $tokenRes = obe_http('https://oauth2.googleapis.com/token', [
+        'method' => 'POST',
+        'timeout' => 20,
+        'headers' => ['Content-Type: application/x-www-form-urlencoded'],
+        'body' => http_build_query([
+            'client_id' => (string)obe_setting($pdo, $clientId,
+                                               'gmail_client_id', ''),
+            'client_secret' => (string)obe_setting(
+                $pdo, $clientId, 'gmail_client_secret', ''),
+            'refresh_token' => (string)$token['refresh_token'],
+            'grant_type' => 'refresh_token',
+        ]),
+    ]);
+    $tokenData = json_decode($tokenRes['body'], true);
+    if ($tokenRes['error'] !== null || $tokenRes['status'] !== 200
+        || empty($tokenData['access_token'])) {
+        return ['ok' => false, 'error' => 'gmail_token_failed',
+                'status' => 502,
+                'message' => 'Refreshing the Gmail access token '
+                    . 'failed (HTTP ' . $tokenRes['status'] . ').'];
+    }
+    return ['ok' => true,
+            'access_token' => (string)$tokenData['access_token'],
+            'email' => isset($token['email'])
+                ? (string)$token['email'] : ''];
+}
+
+/** The message body with the client's outreach link rewritten to
+ * this message's tracked URL, when the link is configured and the
+ * body contains it. Applied at Gmail draft / test-send time only:
+ * the stored body keeps the clean URL, so the queue preview stays
+ * readable while the delivered email carries the tracked one. */
+function obe_body_tracked(PDO $pdo, int $clientId, array $msg): string {
+    $body = (string)($msg['body'] ?? '');
+    $target = trim((string)obe_setting($pdo, $clientId,
+                                       'outreach_link_url', ''));
+    if ($target === '' || strpos($body, $target) === false) {
+        return $body;
+    }
+    $url = obe_tracked_link_for(
+        $pdo, $clientId, isset($msg['id']) ? (int)$msg['id'] : null,
+        !empty($msg['contact_id']) ? (int)$msg['contact_id'] : null,
+        $target);
+    return str_replace($target, $url, $body);
+}
+
 if ($action === 'gmail_draft') {
     $id = isset($data['id']) ? (int)$data['id'] : 0;
     $stmt = $pdo->prepare(
@@ -501,16 +572,6 @@ if ($action === 'gmail_draft') {
     if ($msg === false) {
         json_out(['error' => 'unknown message id'], 400);
     }
-    $tokenRaw = obe_setting($pdo, $clientId, 'gmail_token', null);
-    $token = $tokenRaw !== null ? json_decode((string)$tokenRaw, true)
-                                : null;
-    if (!is_array($token) || empty($token['refresh_token'])) {
-        json_out(['error' => 'gmail_not_connected',
-                  'setup' => 'Create a Google Cloud OAuth client, add '
-                      . 'its client id and secret plus a refresh token '
-                      . 'in Settings and Integrations, then connect.'],
-                 400);
-    }
     if (empty($msg['contact_email'])) {
         json_out(['error' => 'the contact has no email address'], 400);
     }
@@ -518,41 +579,27 @@ if ($action === 'gmail_draft') {
         json_out(['error' => 'Gmail drafts are for email messages only'],
                  400);
     }
-    $clientIdSetting = (string)obe_setting($pdo, $clientId,
-                                           'gmail_client_id', '');
-    $clientSecret = (string)obe_setting($pdo, $clientId,
-                                        'gmail_client_secret', '');
-    $tokenRes = obe_http('https://oauth2.googleapis.com/token', [
-        'method' => 'POST',
-        'timeout' => 20,
-        'headers' => ['Content-Type: application/x-www-form-urlencoded'],
-        'body' => http_build_query([
-            'client_id' => $clientIdSetting,
-            'client_secret' => $clientSecret,
-            'refresh_token' => (string)$token['refresh_token'],
-            'grant_type' => 'refresh_token',
-        ]),
-    ]);
-    $tokenData = json_decode($tokenRes['body'], true);
-    if ($tokenRes['error'] !== null || $tokenRes['status'] !== 200
-        || empty($tokenData['access_token'])) {
-        json_out(['error' => 'gmail_token_failed',
-                  'message' => 'Refreshing the Gmail access token '
-                      . 'failed (HTTP ' . $tokenRes['status'] . ').'],
-                 502);
+    $tok = obe_gmail_token($pdo, $clientId);
+    if (!$tok['ok']) {
+        if ($tok['error'] === 'gmail_not_connected') {
+            json_out(['error' => 'gmail_not_connected',
+                      'setup' => $tok['message']], 400);
+        }
+        json_out(['error' => $tok['error'],
+                  'message' => $tok['message']], (int)$tok['status']);
     }
+    $accessToken = $tok['access_token'];
     $raw = 'To: ' . (string)$msg['contact_email'] . "\r\n"
         . 'Subject: ' . (string)($msg['subject'] ?? '') . "\r\n"
         . "Content-Type: text/plain; charset=UTF-8\r\n\r\n"
-        . (string)$msg['body'];
+        . obe_body_tracked($pdo, $clientId, $msg);
     $encoded = rtrim(strtr(base64_encode($raw), '+/', '-_'), '=');
     $draftRes = obe_http(
         'https://gmail.googleapis.com/gmail/v1/users/me/drafts', [
             'method' => 'POST',
             'timeout' => 30,
             'headers' => ['Content-Type: application/json',
-                          'Authorization: Bearer '
-                              . (string)$tokenData['access_token']],
+                          'Authorization: Bearer ' . $accessToken],
             'body' => json_encode(['message' => ['raw' => $encoded]]),
         ]);
     $draftData = json_decode($draftRes['body'], true);
@@ -569,6 +616,91 @@ if ($action === 'gmail_draft') {
     json_out(['draft_id' => (string)$draftData['id'],
               'message' => 'Draft created in the connected Gmail '
                   . 'account.']);
+}
+
+if ($action === 'track_link') {
+    $id = isset($data['id']) ? (int)$data['id'] : 0;
+    $stmt = $pdo->prepare(
+        'SELECT * FROM obe_messages WHERE id = ? AND client_id = ?');
+    $stmt->execute([$id, $clientId]);
+    $msg = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($msg === false) {
+        json_out(['error' => 'unknown message id'], 400);
+    }
+    $target = trim((string)obe_setting($pdo, $clientId,
+                                       'outreach_link_url', ''));
+    if ($target === '') {
+        json_out(['error' => 'Set your outreach link URL in '
+            . 'Settings & Integrations first — the tracked link '
+            . 'needs a destination to redirect to.'], 400);
+    }
+    $url = obe_tracked_link_for(
+        $pdo, $clientId, $id,
+        !empty($msg['contact_id']) ? (int)$msg['contact_id'] : null,
+        $target);
+    json_out(['url' => $url, 'target' => $target]);
+}
+
+if ($action === 'send_test') {
+    $id = isset($data['id']) ? (int)$data['id'] : 0;
+    $stmt = $pdo->prepare(
+        'SELECT * FROM obe_messages WHERE id = ? AND client_id = ?');
+    $stmt->execute([$id, $clientId]);
+    $msg = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($msg === false) {
+        json_out(['error' => 'unknown message id'], 400);
+    }
+    if ((string)$msg['channel'] !== 'email') {
+        json_out(['error' => 'Test sends are for email messages '
+            . 'only'], 400);
+    }
+    $tok = obe_gmail_token($pdo, $clientId);
+    if (!$tok['ok']) {
+        if ($tok['error'] === 'gmail_not_connected') {
+            json_out(['error' => 'gmail_not_connected',
+                      'setup' => $tok['message']], 400);
+        }
+        json_out(['error' => $tok['error'],
+                  'message' => $tok['message']], (int)$tok['status']);
+    }
+    $to = trim((string)obe_setting($pdo, $clientId, 'test_email', ''));
+    if ($to === '') {
+        $to = trim((string)$tok['email']);
+    }
+    if ($to === '') {
+        json_out(['error' => 'No test recipient: set a test email '
+            . 'in Settings, or save the account email with the Gmail '
+            . 'connection.'], 400);
+    }
+    $raw = 'To: ' . $to . "\r\n"
+        . 'Subject: [TEST] ' . (string)($msg['subject'] ?? '') . "\r\n"
+        . "Content-Type: text/plain; charset=UTF-8\r\n\r\n"
+        . obe_body_tracked($pdo, $clientId, $msg);
+    $encoded = rtrim(strtr(base64_encode($raw), '+/', '-_'), '=');
+    $sendRes = obe_http(
+        'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
+        ['method' => 'POST',
+         'timeout' => 30,
+         'headers' => ['Content-Type: application/json',
+                       'Authorization: Bearer ' . $tok['access_token']],
+         'body' => json_encode(['raw' => $encoded])]);
+    $sendData = json_decode($sendRes['body'], true);
+    if ($sendRes['error'] !== null || $sendRes['status'] < 200
+        || $sendRes['status'] >= 300 || empty($sendData['id'])) {
+        json_out(['error' => 'gmail_send_failed',
+                  'message' => 'Test send failed (HTTP '
+                      . $sendRes['status'] . '). '
+                      . substr($sendRes['body'], 0, 300)], 502);
+    }
+    $ev = $pdo->prepare(
+        'INSERT INTO obe_message_events (client_id, message_id, '
+        . 'type, detail) VALUES (?, ?, ?, ?)');
+    $ev->execute([$clientId, $id, 'test_sent',
+                  json_encode(['to' => $to,
+                               'gmail_id' => (string)$sendData['id']])]);
+    json_out(['ok' => true, 'to' => $to,
+              'message' => 'Test sent to ' . $to . '. The queue '
+              . 'item itself was not changed.']);
 }
 
 json_out(['error' => 'unknown action'], 400);

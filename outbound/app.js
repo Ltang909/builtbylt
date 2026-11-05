@@ -1457,11 +1457,15 @@ async function renderQueue() {
         + '<button class="btn secondary" data-saveedit="' + m.id + '">Save edits</button>'
         + '<button class="btn secondary" data-regen="' + m.id + '">Regenerate</button>'
         + '<button class="btn danger" data-reject="' + m.id + '">Reject</button>'
+        + '<button class="btn secondary" data-test="' + m.id + '">Send test</button>'
+        + '<button class="btn secondary" data-track="' + m.id + '">Copy tracked link</button>'
         + '</div>';
     } else {
       buttons = '<div class="btnrow">'
         + '<button class="btn" data-sent="' + m.id + '">Mark sent</button>'
         + '<button class="btn secondary" data-gmail="' + m.id + '">Create Gmail draft</button>'
+        + '<button class="btn secondary" data-test="' + m.id + '">Send test</button>'
+        + '<button class="btn secondary" data-track="' + m.id + '">Copy tracked link</button>'
         + '</div>';
     }
     return '<div class="msgcard" id="msg-' + m.id + '">'
@@ -1469,6 +1473,7 @@ async function renderQueue() {
       + ' · ' + esc(m.contact_title || '') + ' · ' + esc(m.company_name)
       + ' · score ' + esc(m.match_score) + ' · ' + esc(m.channel)
       + ' · version ' + esc(m.version) + ' · ' + statusBadge(m.status)
+      + (m.link_clicks ? ' · <strong>link clicked ×' + esc(m.link_clicks) + '</strong>' : '')
       + '</div>'
       + evidenceHtml(m)
       + (m.channel === 'email'
@@ -1634,6 +1639,25 @@ async function renderQueue() {
       const extra = err.data && err.data.setup
         ? '<div class="note">' + esc(err.data.setup) + '</div>' : '';
       $('#msgMsg-' + id).innerHTML = errBox(err) + extra;
+    }
+  });
+  wire('data-test', async (id) => {
+    try {
+      const r = await apiPost('queue.php?action=send_test', { id });
+      toast(r.message || 'Test sent.');
+    } catch (err) {
+      $('#msgMsg-' + id).innerHTML = errBox(err);
+    }
+  });
+  wire('data-track', async (id) => {
+    try {
+      const r = await apiPost('queue.php?action=track_link', { id });
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(r.url);
+      }
+      toast('Tracked link copied: ' + r.url);
+    } catch (err) {
+      $('#msgMsg-' + id).innerHTML = errBox(err);
     }
   });
   const bulkBtn = $('#qBulk');
@@ -1842,7 +1866,13 @@ async function renderReporting() {
         report.breakdowns.by_icp.map((r) => '<tr><td>' + esc(r.name)
           + '</td><td>' + esc(r.matches_count) + '</td><td>'
           + esc(r.avg_score) + '</td><td>' + esc(r.qualified)
-          + '</td></tr>'));
+          + '</td></tr>'))
+      + table('Link engagement (per person)', ['Person', 'Company', 'Clicks', 'Last click', 'Destination'],
+        (report.link_engagement || []).map((r) => '<tr><td>' + esc(r.name)
+          + '</td><td>' + esc(r.company || '') + '</td><td>'
+          + esc(r.clicks) + '</td><td>' + esc(r.last_click || '')
+          + '</td><td>' + esc(r.target_url) + '</td></tr>'))
+      + '<p class="muted small">A click is recorded when a tracked link is opened. Mail security scanners sometimes pre-open links, so treat a lone early click as a soft signal, not proof of a read.</p>';
   };
 
   el.innerHTML = '<h2>Reporting</h2>'
@@ -2016,6 +2046,11 @@ async function renderSettings() {
     + '</select></label></div>'
     + '<label class="f"><span>Writing guidelines for this client</span>'
     + '<textarea id="stGuidelines">' + esc(st.writing_guidelines || '') + '</textarea></label>'
+    + '<div class="formrow">'
+    + '<label class="f"><span>Test email (Send test delivers here; blank = the connected Gmail address)</span>'
+    + '<input type="text" id="stTestEmail" value="' + esc(st.test_email || '') + '"></label>'
+    + '<label class="f"><span>Outreach link URL (tracked per person wherever it appears in a draft)</span>'
+    + '<input type="text" id="stLinkUrl" value="' + esc(st.outreach_link_url || '') + '" placeholder="https://..."></label></div>'
     + '<div class="btnrow"><button class="btn" id="stSave">Save settings</button></div>'
     + '<div id="stMsg"></div></div>';
 
@@ -2082,6 +2117,8 @@ async function renderSettings() {
         message_length: parseInt($('#stLen').value, 10) || 120,
         default_tone: $('#stTone').value,
         writing_guidelines: $('#stGuidelines').value,
+        test_email: $('#stTestEmail').value.trim(),
+        outreach_link_url: $('#stLinkUrl').value.trim(),
       });
       toast('Settings saved.');
     } catch (err) {

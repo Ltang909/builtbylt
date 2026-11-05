@@ -398,6 +398,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             . 'WHERE client_id = ?', [$clientId]),
     ];
 
+    $linkEngagement = [];
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT COALESCE(NULLIF(TRIM(CONCAT('
+            . 'COALESCE(ct.first_name, \'\'), \' \', '
+            . 'COALESCE(ct.last_name, \'\'))), \'\'), '
+            . '\'(unknown)\') AS name, '
+            . 'co.name AS company, COUNT(c.id) AS clicks, '
+            . 'MAX(c.clicked_at) AS last_click, l.target_url '
+            . 'FROM obe_link_clicks c '
+            . 'JOIN obe_tracked_links l ON l.token = c.token '
+            . 'LEFT JOIN obe_contacts ct ON ct.id = l.contact_id '
+            . 'LEFT JOIN obe_companies co ON co.id = ct.company_id '
+            . 'WHERE c.client_id = ? '
+            . 'GROUP BY l.contact_id, l.target_url, co.name, '
+            . 'ct.first_name, ct.last_name '
+            . 'ORDER BY clicks DESC, last_click DESC LIMIT 100');
+        $stmt->execute([$clientId]);
+        $linkEngagement = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        $linkEngagement = [];
+    }
+
     json_out([
         'metrics' => $metrics,
         'stages' => $stages,
@@ -408,6 +431,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'by_channel' => $byChannel,
             'by_icp' => $byIcp,
         ],
+        'link_engagement' => $linkEngagement,
     ]);
 }
 
