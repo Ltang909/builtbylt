@@ -37,7 +37,16 @@ function toast(msg) {
 function viewEl() { return $('#view'); }
 
 function errBox(err) {
-  return '<div class="err">' + esc(err.message || String(err)) + '</div>';
+  const m = err.message || String(err);
+  let extra = '';
+  if (m.indexOf('504') !== -1) {
+    extra = '<p class="muted">That is a server timeout, not the '
+      + 'work failing. Runs save progress as they go, so boards '
+      + 'found and signals seen before the cut-off are kept. Give '
+      + 'it a few seconds, then click the same button again to '
+      + 'continue where it stopped.</p>';
+  }
+  return '<div class="err">' + esc(m) + '</div>' + extra;
 }
 
 // --- API ---------------------------------------------------------------------

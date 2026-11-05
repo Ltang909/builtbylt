@@ -1209,39 +1209,175 @@ function obe_slug_candidates(array $company): array {
 }
 
 /**
+ * The public feed URL for a board type + token, used by the
+ * prober (the board reader builds the same URLs with its own
+ * request options).
+ */
+function obe_board_feed_url(string $type, string $token): ?string {
+    switch ($type) {
+        case 'greenhouse':
+            return 'https://boards-api.greenhouse.io/v1/boards/'
+                . urlencode($token) . '/jobs';
+        case 'lever':
+            return 'https://api.lever.co/v0/postings/'
+                . urlencode($token) . '?mode=json';
+        case 'ashby':
+            return 'https://api.ashbyhq.com/posting-api/job-board/'
+                . urlencode($token);
+        case 'workable':
+            return 'https://apply.workable.com/api/v1/widget/accounts/'
+                . urlencode($token) . '/jobs';
+        case 'smartrecruiters':
+            return 'https://api.smartrecruiters.com/v1/companies/'
+                . urlencode($token) . '/postings?limit=100';
+        case 'recruitee':
+            return 'https://' . $token . '.recruitee.com/api/offers/';
+        case 'breezy':
+            return 'https://' . $token . '.breezy.hr/json';
+        case 'teamtailor':
+            return 'https://' . $token . '.teamtailor.com/jobs.rss';
+    }
+    return null;
+}
+
+/**
+ * Does this probe response look like a real board of this type?
+ * HTTP 200 plus the feed's top-level shape. An empty-but-valid
+ * feed counts: the board exists even with zero postings today.
+ */
+function obe_probe_response_ok(string $type, int $status,
+                               string $body): bool {
+    if ($status !== 200 || $body === '') {
+        return false;
+    }
+    if ($type === 'teamtailor') {
+        return strpos($body, '<rss') !== false
+            || strpos($body, '<feed') !== false;
+    }
+    $data = json_decode($body, true);
+    if (!is_array($data)) {
+        return false;
+    }
+    switch ($type) {
+        case 'greenhouse':
+        case 'ashby':
+            return isset($data['jobs']) && is_array($data['jobs']);
+        case 'workable':
+            return isset($data['jobs']) || isset($data[0])
+                || count($data) === 0;
+        case 'smartrecruiters':
+            return isset($data['content'])
+                && is_array($data['content']);
+        case 'recruitee':
+            return isset($data['offers']) && is_array($data['offers']);
+        case 'lever':
+        case 'breezy':
+            return isset($data[0]) || count($data) === 0;
+    }
+    return false;
+}
+
+/**
+ * Fetch many URLs concurrently (curl_multi). Probing sequentially
+ * cost up to 20 s per candidate and made discovery runs outlast
+ * the web proxy, surfacing as HTTP 504 in the browser; the same
+ * checks in parallel take roughly one timeout window total.
+ * $urls maps key => URL; returns key => status/body/error.
+ */
+function obe_http_multi(array $urls, int $timeout = 8): array {
+    $out = [];
+    $mh = curl_multi_init();
+    $handles = [];
+    foreach ($urls as $key => $url) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_CONNECTTIMEOUT => min(6, $timeout),
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 3,
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; '
+                . 'OutboundEngine/1.0)',
+        ]);
+        curl_multi_add_handle($mh, $ch);
+        $handles[$key] = $ch;
+        $out[$key] = ['status' => 0, 'body' => '', 'error' => null];
+    }
+    $running = null;
+    do {
+        curl_multi_exec($mh, $running);
+        if ($running > 0) {
+            curl_multi_select($mh, 0.5);
+        }
+    } while ($running > 0);
+    foreach ($handles as $key => $ch) {
+        $err = curl_error($ch);
+        $out[$key] = [
+            'status' => (int)curl_getinfo($ch,
+                                           CURLINFO_RESPONSE_CODE),
+            'body' => (string)curl_multi_getcontent($ch),
+            'error' => $err !== '' ? $err : null,
+        ];
+        curl_multi_remove_handle($mh, $ch);
+        curl_close($ch);
+    }
+    curl_multi_close($mh);
+    return $out;
+}
+
+/**
  * Probe the public ATS feeds directly for this company. Link
  * scanning is blind to boards embedded as JavaScript widgets (no
  * board URL ever appears in the page HTML — Circle's site never
  * links its Ashby board, yet the board is live), so when scanning
  * finds nothing, ask each ATS whether a board exists under the
- * company's obvious slugs. A probe is a fetch of the same public
- * feed the run would read anyway: success (feed parses, even with
- * zero postings) means the board is real, and it is saved on the
- * company row. Workday is not probed — its token needs a
- * host|tenant|site triple that cannot be guessed from a slug.
- * $budget caps total probe requests across the run and is
- * decremented per attempt. Returns the found board or null.
+ * company's obvious slugs. Candidates keep the original priority
+ * order (domain-root slug first, ATS order within it) but are all
+ * fetched IN PARALLEL — the first valid feed in priority order
+ * wins and is saved on the company row. Workday is not probed:
+ * its token needs a host|tenant|site triple that cannot be
+ * guessed from a slug. $budget caps total probe requests across
+ * the run and is decremented per request fired.
  */
 function obe_probe_boards(PDO $pdo, array $company,
                           int &$budget): ?array {
     $types = ['ashby', 'greenhouse', 'lever', 'recruitee', 'breezy',
               'workable', 'smartrecruiters', 'teamtailor'];
+    $candidates = [];
+    $urls = [];
     foreach (obe_slug_candidates($company) as $slug) {
         foreach ($types as $type) {
             if ($budget <= 0) {
-                return null;
+                break 2;
             }
-            $budget--;
-            try {
-                obe_fetch_board_jobs($type, $slug);
-            } catch (Throwable $e) {
+            $url = obe_board_feed_url($type, $slug);
+            if ($url === null) {
                 continue;
             }
+            $budget--;
+            $key = count($candidates);
+            $candidates[] = ['type' => $type, 'token' => $slug];
+            $urls[$key] = $url;
+        }
+    }
+    if (count($candidates) === 0) {
+        return null;
+    }
+    $results = obe_http_multi($urls, 8);
+    foreach ($candidates as $key => $cand) {
+        $r = isset($results[$key]) ? $results[$key] : null;
+        if ($r === null) {
+            continue;
+        }
+        if (obe_probe_response_ok($cand['type'], (int)$r['status'],
+                                  (string)$r['body'])) {
             $stmt = $pdo->prepare(
                 'UPDATE obe_companies SET board_type = ?, '
                 . 'board_token = ? WHERE id = ?');
-            $stmt->execute([$type, $slug, (int)$company['id']]);
-            return ['type' => $type, 'token' => $slug];
+            $stmt->execute([$cand['type'], $cand['token'],
+                            (int)$company['id']]);
+            return ['type' => $cand['type'],
+                    'token' => $cand['token']];
         }
     }
     return null;
@@ -1959,6 +2095,12 @@ function obe_find_or_create_company(PDO $pdo, int $clientId, string $name,
  * Returns a summary array; also writes a job_runs row.
  */
 function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
+    // A run makes many external fetches. If the web proxy stops
+    // waiting (the browser shows HTTP 504), let PHP finish anyway
+    // so the run completes and logs instead of dying half-done;
+    // everything it saves along the way is kept either way.
+    ignore_user_abort(true);
+    @set_time_limit(0);
     $clientId = (int)$client['id'];
     $summary = [
         'companies_checked' => 0,
@@ -2011,7 +2153,7 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
         . 'AND ((careers_url IS NOT NULL AND careers_url <> \'\') '
         . 'OR (website IS NOT NULL AND website <> \'\') '
         . 'OR (domain IS NOT NULL AND domain <> \'\')) '
-        . 'ORDER BY id LIMIT 25');
+        . 'ORDER BY id LIMIT 12');
     $stmt->execute([$clientId]);
     $probeBudget = 60;
     foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $cand) {
@@ -2059,7 +2201,8 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
             }
             $headHay = strtolower($job['title'] . ' '
                                   . $job['department']);
-            $bodyHay = strtolower((string)($job['body'] ?? ''));
+            $bodyHay = strtolower(substr(
+                (string)($job['body'] ?? ''), 0, 12000));
             $haystack = $headHay . ' ' . $bodyHay;
             foreach ($signals as $signal) {
                 $types = obe_json_field($signal['source_types_json'] ?? null);
@@ -2136,10 +2279,16 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
         }
     }
     if (count($newsSignals) > 0) {
+        // Rotate: each run checks the next 12 companies after
+        // the stored cursor, wrapping to the start, so a long
+        // company list is fully covered across runs instead of
+        // the same first page being re-checked every time.
+        $newsCursor = (int)obe_setting($pdo, $clientId,
+                                       'news_cursor', 0);
         $stmt = $pdo->prepare(
             'SELECT * FROM obe_companies WHERE client_id = ? '
-            . 'ORDER BY id LIMIT 25');
-        $stmt->execute([$clientId]);
+            . 'ORDER BY (id <= ?) ASC, id ASC LIMIT 12');
+        $stmt->execute([$clientId, $newsCursor]);
         $newsCompanies = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $newsObsInsert = $pdo->prepare(
             'INSERT INTO obe_signal_observations (client_id, company_id, '
@@ -2196,6 +2345,11 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
         }
     }
 
+    if (isset($newsCompanies) && count($newsCompanies) > 0) {
+        obe_set_setting($pdo, $clientId, 'news_cursor',
+            (string)(int)$newsCompanies[
+                count($newsCompanies) - 1]['id']);
+    }
     if ($summary['news_failed'] > 0
         && $summary['news_checked'] === 0) {
         $summary['errors'][] = 'News check failed for all '
