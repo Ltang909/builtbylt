@@ -583,7 +583,6 @@ if ($action === 'apollo_search') {
             isset($person['title']) ? (string)$person['title'] : null,
             null,
             null,
-            null,
             $apolloId !== '' ? $apolloId : null,
         ]);
         $inserted++;
