@@ -37,6 +37,9 @@ const IMAGE_PRICES_USD_BY_SIZE = [   // estimate, checked 2026-11-04
     '1024x1024' => ['low' => 0.007, 'medium' => 0.015, 'high' => 0.055],
     '1024x1536' => ['low' => 0.011, 'medium' => 0.023, 'high' => 0.083],
     '1536x1024' => ['low' => 0.011, 'medium' => 0.023, 'high' => 0.083],
+    // Native Google Display landscape (Update 11.5): 1216x640 is
+    // the exact 1.91:1 frame at square-tier pixel count.
+    '1216x640' => ['low' => 0.007, 'medium' => 0.015, 'high' => 0.055],
 ];
 // The square row as its own constant: older code refers to it.
 const IMAGE_PRICES_USD = [           // estimate, checked 2026-11-04

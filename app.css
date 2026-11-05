@@ -148,3 +148,9 @@ pre.doc{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
   100%{outline:2px solid transparent;outline-offset:8px}}
 #tabs button.locked{opacity:.38;cursor:default}
 #tabs button.done{color:var(--pass)}
+
+/* Update 11.5: display-asset links as quiet pills, not raw anchors */
+.dlink{display:inline-block;padding:2px 10px;border:1px solid var(--line);
+  border-radius:999px;color:var(--text);text-decoration:none;font-size:12px;
+  background:var(--panel2)}
+.dlink:hover{border-color:var(--primary);color:#fff}

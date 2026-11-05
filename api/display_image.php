@@ -34,7 +34,11 @@ if (!$r['ok']) {
     json_out(['error' => $r['error']], (int)$r['status']);
 }
 $abs = PANEL_ROOT . '/' . $r['path'];
-header('Content-Type: image/jpeg');
+// The generated variant (Update 11.5) may be PNG/WebP bytes; the
+// derived crop is JPEG. Serve the file's real type.
+$info = @getimagesize($abs);
+header('Content-Type: ' . ($info !== false && !empty($info['mime'])
+    ? $info['mime'] : 'image/jpeg'));
 header('Content-Length: ' . filesize($abs));
 header('Content-Disposition: inline; filename="creative-' . $cid
     . '-landscape-1200x628.jpg"');

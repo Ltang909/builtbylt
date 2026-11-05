@@ -101,7 +101,9 @@ function gen_params(PDO $pdo, array $data): array {
 function gen_estimate(array $p): array {
     $copyCost = est_copy_cost($p['copy_model'], GEN_EST_INPUT_TOKENS,
         GEN_EST_OUTPUT_TOKENS_PER_VARIANT * $p['variants']);
-    $imageCost = est_image_cost($p['image_quality'], $p['images']);
+    // Update 11.5: every imaged creative gets TWO generations —
+    // the square plus a native 1.91:1 landscape variant.
+    $imageCost = est_image_cost($p['image_quality'], $p['images'] * 2);
     $verifyCost = est_verify_cost(
         $p['variants'], JEV_EST_INPUT_TOKENS_PER_CREATIVE);
     $lines = [
@@ -114,10 +116,11 @@ function gen_estimate(array $p): array {
         ['item' => 'images', 'label' => 'estimate',
          'detail' => sprintf('%s: %d image(s) at %s quality; %s; '
              . 'priced at the largest size',
-             $p['art_model'], $p['images'], $p['image_quality'],
+             $p['art_model'], $p['images'] * 2, $p['image_quality'],
              !empty($p['has_template'])
                  ? 'rendered from the workspace ad template '
-                     . '(square 1024x1024), headline on image'
+                     . '(square 1024x1024 + native landscape '
+                     . '1216x640 per creative), headline on image'
                  : 'headline rendered on the image; canvas follows '
                      . 'each variant\'s format'),
          'cost_usd' => round($imageCost, 6)],

@@ -84,7 +84,7 @@ async function loadAll(){
 }
 function renderAll(){
   renderIntake();
-  renderExperiments(); renderQueue(); renderApprovals();
+  renderExperiments(); renderQueue();
   renderLaunch(); renderPerformance(); renderLearnings(); renderSettings();
   refreshStageStates();
 }
@@ -94,24 +94,24 @@ function renderAll(){
 // not reached yet renders greyed and inert; finishing a stage scrolls
 // to the next one. gotoTab keeps its name so every existing call site
 // ("after generate, go to the queue") now means "scroll to that stage".
-const STAGE_ORDER = ["intake", "experiments", "queue", "approvals", "launch", "performance", "learnings", "settings"];
+const STAGE_ORDER = ["intake", "experiments", "queue", "launch", "performance", "learnings", "settings"];
 const STAGE_LOCK_HINTS = {
   queue: "add or generate a creative first",
-  approvals: "verify a creative in the Queue first",
-  launch: "approve a creative first",
+  launch: "push a creative to Google Ads first",
   performance: "needs launched creatives with performance rows",
   learnings: "needs a computed verdict or a recorded learning"
 };
 function stageStates(){
   const verified = creatives.some(c => c.verdicts && c.verdicts.length);
-  const approved = creatives.some(c => ["approved", "launched", "live", "scale_proposed"].includes(c.status));
+  // Update 11.5: the Approvals stage is gone; the Launch Board is
+  // unlocked by an actual Google Ads push, not by an approval.
+  const pushed = creatives.some(c => (c.google_ads_pushes || []).length > 0);
   const perf = perfBoard.some(p => p.days && p.days.length);
   const unlocked = {
     intake: true,
     experiments: true,
     queue: creatives.length > 0,
-    approvals: verified,
-    launch: approved,
+    launch: pushed,
     performance: perf,
     learnings: learnings.length > 0 || perf,
     settings: true
@@ -120,7 +120,6 @@ function stageStates(){
     intake: perf,
     experiments: creatives.length > 0,
     queue: verified,
-    approvals: approved,
     launch: perf,
     performance: perfBoard.some(p => ["pass", "fail", "kill"].includes(p.perf_status)),
     learnings: learnings.length > 0,
@@ -582,14 +581,32 @@ function displayLine(c){
   const fails = (c.display_spec.checks || []).filter(x => !x.ok && !x.empty);
   const assets = c.display_assets || [];
   const assetTxt = assets.length
-    ? assets.map(a => `<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.label)}</a>`).join(" · ")
+    ? assets.map(a => `<a class="dlink" href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.label)}</a>`).join(" · ")
     : "no image yet";
+  const landAsset = assets.find(a => a.kind === "landscape");
+  const landCtl = !assets.length ? ""
+    : landAsset && landAsset.generated
+      ? ` · <span class="chip pass">landscape: AI-generated</span>`
+      : ` · <button class="btn secondary" style="padding:2px 8px" onclick="genLandscape(${c.id})">Generate landscape (AI)</button>`;
   return `<div class="meta" style="margin-top:6px">Display (Google RDA): `
     + (fails.length
       ? `<span class="chip fail">${fails.length} field(s) over Google limits</span>`
       : `<span class="chip src">copy within Google limits</span>`)
     + ` · ${assetTxt}`
-    + ` · <a href="api/display_export.php?creative_id=${c.id}">export packet</a>${pushTxt}</div>`;
+    + ` · <a class="dlink" href="api/display_export.php?creative_id=${c.id}">export packet</a>${landCtl}${pushTxt}</div>`;
+}
+// Update 11.5: standalone native-landscape generation for a
+// creative that only has the square (older creatives, or a batch
+// whose landscape call failed). Estimate first, native confirm
+// with the number, then the confirmed call — the panel's spend
+// discipline in miniature.
+async function genLandscape(id){
+  const est = await api("generate_landscape.php", jsonOpts({creative_id: id, action: "estimate"})).catch(() => null);
+  if (!est || !est.ok){ alert("Could not price the landscape generation."); return; }
+  if (!confirm(`Generate a native landscape variant (1216x640) for creative #${id} with OpenAI?\nEstimated cost: $${Number(est.cost_usd).toFixed(4)}. Until it exists, the landscape asset is a center crop of the square.`)) return;
+  const out = await api("generate_landscape.php", jsonOpts({creative_id: id, confirm: true})).catch(() => null);
+  if (!out || !out.ok){ alert("Landscape generation failed: " + ((out && out.error) || "request failed")); return; }
+  loadAll();
 }
 function lintChips(c){
   if (!c.lint_flags || !c.lint_flags.length) return "";
@@ -914,7 +931,7 @@ async function genRun(expId){
   const wsTplKeys = ((workspaces.find(w => w.id === WS) || {}).image_templates || []).map(t => t.key);
   const tplForIndex = k => i.template_key === "alternate" && wsTplKeys.length > 1
     ? wsTplKeys[k % wsTplKeys.length] : i.template_key;
-  let imagesMade = 0, imageCost = 0;
+  let imagesMade = 0, landMade = 0, imageCost = 0;
   const imageFails = [];
   if (pending.length){
     const fill = document.getElementById("gen-fill-" + expId);
@@ -930,19 +947,32 @@ async function genRun(expId){
         imageFails.push(`creative #${pending[k]}: the image request failed (${e && e.message ? e.message : e}) — not retried, in case the provider completed it`);
         continue;
       }
-      if (r && r.ok){ imagesMade++; imageCost += Number(r.cost_usd || 0); }
+      if (r && r.ok){
+        imagesMade++; imageCost += Number(r.cost_usd || 0);
+        // Update 11.5: the native landscape variant rides the same
+        // confirmed run — the estimate priced both generations.
+        if (label) label.textContent = `Generating landscape variant ${k + 1} of ${pending.length}…`;
+        try {
+          const lr = await api("generate_landscape.php", jsonOpts({creative_id: pending[k],
+            template: tplForIndex(k), confirm: true}));
+          if (lr && lr.ok){ landMade++; imageCost += Number(lr.cost_usd || 0); }
+          else imageFails.push(`creative #${pending[k]} landscape: ${(lr && lr.error) || "landscape failed"} — the square is fine; use Generate landscape (AI) on the card to retry`);
+        } catch (e) {
+          imageFails.push(`creative #${pending[k]} landscape: the request failed — not retried, in case the provider completed it`);
+        }
+      }
       else imageFails.push(`creative #${pending[k]}: ${(r && r.error) || "image failed"}`);
     }
   }
   const totalActual = (Number(out.actual_cost_usd) || 0) + imageCost;
   res.innerHTML = `<div class="formnote"><strong>Batch #${b.id} ${esc(b.status)}</strong> — `
-    + `${out.created}${out.requested ? ` of ${out.requested} requested` : ""} creatives created (drafts), ${imagesMade} image(s) generated. `
+    + `${out.created}${out.requested ? ` of ${out.requested} requested` : ""} creatives created (drafts), ${imagesMade} square image(s) + ${landMade} landscape variant(s) generated. `
     + `Actual cost: ${cost(totalActual)} (estimate was ${cost(b.est_cost_usd)}).`
     + (b.error ? `<br>Notes: ${esc(b.error)}` : "")
     + (imageFails.length ? `<br>Image problems: ${esc(imageFails.join("; "))}` : "")
     + `<br><button class="btn" onclick="gotoQueueBatch(${b.id})">Batch #${b.id} created — review and verify in the Creative Queue →</button></div>`;
   creatives = await api("creatives.php");
-  renderQueue(); renderApprovals();
+  renderQueue();
   refreshStageStates();
 }
 function gotoQueueBatch(batchId){
@@ -1114,7 +1144,7 @@ function batchHeaderHtml(batchId, members){
       <button class="btn" id="bv-confirm-${batchId}" ${est ? "" : "disabled"} onclick="batchVerifyRun(${batchId})">Confirm &amp; verify batch</button>
     </div>`;
   } else {
-    controls = `<div class="formnote" style="margin:8px 0 0">No drafts left in this batch — every creative has been verified. Verdicts are on the cards below; passed drafts are waiting in Approvals.</div>`;
+    controls = `<div class="formnote" style="margin:8px 0 0">No drafts left in this batch — every creative has been verified. Verdicts are on the cards below; push passed drafts from their cards.</div>`;
   }
   return `<div class="batch-head" style="background:${color}1f;border-bottom:3px solid ${color}">`
     + `<div class="batch-title"><span class="gendot" style="background:${color}"></span><span class="chip genpill" style="background:${color}">GENERATED</span> ${esc(batchTitle(batchId, members))}</div>`
@@ -1147,11 +1177,11 @@ async function batchVerifyRun(batchId){
     jsonOpts({action: "verify_batch", batch_id: batchId, confirm: true})).then(r => r.json());
   if (out.error){ if (slot) slot.innerHTML = `<span class="msg err">${esc(out.error)}</span>`; return; }
   const counts = Object.entries(out.outcomes || {}).map(([k, v]) => `${k}: ${v}`).join(", ");
-  alert(`Batch #${batchId} verified ${out.verified} creative(s). Outcomes — ${counts}. Verdicts are on the cards in this batch below; passed drafts are in Approvals.`);
+  alert(`Batch #${batchId} verified ${out.verified} creative(s). Outcomes — ${counts}. Verdicts are on the cards in this batch below; push the passed ones from their cards.`);
   delete batchVerifyState[batchId];  // draft set changed; header re-estimates
   highlightBatchId = batchId;
   await loadAll();
-  gotoTab("approvals");
+  gotoTab("queue");
 }
 
 // Clearing (Update 3): destructive, but confirmed twice — the native
@@ -1306,28 +1336,23 @@ async function recordLearning(id){
   loadAll(); gotoTab("learnings");
 }
 
-// ---------- approvals ----------
-function renderApprovals(){
-  const el = $("#tab-approvals");
-  const pending = creatives.filter(c => c.status === "claude_review");
-  el.innerHTML = (pending.length ? "" : '<div class="empty">Nothing waiting. Creatives land here after passing the enabled guardrails (Step 3a). Human approval is Step 5 and is never automated away.</div>')
-    + pending.map(c => creativeCard(c,
-        `<button class="btn" onclick="decide(${c.id},'approve')">Approve</button>
-         <button class="btn danger" onclick="decide(${c.id},'reject')">Reject → edits</button>`
-      )).join("");
-}
-async function decide(id, action){
-  await fetch(API + "verify.php", jsonOpts({creative_id: id, action}));
-  loadAll();
-}
+// ---------- approvals: REMOVED (Update 11.5, operator's call) ---
+// The separate Approvals stage is gone. The push click is the
+// commitment point — pushes create PAUSED campaigns — and the
+// Launch Board below intakes anything already pushed. The
+// approve/reject API actions still exist server-side; nothing in
+// the UI calls them anymore.
 
 // ---------- launch board ----------
 function renderLaunch(){
   const el = $("#tab-launch");
-  const launched = creatives.filter(c => ["approved","launched","live","scale_proposed"].includes(c.status));
-  el.innerHTML = (launched.length ? "" : '<div class="empty">No approved creatives yet.</div>')
+  // Update 11.5: intake is "already pushed to Google Ads" — the
+  // pushes recorded on the creative, newest state on the card's
+  // Display line. The old Meta simulated-upload chip is gone.
+  const launched = creatives.filter(c => (c.google_ads_pushes || []).length > 0);
+  el.innerHTML = (launched.length ? "" : '<div class="empty">Nothing pushed yet. Push a creative to Google Ads (paused) from its Creative Queue card and it lands here.</div>')
     + launched.map(c => creativeCard(c,
-        `<span class="chip src">upload: simulated</span> <span class="chip src">utm_campaign: exp-${c.experiment_id}-creative-${c.id}</span>`
+        `<span class="chip src">utm_campaign: exp-${c.experiment_id}-creative-${c.id}</span>`
       )).join("");
 }
 

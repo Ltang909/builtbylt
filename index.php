@@ -27,7 +27,7 @@ require_page_auth($pdo);
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <title>Creative Testing System — Control Panel (Universal)</title>
-<link rel="stylesheet" href="app.css?v=20261102-1">
+<link rel="stylesheet" href="app.css?v=20261105-1">
 </head>
 <body>
 <header>
@@ -43,10 +43,9 @@ require_page_auth($pdo);
   <button data-tab="intake">0 · Intake</button>
   <button data-tab="experiments" class="active">1 · Experiments</button>
   <button data-tab="queue">2 · Creative Queue</button>
-  <button data-tab="approvals">3 · Approvals</button>
-  <button data-tab="launch">4 · Launch Board</button>
-  <button data-tab="performance">5 · Performance</button>
-  <button data-tab="learnings">6 · Learnings</button>
+  <button data-tab="launch">3 · Launch Board</button>
+  <button data-tab="performance">4 · Performance</button>
+  <button data-tab="learnings">5 · Learnings</button>
   <button data-tab="settings">Settings</button>
 </nav>
 <main>
@@ -66,25 +65,20 @@ require_page_auth($pdo);
   <div class="stage" id="stage-queue">
     <div class="stage-head"><span class="stage-num">2</span><h2>Creative Queue</h2><span class="stage-state"></span></div>
     <section id="tab-queue"></section>
-    <div class="stage-foot"><button class="btn stage-next" data-next="approvals">Next: Approvals ↓</button></div>
-  </div>
-  <div class="stage" id="stage-approvals">
-    <div class="stage-head"><span class="stage-num">3</span><h2>Approvals</h2><span class="stage-state"></span></div>
-    <section id="tab-approvals"></section>
     <div class="stage-foot"><button class="btn stage-next" data-next="launch">Next: Launch Board ↓</button></div>
   </div>
   <div class="stage" id="stage-launch">
-    <div class="stage-head"><span class="stage-num">4</span><h2>Launch Board</h2><span class="stage-state"></span></div>
+    <div class="stage-head"><span class="stage-num">3</span><h2>Launch Board</h2><span class="stage-state"></span></div>
     <section id="tab-launch"></section>
     <div class="stage-foot"><button class="btn stage-next" data-next="performance">Next: Performance ↓</button></div>
   </div>
   <div class="stage" id="stage-performance">
-    <div class="stage-head"><span class="stage-num">5</span><h2>Performance</h2><span class="stage-state"></span></div>
+    <div class="stage-head"><span class="stage-num">4</span><h2>Performance</h2><span class="stage-state"></span></div>
     <section id="tab-performance"></section>
     <div class="stage-foot"><button class="btn stage-next" data-next="learnings">Next: Learnings ↓</button></div>
   </div>
   <div class="stage" id="stage-learnings">
-    <div class="stage-head"><span class="stage-num">6</span><h2>Learnings</h2><span class="stage-state"></span></div>
+    <div class="stage-head"><span class="stage-num">5</span><h2>Learnings</h2><span class="stage-state"></span></div>
     <section id="tab-learnings"></section>
     <div class="stage-foot"><button class="btn secondary stage-next" data-next="settings">Workspace settings ↓</button></div>
   </div>
@@ -93,6 +87,6 @@ require_page_auth($pdo);
     <section id="tab-settings"></section>
   </div>
 </main>
-<script src="app.js?v=20261105-3"></script>
+<script src="app.js?v=20261105-4"></script>
 </body>
 </html>

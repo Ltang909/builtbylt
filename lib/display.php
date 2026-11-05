@@ -201,6 +201,7 @@ function display_assets_for(PDO $pdo, array $creative): array {
     } catch (Throwable $e) {
         $landPath = null;
     }
+    $genLand = display_generated_landscape($creative);
     $assets[] = [
         'kind' => 'landscape',
         'label' => 'Landscape 1.91:1 (1200x628)',
@@ -209,15 +210,36 @@ function display_assets_for(PDO $pdo, array $creative): array {
         'width' => RDA_LANDSCAPE_W,
         'height' => RDA_LANDSCAPE_H,
         'ratio_ok' => true,
-        'recorded' => $landPath !== null,
+        'recorded' => $landPath !== null || $genLand !== null,
+        'generated' => $genLand !== null,
     ];
     return $assets;
 }
 
 /**
- * The landscape asset's JPEG bytes for a creative, deriving and
- * caching the file on first use. Shared by api/display_image.php
- * (serves it) and the Google Ads push (uploads it). Returns
+ * The AI-generated native landscape variant's relative path, when
+ * one exists (Update 11.5: api/generate_landscape.php stores
+ * <cid>_landscape_gen.<ext> beside the square). Null otherwise.
+ */
+function display_generated_landscape(array $creative): ?string {
+    $cid = (int)$creative['id'];
+    $wsid = (int)$creative['workspace_id'];
+    foreach (['png', 'jpg', 'webp'] as $ext) {
+        $rel = 'uploads/ws' . $wsid . '/' . $cid
+            . '_landscape_gen.' . $ext;
+        if (is_file(PANEL_ROOT . '/' . $rel)) {
+            return $rel;
+        }
+    }
+    return null;
+}
+
+/**
+ * The landscape asset's bytes for a creative. Preference order
+ * (Update 11.5): the AI-generated native landscape when one
+ * exists; otherwise a GD center crop of the square, derived and
+ * cached on first use. Shared by api/display_image.php (serves
+ * it) and the Google Ads push (uploads it). Returns
  * ['ok' => true, 'bytes' => string, 'path' => relative path] or
  * ['ok' => false, 'error' => string, 'status' => int].
  */
@@ -228,6 +250,13 @@ function display_landscape_bytes(PDO $pdo, array $creative): array {
     }
     $cid = (int)$creative['id'];
     $wsid = (int)$creative['workspace_id'];
+    $gen = display_generated_landscape($creative);
+    if ($gen !== null) {
+        $bytes = @file_get_contents(PANEL_ROOT . '/' . $gen);
+        if ($bytes !== false) {
+            return ['ok' => true, 'bytes' => $bytes, 'path' => $gen];
+        }
+    }
     $rel = 'uploads/ws' . $wsid . '/' . $cid . '_landscape.jpg';
     $abs = PANEL_ROOT . '/' . $rel;
     if (is_file($abs)) {
