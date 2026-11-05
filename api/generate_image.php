@@ -81,7 +81,7 @@ if (trim($prompt) === '') {
               'error' => 'creative has no image prompt or art direction']);
 }
 $artRoute = get_route($pdo, 'art_gen');
-$artModel = (string)($artRoute['model'] ?: 'gpt-image-1');
+$artModel = (string)($artRoute['model'] ?: 'gpt-image-2.5-sunburst');
 $apiKey = vault_key($pdo, 'openai');
 if ($apiKey === null) {
     json_out(['ok' => false, 'creative_id' => $cid,

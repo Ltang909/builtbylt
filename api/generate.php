@@ -93,7 +93,7 @@ function gen_params(PDO $pdo, array $data): array {
         'copy_provider' => $copyRoute['provider'] ?: 'openai',
         'copy_model' => (string)($data['copy_model']
             ?? ($copyRoute['model'] ?: 'gpt-4o-mini')),
-        'art_model' => (string)($artRoute['model'] ?: 'gpt-image-1'),
+        'art_model' => (string)($artRoute['model'] ?: 'gpt-image-2.5-sunburst'),
     ];
 }
 

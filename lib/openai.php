@@ -183,7 +183,8 @@ function openai_image_edit(string $apiKey, string $model,
  * the top line of a stacked headline first — ran off the frame.
  * Portrait formats get the portrait canvas, landscape the landscape
  * canvas, everything else (including an empty or unknown format)
- * stays square. gpt-image-1 offers exactly these three sizes.
+ * stays square. These are the panel's three canvas sizes; GPT
+ * Image 2.5 accepts them (custom sizes in multiples of 16).
  */
 function image_size_for_format(?string $format): string {
     $f = str_replace([' ', '_'], '', strtolower(trim((string)$format)));
