@@ -324,16 +324,23 @@ function gads_list_customers(PDO $pdo, array $conn): array {
     return $out;
 }
 
-/** Map the panel's CTA text to Google's RDA button enum, or null. */
-function gads_cta_enum(string $cta): ?string {
+/** Map the panel's CTA text to the button text Google accepts
+ * in a Responsive Display Ad's call_to_action_text field, or null
+ * (field omitted; Google picks). Despite the enum-sounding name,
+ * that field is a plain display string in the API — the official
+ * v26 RDA guide sets it with .setCallToActionText("Apply Now")
+ * and points at the Help Center list of valid button texts.
+ * Sending the enum token (SIGN_UP) is rejected with AdError
+ * INVALID_CALL_TO_ACTION_TEXT, as the first headed push proved
+ * live (creative #165, 2026-11-05). Only texts attested on
+ * Google's button list are mapped; anything else is omitted. */
+function gads_cta_text(string $cta): ?string {
     $map = [
-        'learn more' => 'LEARN_MORE', 'sign up' => 'SIGN_UP',
-        'shop now' => 'SHOP_NOW', 'get quote' => 'GET_QUOTE',
-        'apply now' => 'APPLY_NOW', 'contact us' => 'CONTACT_US',
-        'subscribe' => 'SUBSCRIBE', 'download' => 'DOWNLOAD',
-        'book now' => 'BOOK_NOW', 'see more' => 'SEE_MORE',
-        'start now' => 'START_NOW', 'visit site' => 'VISIT_SITE',
-        'get started' => 'START_NOW',
+        'learn more' => 'Learn More', 'sign up' => 'Sign Up',
+        'shop now' => 'Shop Now', 'get quote' => 'Get Quote',
+        'apply now' => 'Apply Now', 'contact us' => 'Contact Us',
+        'subscribe' => 'Subscribe', 'download' => 'Download',
+        'book now' => 'Book Now', 'see more' => 'See More',
     ];
     $k = strtolower(trim($cta));
     return $map[$k] ?? null;
@@ -408,9 +415,9 @@ function gads_push_creative(PDO $pdo, array $creative, array $conn,
         'marketingImages' => [['asset' => $landRes]],
         'squareMarketingImages' => [['asset' => $squareRes]],
     ];
-    $ctaEnum = gads_cta_enum((string)$spec['cta']);
-    if ($ctaEnum !== null) {
-        $rda['callToActionText'] = $ctaEnum;
+    $ctaText = gads_cta_text((string)$spec['cta']);
+    if ($ctaText !== null) {
+        $rda['callToActionText'] = $ctaText;
     }
 
     $ops = [
