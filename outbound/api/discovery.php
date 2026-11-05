@@ -746,7 +746,7 @@ if ($action === 'people_for_company') {
         $added++;
     }
     if ($icp !== null) {
-        obe_run_discovery($pdo, ['id' => $clientId], $icp);
+        obe_run_discovery($pdo, $client, $icp, true);
     }
     obe_log_run($pdo, $clientId, 'apollo_search',
                 'People search for ' . (string)$company['name']

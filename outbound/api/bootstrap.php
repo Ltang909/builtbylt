@@ -2094,7 +2094,7 @@ function obe_find_or_create_company(PDO $pdo, int $clientId, string $name,
  *
  * Returns a summary array; also writes a job_runs row.
  */
-function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
+function obe_run_discovery(PDO $pdo, array $client, ?array $icp, bool $scoreOnly = false): array {
     // A run makes many external fetches. If the web proxy stops
     // waiting (the browser shows HTTP 504), let PHP finish anyway
     // so the run completes and logs instead of dying half-done;
@@ -2143,6 +2143,7 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
     $stmt->execute([$clientId, $icpId]);
     $signals = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    if (!$scoreOnly) {
     // Companies that arrive from Apollo search or CSV import usually
     // have no job board attached yet. Try to detect one automatically
     // (bounded per run) so a single Run covers the full flow: find
@@ -2357,6 +2358,7 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
             . (string)$summary['news_error'] . '.';
     }
 
+    }
     // Every company with at least one observation gets (re)scored.
     $stmt = $pdo->prepare(
         'SELECT DISTINCT company_id FROM obe_signal_observations '
