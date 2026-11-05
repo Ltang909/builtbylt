@@ -291,10 +291,13 @@ function scoreBadge(score) {
 
 function statusBadge(status) {
   const good = ['enriched', 'Active', 'approved', 'sent', 'confirmed'];
-  const warn = ['queued_enrich', 'Draft', 'pending', 'draft'];
+  const warn = ['queued_enrich', 'enriched_no_email', 'Draft',
+                'pending', 'draft'];
   const cls = good.indexOf(status) >= 0 ? 'good'
     : (warn.indexOf(status) >= 0 ? 'warn' : '');
-  return '<span class="badge ' + cls + '">' + esc(status) + '</span>';
+  const label = status === 'enriched_no_email'
+    ? 'enriched · no email' : status;
+  return '<span class="badge ' + cls + '">' + esc(label) + '</span>';
 }
 
 // --- Dashboard ----------------------------------------------------------------------
@@ -1038,6 +1041,9 @@ async function renderDiscovery() {
     + (showEnrich && m.contact_id
       ? '<button class="btn small secondary" data-enrich="' + m.id + '">Enrich</button>'
       : '')
+    + (m.contact_id && !m.has_email
+      ? '<button class="btn small secondary" data-addemail="' + m.id + '">Add email</button>'
+      : '')
     + '</div></td></tr>').join('');
 
   const ageText = (ts) => {
@@ -1350,8 +1356,24 @@ async function renderDiscovery() {
             match_id: parseInt(b.dataset.enrich, 10), confirmed,
           }));
         if (resp === null) { return; }
-        toast('Enriched. Credits remaining this month: '
-          + resp.credits_remaining + '.');
+        toast(resp.email_found === false
+          ? 'Enriched, but Apollo returned no email for this person — name and LinkedIn were updated. Use the LinkedIn channel, add the email manually if you have it, or re-check later. Credits remaining: ' + resp.credits_remaining + '.'
+          : 'Enriched. Credits remaining this month: '
+            + resp.credits_remaining + '.');
+        renderDiscovery();
+      } catch (err) { toast(err.message); }
+    };
+  });
+  el.querySelectorAll('[data-addemail]').forEach((b) => {
+    b.onclick = async () => {
+      const email = prompt('Email address for this contact (Apollo could not find one):');
+      if (!email) { return; }
+      try {
+        await apiPost('discovery.php?action=set_contact_email', {
+          match_id: parseInt(b.dataset.addemail, 10),
+          email: email.trim(),
+        });
+        toast('Email saved.');
         renderDiscovery();
       } catch (err) { toast(err.message); }
     };

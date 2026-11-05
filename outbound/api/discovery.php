@@ -34,6 +34,14 @@ function obe_match_out(PDO $pdo, array $row): array {
     $row['score'] = (int)$row['score'];
     $row['breakdown'] = obe_json_field($row['breakdown_json'] ?? null);
     unset($row['breakdown_json']);
+    $row['has_email'] = isset($row['contact_email'])
+        && trim((string)$row['contact_email']) !== '';
+    if (($row['status'] ?? '') === 'enriched' && !$row['has_email']
+        && array_key_exists('contact_email', $row)) {
+        // Self-healing display for rows stamped 'enriched' by the
+        // old logic despite having no email (e.g. Dmitriy, Nov 5).
+        $row['status'] = 'enriched_no_email';
+    }
     $row['contact_name'] = null;
     if (!empty($row['first_name']) || !empty($row['last_name'])) {
         $row['contact_name'] = trim((string)($row['first_name'] ?? '')
@@ -615,7 +623,8 @@ if ($action === 'enrich') {
     // Enrichment credits are only spent on qualified prospects.
     if ((int)$match['score'] < 75
         && !in_array((string)$match['status'],
-                     ['queued_enrich', 'enriched'], true)) {
+                     ['queued_enrich', 'enriched',
+                      'enriched_no_email'], true)) {
         json_out(['error' => 'not_qualified',
                   'message' => 'Enrichment is reserved for qualified '
                       . 'prospects scoring 75 or more.'], 409);
@@ -655,11 +664,41 @@ if ($action === 'enrich') {
                   'message' => $r['error']], 502);
     }
     json_out(['enriched' => true,
+              'email_found' => $r['email_found'],
+              'email_status' => $r['email_status'],
               'contact' => ['id' => (int)$match['ct_id'],
                             'email' => $r['email'],
                             'linkedin_url' => $r['linkedin_url']],
               'credits_used_this_month' => $used + 1,
               'credits_remaining' => $remaining - 1]);
+}
+
+if ($action === 'set_contact_email') {
+    $matchId = isset($data['match_id']) ? (int)$data['match_id'] : 0;
+    $email = strtolower(trim((string)($data['email'] ?? '')));
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        json_out(['error' => 'Enter a valid email address.'], 400);
+    }
+    $stmt = $pdo->prepare(
+        'SELECT contact_id FROM obe_prospect_matches '
+        . 'WHERE id = ? AND client_id = ?');
+    $stmt->execute([$matchId, $clientId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row === false || empty($row['contact_id'])) {
+        json_out(['error' => 'unknown match or no contact'], 400);
+    }
+    if (obe_suppressed($pdo, $clientId, $email)) {
+        json_out(['error' => 'That address is on the suppression '
+            . 'list for this client.'], 409);
+    }
+    $upd = $pdo->prepare(
+        'UPDATE obe_contacts SET email = ? WHERE id = ?');
+    $upd->execute([$email, (int)$row['contact_id']]);
+    $upd = $pdo->prepare(
+        'UPDATE obe_prospect_matches SET status = ? WHERE id = ? '
+        . 'AND status = ?');
+    $upd->execute(['enriched', $matchId, 'enriched_no_email']);
+    json_out(['ok' => true, 'email' => $email]);
 }
 
 if ($action === 'people_for_company') {
@@ -925,6 +964,7 @@ if ($action === 'pipeline') {
     $stmt->execute([$clientId]);
     $candidates = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $enriched = 0;
+    $noEmail = 0;
     $skippedBudget = 0;
     $enrichErrors = [];
     foreach ($candidates as $cand) {
@@ -935,6 +975,9 @@ if ($action === 'pipeline') {
         $r = obe_apollo_enrich_match($pdo, $clientId, $cand, $key);
         if ($r['ok']) {
             $enriched++;
+            if (empty($r['email_found'])) {
+                $noEmail++;
+            }
             $remaining -= 1;
         } else {
             $enrichErrors[] = (string)$cand['company_name']
@@ -943,7 +986,8 @@ if ($action === 'pipeline') {
     }
     obe_log_run($pdo, $clientId, 'pipeline',
                 'Pipeline run: ' . $peopleAdded . ' people added, '
-                . $enriched . ' enriched, ' . $skippedBudget
+                . $enriched . ' enriched (' . $noEmail
+                . ' of them without an email), ' . $skippedBudget
                 . ' left unenriched by the budget cap.');
     json_out([
         'companies_checked' => $sum1['companies_checked'],
@@ -955,6 +999,7 @@ if ($action === 'pipeline') {
         'queued' => $sum2['queued'],
         'people_added' => $peopleAdded,
         'enriched' => $enriched,
+        'enriched_no_email' => $noEmail,
         'skipped_budget' => $skippedBudget,
         'credits_used_this_month' => $used + $enriched,
         'errors' => array_merge($sum1['errors'], $peopleErrors,

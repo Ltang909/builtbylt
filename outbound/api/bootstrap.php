@@ -1082,6 +1082,9 @@ function obe_apollo_enrich_match(PDO $pdo, int $clientId, array $match,
         ? $decoded['person'] : [];
     $email = isset($person['email']) && (string)$person['email'] !== ''
         ? (string)$person['email'] : ($match['email'] ?? null);
+    $emailStatus = isset($person['email_status'])
+        ? (string)$person['email_status'] : null;
+    $emailFound = $email !== null && (string)$email !== '';
     $linkedin = isset($person['linkedin_url'])
         && (string)$person['linkedin_url'] !== ''
         ? (string)$person['linkedin_url']
@@ -1097,12 +1100,25 @@ function obe_apollo_enrich_match(PDO $pdo, int $clientId, array $match,
         . 'first_name = ?, last_name = ? WHERE id = ?');
     $upd->execute([$email, $linkedin, $firstName, $lastName,
                    (int)$match['ct_id']]);
+    // 'enriched' means an email actually landed (Nov 5 fix: Apollo
+    // can match the person and still return no email — the old
+    // code stamped 'enriched' anyway and the gap only surfaced
+    // later as a draft error).
     $upd = $pdo->prepare(
         'UPDATE obe_prospect_matches SET status = ? WHERE id = ?');
-    $upd->execute(['enriched', (int)$match['id']]);
+    $upd->execute([$emailFound ? 'enriched' : 'enriched_no_email',
+                   (int)$match['id']]);
     obe_usage($pdo, $clientId, 'apollo', 1, 1.0, 0.0,
-              'People match enrichment for match ' . (int)$match['id']);
-    return ['ok' => true, 'email' => $email, 'linkedin_url' => $linkedin];
+              'People match enrichment for match ' . (int)$match['id']
+              . ($emailFound ? '; email found'
+                 : '; NO email returned by Apollo'
+                   . ($emailStatus !== null && $emailStatus !== ''
+                       ? ' (email_status: ' . $emailStatus . ')'
+                       : '')));
+    return ['ok' => true, 'email' => $email,
+            'email_found' => $emailFound,
+            'email_status' => $emailStatus,
+            'linkedin_url' => $linkedin];
 }
 
 /**
