@@ -561,6 +561,110 @@ function obe_body_tracked(PDO $pdo, int $clientId, array $msg): string {
     return str_replace($target, $url, $body);
 }
 
+
+/** The account's Gmail signature, fetched from the sendAs settings
+ * (Nov 2026: Gmail stays the single source of truth). Gmail only
+ * ever applies signatures inside its own clients; API drafts get
+ * exactly the body they are handed, so the engine fetches the
+ * signature and appends it itself. Cached per client for 24h.
+ * Returns ['html' => ?string, 'scope_missing' => bool]: html null
+ * means no signature could be read (legacy unsigned format),
+ * '' means the account has none saved. Reading settings needs the
+ * gmail.settings.basic scope on the refresh token; a 403 there
+ * sets scope_missing so the UI can say to re-mint the token. */
+function obe_gmail_signature(PDO $pdo, int $clientId,
+                             string $accessToken): array {
+    $cached = obe_setting($pdo, $clientId, 'gmail_signature_html',
+                          null);
+    $fetchedAt = (int)obe_setting($pdo, $clientId,
+                                  'gmail_signature_fetched_at', 0);
+    if ($cached !== null && (time() - $fetchedAt) < 86400) {
+        return ['html' => (string)$cached, 'scope_missing' => false];
+    }
+    $res = obe_http(
+        'https://gmail.googleapis.com/gmail/v1/users/me/settings/sendAs',
+        ['method' => 'GET',
+         'timeout' => 20,
+         'headers' => ['Authorization: Bearer ' . $accessToken]]);
+    if ($res['error'] === null && $res['status'] === 403) {
+        return ['html' => $cached !== null ? (string)$cached : null,
+                'scope_missing' => true];
+    }
+    if ($res['error'] !== null || $res['status'] !== 200) {
+        return ['html' => $cached !== null ? (string)$cached : null,
+                'scope_missing' => false];
+    }
+    $data = json_decode($res['body'], true);
+    $sig = '';
+    if (is_array($data) && !empty($data['sendAs'])
+        && is_array($data['sendAs'])) {
+        $pick = null;
+        foreach ($data['sendAs'] as $entry) {
+            if (!empty($entry['isPrimary'])) {
+                $pick = $entry;
+                break;
+            }
+        }
+        if ($pick === null) {
+            $pick = $data['sendAs'][0];
+        }
+        $sig = isset($pick['signature']) ? (string)$pick['signature']
+                                         : '';
+    }
+    obe_set_setting($pdo, $clientId, 'gmail_signature_html', $sig);
+    obe_set_setting($pdo, $clientId, 'gmail_signature_fetched_at',
+                    (string)time());
+    return ['html' => $sig, 'scope_missing' => false];
+}
+
+/** Plain-text rendering of the HTML signature for the text part. */
+function obe_signature_text(string $html): string {
+    $t = preg_replace('/<br\s*\/?>/i', "\n", $html);
+    $t = preg_replace('/<\/(div|p|tr)>/i', "\n", (string)$t);
+    $t = strip_tags((string)$t);
+    $t = html_entity_decode($t, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $lines = array_map('trim', explode("\n", $t));
+    $t = implode("\n", $lines);
+    $t = preg_replace('/\n{3,}/', "\n\n", $t);
+    return trim((string)$t);
+}
+
+/** Build the raw RFC 822 message. With a Gmail signature the
+ * message becomes multipart/alternative: a text part (body plus
+ * the signature as text) and an HTML part (body plus the
+ * signature HTML, so links and formatting survive). Without one,
+ * the legacy single-part plain text format is kept as it was. */
+function obe_build_raw_email(string $to, string $subject,
+                             string $textBody,
+                             ?string $sigHtml): string {
+    $sigText = $sigHtml !== null ? obe_signature_text($sigHtml) : '';
+    if ($sigHtml === null || trim($sigHtml) === ''
+        || ($sigText === '' && trim(strip_tags($sigHtml)) === '')) {
+        return 'To: ' . $to . "\r\n"
+            . 'Subject: ' . $subject . "\r\n"
+            . "Content-Type: text/plain; charset=UTF-8\r\n\r\n"
+            . $textBody;
+    }
+    $boundary = 'obe_' . bin2hex(random_bytes(8));
+    $text = $textBody . ($sigText !== '' ? "\n\n" . $sigText : '');
+    $htmlBody = nl2br(htmlspecialchars($textBody, ENT_QUOTES,
+                                       'UTF-8'));
+    $html = '<div>' . $htmlBody . '</div>'
+        . '<div><br></div>' . $sigHtml;
+    return 'To: ' . $to . "\r\n"
+        . 'Subject: ' . $subject . "\r\n"
+        . "MIME-Version: 1.0\r\n"
+        . 'Content-Type: multipart/alternative; boundary="'
+        . $boundary . '"' . "\r\n\r\n"
+        . '--' . $boundary . "\r\n"
+        . "Content-Type: text/plain; charset=UTF-8\r\n\r\n"
+        . $text . "\r\n"
+        . '--' . $boundary . "\r\n"
+        . "Content-Type: text/html; charset=UTF-8\r\n\r\n"
+        . $html . "\r\n"
+        . '--' . $boundary . "--\r\n";
+}
+
 if ($action === 'gmail_draft') {
     $id = isset($data['id']) ? (int)$data['id'] : 0;
     $stmt = $pdo->prepare(
@@ -589,10 +693,11 @@ if ($action === 'gmail_draft') {
                   'message' => $tok['message']], (int)$tok['status']);
     }
     $accessToken = $tok['access_token'];
-    $raw = 'To: ' . (string)$msg['contact_email'] . "\r\n"
-        . 'Subject: ' . (string)($msg['subject'] ?? '') . "\r\n"
-        . "Content-Type: text/plain; charset=UTF-8\r\n\r\n"
-        . obe_body_tracked($pdo, $clientId, $msg);
+    $sig = obe_gmail_signature($pdo, $clientId, $accessToken);
+    $raw = obe_build_raw_email(
+        (string)$msg['contact_email'],
+        (string)($msg['subject'] ?? ''),
+        obe_body_tracked($pdo, $clientId, $msg), $sig['html']);
     $encoded = rtrim(strtr(base64_encode($raw), '+/', '-_'), '=');
     $draftRes = obe_http(
         'https://gmail.googleapis.com/gmail/v1/users/me/drafts', [
@@ -613,9 +718,19 @@ if ($action === 'gmail_draft') {
     $upd = $pdo->prepare(
         'UPDATE obe_messages SET external_id = ? WHERE id = ?');
     $upd->execute([(string)$draftData['id'], $id]);
+    $note = $sig['scope_missing']
+        ? ' Note: your Gmail signature could not be read — the '
+          . 'saved Gmail token is missing the settings permission. '
+          . 'Re-mint it with both scopes (see the Gmail card in '
+          . 'Settings) and future drafts will be signed.'
+        : ($sig['html'] !== null && trim((string)$sig['html']) !== ''
+            ? ' Your Gmail signature was applied.' : '');
     json_out(['draft_id' => (string)$draftData['id'],
+              'signature_applied' => $sig['html'] !== null
+                  && trim((string)$sig['html']) !== '',
+              'signature_scope_missing' => $sig['scope_missing'],
               'message' => 'Draft created in the connected Gmail '
-                  . 'account.']);
+                  . 'account.' . $note]);
 }
 
 if ($action === 'track_link') {
@@ -672,10 +787,11 @@ if ($action === 'send_test') {
             . 'in Settings, or save the account email with the Gmail '
             . 'connection.'], 400);
     }
-    $raw = 'To: ' . $to . "\r\n"
-        . 'Subject: [TEST] ' . (string)($msg['subject'] ?? '') . "\r\n"
-        . "Content-Type: text/plain; charset=UTF-8\r\n\r\n"
-        . obe_body_tracked($pdo, $clientId, $msg);
+    $sig = obe_gmail_signature($pdo, $clientId,
+                               $tok['access_token']);
+    $raw = obe_build_raw_email(
+        $to, '[TEST] ' . (string)($msg['subject'] ?? ''),
+        obe_body_tracked($pdo, $clientId, $msg), $sig['html']);
     $encoded = rtrim(strtr(base64_encode($raw), '+/', '-_'), '=');
     $sendRes = obe_http(
         'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
@@ -698,9 +814,18 @@ if ($action === 'send_test') {
     $ev->execute([$clientId, $id, 'test_sent',
                   json_encode(['to' => $to,
                                'gmail_id' => (string)$sendData['id']])]);
+    $note = $sig['scope_missing']
+        ? ' Note: your Gmail signature could not be read — the '
+          . 'saved Gmail token is missing the settings permission '
+          . '(see the Gmail card in Settings).'
+        : ($sig['html'] !== null && trim((string)$sig['html']) !== ''
+            ? ' Your Gmail signature was applied.' : '');
     json_out(['ok' => true, 'to' => $to,
+              'signature_applied' => $sig['html'] !== null
+                  && trim((string)$sig['html']) !== '',
+              'signature_scope_missing' => $sig['scope_missing'],
               'message' => 'Test sent to ' . $to . '. The queue '
-              . 'item itself was not changed.']);
+              . 'item itself was not changed.' . $note]);
 }
 
 json_out(['error' => 'unknown action'], 400);

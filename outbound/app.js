@@ -1998,6 +1998,10 @@ async function renderSettings() {
     + '<p>Status: ' + (ig.gmail.connected
       ? present(true, 'connected' + (ig.gmail.email ? ' as ' + ig.gmail.email : ''))
       : present(false, 'not connected')) + '</p>'
+    + '<p>Signature: ' + (ig.gmail.signature_cached
+      ? present(true, 'synced from Gmail' + (ig.gmail.signature_fetched_at ? ' · last fetched ' + new Date(ig.gmail.signature_fetched_at * 1000).toLocaleString() : ''))
+      : present(false, 'not synced yet — it is fetched the first time a draft or test send runs')) + '</p>'
+    + '<p class="muted small">Drafts and test sends carry the signature saved in your Gmail settings, fetched through the API (Gmail never adds it to API-created drafts itself). Reading it needs the token to include the gmail.settings.basic scope as well as gmail.compose — if a message comes out unsigned, re-mint the refresh token in the OAuth Playground with both scopes and save it here.</p>'
     + '<p class="muted small">Setup: create a Google Cloud OAuth '
     + 'client, save its client id and secret here, then add a refresh '
     + 'token for the sending account. Until then, Gmail draft '

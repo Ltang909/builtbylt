@@ -59,6 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'email' => $gmailConnected
                     && !empty($gmailToken['email'])
                     ? (string)$gmailToken['email'] : null,
+                'signature_cached' => obe_setting(
+                    $pdo, $clientId, 'gmail_signature_html', null)
+                    !== null,
+                'signature_fetched_at' => (int)obe_setting(
+                    $pdo, $clientId, 'gmail_signature_fetched_at', 0),
             ],
             'cron_secret' => [
                 'set' => $cronHash !== null && (string)$cronHash !== '',
