@@ -1205,7 +1205,13 @@ async function renderDiscovery() {
         }));
       if (resp === null) { return; }
       msg.innerHTML = '<div class="ok">Pipeline complete: '
-        + esc(resp.companies_checked) + ' companies checked, '
+        + esc(resp.companies_checked) + ' companies checked'
+        + (resp.probes_made ? ', ' + esc(resp.probes_made)
+          + ' slug probes (' + esc(resp.boards_probed || 0)
+          + ' boards found)' : '')
+        + (resp.news_failed ? ', NEWS FAILED for '
+          + esc(resp.news_failed) + ' companies' : '')
+        + ', '
         + esc(resp.new_observations) + ' new signal observations, '
         + esc(resp.people_added) + ' people found at signal '
         + 'companies, ' + esc(resp.matches_scored) + ' matches '
@@ -1233,13 +1239,20 @@ async function renderDiscovery() {
       msg.innerHTML = '<div class="ok">Discovery complete: '
         + esc(s.companies_checked) + ' companies checked'
         + (s.boards_detected ? ', ' + esc(s.boards_detected)
-          + ' boards auto-detected' : '')
+          + ' boards auto-detected'
+          + (s.boards_probed ? ' (' + esc(s.boards_probed)
+            + ' by slug probe)' : '') : '')
+        + (s.probes_made ? ', ' + esc(s.probes_made)
+          + ' probes made' : '')
         + ', '
         + esc(s.jobs_seen) + ' jobs seen, ' + esc(s.new_observations)
         + ' new signal observations'
         + (s.news_checked ? ' (' + esc(s.news_observations || 0)
           + ' from news across ' + esc(s.news_checked)
           + ' companies)' : '')
+        + (s.news_failed ? ', NEWS FAILED for '
+          + esc(s.news_failed) + ' companies'
+          + (s.news_error ? ' — ' + esc(s.news_error) : '') : '')
         + ', ' + esc(s.matches_scored)
         + ' matches scored, ' + esc(s.queued) + ' queued for '
         + 'enrichment.'

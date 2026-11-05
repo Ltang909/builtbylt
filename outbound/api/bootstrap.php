@@ -1175,6 +1175,79 @@ function obe_detect_board_for_company(PDO $pdo, array $company): ?array {
 }
 
 /**
+ * Candidate board slugs for a company: its domain root first
+ * (circle.so -> circle; that is what companies most often use as
+ * their ATS slug), then the name with punctuation removed, then a
+ * hyphenated name form.
+ */
+function obe_slug_candidates(array $company): array {
+    $out = [];
+    $domain = strtolower((string)($company['domain'] ?? ''));
+    $domain = (string)preg_replace('/^www\./', '', $domain);
+    if ($domain !== '') {
+        $parts = explode('.', $domain);
+        if ((string)$parts[0] !== '') {
+            $out[] = (string)$parts[0];
+        }
+    }
+    $name = strtolower((string)($company['name'] ?? ''));
+    $squashed = (string)preg_replace('/[^a-z0-9]+/', '', $name);
+    if ($squashed !== '') {
+        $out[] = $squashed;
+    }
+    $hyphen = trim((string)preg_replace('/[^a-z0-9]+/', '-', $name),
+                   '-');
+    if ($hyphen !== '') {
+        $out[] = $hyphen;
+    }
+    $out = array_values(array_unique(array_filter($out,
+        function ($s) {
+            return strlen((string)$s) >= 2
+                && strlen((string)$s) <= 40;
+        })));
+    return array_slice($out, 0, 3);
+}
+
+/**
+ * Probe the public ATS feeds directly for this company. Link
+ * scanning is blind to boards embedded as JavaScript widgets (no
+ * board URL ever appears in the page HTML — Circle's site never
+ * links its Ashby board, yet the board is live), so when scanning
+ * finds nothing, ask each ATS whether a board exists under the
+ * company's obvious slugs. A probe is a fetch of the same public
+ * feed the run would read anyway: success (feed parses, even with
+ * zero postings) means the board is real, and it is saved on the
+ * company row. Workday is not probed — its token needs a
+ * host|tenant|site triple that cannot be guessed from a slug.
+ * $budget caps total probe requests across the run and is
+ * decremented per attempt. Returns the found board or null.
+ */
+function obe_probe_boards(PDO $pdo, array $company,
+                          int &$budget): ?array {
+    $types = ['ashby', 'greenhouse', 'lever', 'recruitee', 'breezy',
+              'workable', 'smartrecruiters', 'teamtailor'];
+    foreach (obe_slug_candidates($company) as $slug) {
+        foreach ($types as $type) {
+            if ($budget <= 0) {
+                return null;
+            }
+            $budget--;
+            try {
+                obe_fetch_board_jobs($type, $slug);
+            } catch (Throwable $e) {
+                continue;
+            }
+            $stmt = $pdo->prepare(
+                'UPDATE obe_companies SET board_type = ?, '
+                . 'board_token = ? WHERE id = ?');
+            $stmt->execute([$type, $slug, (int)$company['id']]);
+            return ['type' => $type, 'token' => $slug];
+        }
+    }
+    return null;
+}
+
+/**
  * Recent Google News items about a company that mention at least one
  * of the given signals' keywords. One RSS fetch per call (free, no
  * key). Returns up to 10 normalized items (title, summary, link,
@@ -1282,11 +1355,26 @@ function obe_news_items(string $companyName, array $newsSignals): ?array {
  * free, unauthenticated APIs). Normalized to title, department,
  * location, url, posted date. Throws Exception on failure.
  */
+/**
+ * HTML (or HTML-escaped HTML, as Greenhouse returns it) to plain
+ * text for keyword matching. Decodes first so escaped markup still
+ * strips, then collapses whitespace.
+ */
+function obe_plain_text(string $html): string {
+    if ($html === '') {
+        return '';
+    }
+    $text = strip_tags(html_entity_decode($html, ENT_QUOTES, 'UTF-8'));
+    $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
+    $text = preg_replace('/\s+/', ' ', (string)$text);
+    return trim((string)$text);
+}
+
 function obe_fetch_board_jobs(string $type, string $token): array {
     $jobs = [];
     if ($type === 'greenhouse') {
         $res = obe_http('https://boards-api.greenhouse.io/v1/boards/'
-                        . urlencode($token) . '/jobs',
+                        . urlencode($token) . '/jobs?content=true',
                         ['timeout' => 20, 'follow' => true]);
         if ($res['error'] !== null || $res['status'] !== 200) {
             throw new Exception('Greenhouse board fetch failed (HTTP '
@@ -1303,6 +1391,8 @@ function obe_fetch_board_jobs(string $type, string $token): array {
                     ? (string)$j['location']['name'] : '',
                 'url' => (string)($j['absolute_url'] ?? ''),
                 'posted' => (string)($j['updated_at'] ?? ''),
+                'body' => obe_plain_text(
+                    (string)($j['content'] ?? '')),
             ];
         }
         return $jobs;
@@ -1331,6 +1421,14 @@ function obe_fetch_board_jobs(string $type, string $token): array {
                 'location' => (string)($cat['location'] ?? ''),
                 'url' => (string)($j['hostedUrl'] ?? ''),
                 'posted' => $posted,
+                'body' => trim(((string)($j['descriptionPlain'] ?? ''))
+                    . ' ' . ((string)($j['additionalPlain'] ?? '')))
+                    !== ''
+                    ? trim(((string)($j['descriptionPlain'] ?? ''))
+                        . ' '
+                        . ((string)($j['additionalPlain'] ?? '')))
+                    : obe_plain_text(
+                        (string)($j['description'] ?? '')),
             ];
         }
         return $jobs;
@@ -1355,6 +1453,10 @@ function obe_fetch_board_jobs(string $type, string $token): array {
                 'url' => (string)($j['jobUrl']
                     ?? ($j['applyUrl'] ?? '')),
                 'posted' => (string)($j['publishedAt'] ?? ''),
+                'body' => ((string)($j['descriptionPlain'] ?? '')) !== ''
+                    ? (string)$j['descriptionPlain']
+                    : obe_plain_text(
+                        (string)($j['descriptionHtml'] ?? '')),
             ];
         }
         return $jobs;
@@ -1381,6 +1483,8 @@ function obe_fetch_board_jobs(string $type, string $token): array {
                 'department' => (string)($j['department'] ?? ''),
                 'location' => implode(', ', $locParts),
                 'url' => (string)($j['url'] ?? ''),
+                'body' => obe_plain_text(
+                    (string)($j['description'] ?? '')),
                 'posted' => (string)($j['published_on']
                     ?? ($j['created_at'] ?? '')),
             ];
@@ -1437,6 +1541,9 @@ function obe_fetch_board_jobs(string $type, string $token): array {
                 'department' => (string)($j['department'] ?? ''),
                 'location' => (string)($j['location'] ?? ''),
                 'url' => (string)($j['careers_url'] ?? ''),
+                'body' => obe_plain_text(
+                    ((string)($j['description'] ?? '')) . ' '
+                    . ((string)($j['requirements'] ?? ''))),
                 'posted' => (string)($j['published_at']
                     ?? ($j['created_at'] ?? '')),
             ];
@@ -1472,6 +1579,8 @@ function obe_fetch_board_jobs(string $type, string $token): array {
                 'department' => (string)($j['department'] ?? ''),
                 'location' => $locText,
                 'url' => (string)($j['url'] ?? ''),
+                'body' => obe_plain_text(
+                    (string)($j['description'] ?? '')),
                 'posted' => (string)($j['published_date'] ?? ''),
             ];
         }
@@ -1497,6 +1606,8 @@ function obe_fetch_board_jobs(string $type, string $token): array {
                 'location' => '',
                 'url' => (string)$item->link,
                 'posted' => (string)$item->pubDate,
+                'body' => obe_plain_text(
+                    (string)$item->description),
             ];
         }
         return $jobs;
@@ -1855,6 +1966,10 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
         'jobs_seen' => 0,
         'news_checked' => 0,
         'news_observations' => 0,
+        'news_failed' => 0,
+        'news_error' => null,
+        'boards_probed' => 0,
+        'probes_made' => 0,
         'new_observations' => 0,
         'matches_scored' => 0,
         'queued' => 0,
@@ -1894,13 +2009,22 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
         'SELECT * FROM obe_companies WHERE client_id = ? '
         . 'AND (board_token IS NULL OR board_token = \'\') '
         . 'AND ((careers_url IS NOT NULL AND careers_url <> \'\') '
-        . 'OR (website IS NOT NULL AND website <> \'\')) '
+        . 'OR (website IS NOT NULL AND website <> \'\') '
+        . 'OR (domain IS NOT NULL AND domain <> \'\')) '
         . 'ORDER BY id LIMIT 25');
     $stmt->execute([$clientId]);
+    $probeBudget = 60;
     foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $cand) {
         if (obe_detect_board_for_company($pdo, $cand) !== null) {
             $summary['boards_detected']++;
+            continue;
         }
+        $before = $probeBudget;
+        if (obe_probe_boards($pdo, $cand, $probeBudget) !== null) {
+            $summary['boards_detected']++;
+            $summary['boards_probed']++;
+        }
+        $summary['probes_made'] += $before - $probeBudget;
     }
 
     $stmt = $pdo->prepare(
@@ -1933,7 +2057,10 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
             if ($job['url'] === '' || $job['title'] === '') {
                 continue;
             }
-            $haystack = strtolower($job['title'] . ' ' . $job['department']);
+            $headHay = strtolower($job['title'] . ' '
+                                  . $job['department']);
+            $bodyHay = strtolower((string)($job['body'] ?? ''));
+            $haystack = $headHay . ' ' . $bodyHay;
             foreach ($signals as $signal) {
                 $types = obe_json_field($signal['source_types_json'] ?? null);
                 // Job boards are one family: a signal that named
@@ -1948,15 +2075,15 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
                     continue;
                 }
                 $keywords = obe_json_field($signal['keywords_json'] ?? null);
-                $matched = false;
+                $matchedKw = null;
                 foreach ($keywords as $kw) {
                     $kw = strtolower(trim((string)$kw));
                     if ($kw !== '' && strpos($haystack, $kw) !== false) {
-                        $matched = true;
+                        $matchedKw = $kw;
                         break;
                     }
                 }
-                if (!$matched) {
+                if ($matchedKw === null) {
                     continue;
                 }
                 $obsExists->execute([$companyId, (int)$signal['id'],
@@ -1970,6 +2097,17 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
                 }
                 if ($job['location'] !== '') {
                     $evidence .= ' · ' . $job['location'];
+                }
+                if (strpos($headHay, $matchedKw) === false
+                    && $bodyHay !== '') {
+                    $pos = strpos($bodyHay, $matchedKw);
+                    if ($pos !== false) {
+                        $start = max(0, $pos - 60);
+                        $snippet = substr(
+                            (string)($job['body'] ?? ''), $start, 170);
+                        $evidence .= ' — "…'
+                            . trim((string)$snippet) . '…"';
+                    }
                 }
                 $postedTs = $job['posted'] !== ''
                     ? strtotime($job['posted']) : false;
@@ -2010,6 +2148,12 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
         foreach ($newsCompanies as $nc) {
             $items = obe_news_items((string)$nc['name'], $newsSignals);
             if ($items === null) {
+                $summary['news_failed']++;
+                if ($summary['news_error'] === null) {
+                    $summary['news_error'] = 'the Google News feed '
+                        . 'could not be fetched or parsed (first '
+                        . 'failure: ' . (string)$nc['name'] . ')';
+                }
                 continue;
             }
             $summary['news_checked']++;
@@ -2050,6 +2194,13 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
                 }
             }
         }
+    }
+
+    if ($summary['news_failed'] > 0
+        && $summary['news_checked'] === 0) {
+        $summary['errors'][] = 'News check failed for all '
+            . $summary['news_failed'] . ' companies tried: '
+            . (string)$summary['news_error'] . '.';
     }
 
     // Every company with at least one observation gets (re)scored.
@@ -2113,7 +2264,10 @@ function obe_run_discovery(PDO $pdo, array $client, ?array $icp): array {
                 . ' jobs seen, ' . $summary['news_observations']
                 . ' news observations, ' . $summary['new_observations']
                 . ' new observations, ' . $summary['matches_scored']
-                . ' matches scored, ' . $summary['queued'] . ' queued.',
+                . ' matches scored, ' . $summary['queued'] . ' queued, '
+                . $summary['probes_made'] . ' probes made ('
+                . $summary['boards_probed'] . ' boards found), '
+                . $summary['news_failed'] . ' news fetches failed.',
                 $summary);
     return $summary;
 }

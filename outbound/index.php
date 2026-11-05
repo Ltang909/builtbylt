@@ -68,6 +68,6 @@ if (!is_logged_in()) {
   </div>
 </div>
 <div id="toast" class="toast hidden"></div>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>
