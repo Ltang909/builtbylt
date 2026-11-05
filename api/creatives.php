@@ -7,6 +7,12 @@
  *   POST api/creatives.php {workspace_id, experiment_id, kind, game_name,
  *        headline, primary_text, description, cta, offer_text,
  *        template_id, format} -> created creative
+ *   POST api/creatives.php {action: "update_copy", creative_id,
+ *        headline?, primary_text?, description?, cta?, offer_text?}
+ *        -> hand-edit the produced copy (Update 11.4). Editing wipes
+ *        the creative's verdicts and returns it to 'generated':
+ *        edited copy must re-verify before it can be approved.
+ *        Creatives already launched/live refuse edits.
  *   POST api/creatives.php {action: "image", creative_id, filename,
  *        image_base64} -> creative with the image stored under
  *        uploads/ws<workspace_id>/ . Base64 JSON only (kept simple, like
@@ -76,6 +82,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare(
             'UPDATE creatives SET image_path = ? WHERE id = ?');
         $stmt->execute([$rel, $cid]);
+        $fresh = fetch_creative($pdo, $cid);
+        $fresh['id'] = (int)$fresh['id'];
+        $fresh['workspace_id'] = (int)$fresh['workspace_id'];
+        json_out(creative_with_verdicts($pdo, $fresh));
+    }
+
+    if ($action === 'update_copy') {
+        $cid = (int)($data['creative_id'] ?? 0);
+        $row = fetch_creative($pdo, $cid);
+        if ($row === null) {
+            json_out(['error' => 'creative not found'], 404);
+        }
+        if (in_array((string)$row['status'],
+                     ['launched', 'live'], true)) {
+            json_out(['error' => 'This creative is already in '
+                . 'market; duplicate it instead of editing it.'], 400);
+        }
+        $fields = ['headline', 'primary_text', 'description',
+                   'cta', 'offer_text'];
+        $sets = [];
+        $vals = [];
+        foreach ($fields as $f) {
+            if (array_key_exists($f, $data)) {
+                $sets[] = $f . ' = ?';
+                $vals[] = $data[$f] === null
+                    ? null : (string)$data[$f];
+            }
+        }
+        if ($sets) {
+            $vals[] = $cid;
+            $pdo->prepare('UPDATE creatives SET '
+                . implode(', ', $sets) . ' WHERE id = ?')
+                ->execute($vals);
+        }
+        // The verdicts judged the old copy; they no longer apply.
+        $pdo->prepare('DELETE FROM verdicts WHERE creative_id = ?')
+            ->execute([$cid]);
+        $pdo->prepare("UPDATE creatives SET status = 'generated' "
+            . 'WHERE id = ?')->execute([$cid]);
         $fresh = fetch_creative($pdo, $cid);
         $fresh['id'] = (int)$fresh['id'];
         $fresh['workspace_id'] = (int)$fresh['workspace_id'];

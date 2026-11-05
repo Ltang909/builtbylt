@@ -612,8 +612,62 @@ function creativeCard(c, extraButtons){
     ${c.art_direction ? `<div class="copy"><span class="lbl">Art direction</span>\n${esc(c.art_direction)}</div>` : ""}
     ${verdictChips(c)}
     ${displayLine(c)}
-    <div style="margin-top:10px">${extraButtons || ""}</div>
+    <div style="margin-top:10px"><button class="btn secondary" onclick="toggleEditCopy(${c.id})">Edit copy</button> ${extraButtons || ""}</div>
+    ${editCopyForm(c)}
   </div>`;
+}
+
+// ---------- edit copy (Update 11.4) ----------
+// Hand-edit the produced copy in place. The counters track the
+// Google Display caps live (rule R13 judges the same numbers), so
+// an over-limit line is visible while it is being trimmed. Saving
+// wipes the creative's verdicts server-side and returns it to
+// 'generated': edited copy must re-verify before approval.
+function copyCount(id, field, cap){
+  const el = document.getElementById(`ec-${id}-${field}`);
+  const out = document.getElementById(`ecc-${id}-${field}`);
+  if (!el || !out) return;
+  const n = el.value.length;
+  out.textContent = n + (cap ? "/" + cap : "");
+  out.style.color = cap && n > cap ? "var(--fail, #ef476f)" : "";
+}
+function editCopyForm(c){
+  const row = (field, label, cap, area) => `
+    <div class="copy"><span class="lbl">${label}</span> <span class="meta" id="ecc-${c.id}-${field}">${(c[field] || "").length}${cap ? "/" + cap : ""}</span>
+    ${area
+      ? `<textarea id="ec-${c.id}-${field}" rows="2" style="width:100%" oninput="copyCount(${c.id},'${field}',${cap || 0})">${esc(c[field] || "")}</textarea>`
+      : `<input type="text" id="ec-${c.id}-${field}" value="${esc(c[field] || "")}" style="width:100%" oninput="copyCount(${c.id},'${field}',${cap || 0})">`}</div>`;
+  return `<div id="edit-${c.id}" style="display:none;margin-top:10px;border-top:1px solid var(--line, #333);padding-top:8px">
+    ${row("headline", "Headline", 30, false)}
+    ${row("primary_text", "Primary text", 90, true)}
+    ${row("description", "Description", 90, true)}
+    ${row("cta", "CTA", 0, false)}
+    ${row("offer_text", "Offer (30 max to run in the display set)", 30, false)}
+    <div class="rowline" style="margin-top:8px"><button class="btn" onclick="saveCopy(${c.id})">Save copy</button>
+    <button class="btn secondary" onclick="toggleEditCopy(${c.id})">Cancel</button>
+    <span class="msg">Saving clears this creative's verdicts — it goes back to generated and needs a fresh guardrails run.</span></div>
+  </div>`;
+}
+function toggleEditCopy(id){
+  const el = document.getElementById("edit-" + id);
+  if (el) el.style.display = el.style.display === "none" ? "" : "none";
+}
+async function saveCopy(id){
+  const grab = f => {
+    const el = document.getElementById(`ec-${id}-${f}`);
+    return el ? el.value : "";
+  };
+  const out = await api("creatives.php", jsonOpts({
+    action: "update_copy", creative_id: id,
+    headline: grab("headline"), primary_text: grab("primary_text"),
+    description: grab("description"), cta: grab("cta"),
+    offer_text: grab("offer_text"),
+  })).catch(e => null);
+  if (!out || out.error){
+    alert("Could not save: " + ((out && out.error) || "request failed"));
+    return;
+  }
+  loadAll();
 }
 
 // ---------- structured hypothesis (Update 3) ----------
@@ -988,6 +1042,7 @@ function queueCard(c){
     ? `<img class="qthumb" src="${esc(c.image_url)}" alt="creative image">` : "";
   const buttons =
       `<button class="btn" onclick="verifyCreative(${c.id})">Run guardrails (Step 3a)</button>`
+    + `<button class="btn secondary" onclick="toggleEditCopy(${c.id})">Edit copy</button>`
     + `<span class="rowline" style="display:inline-flex"><input type="file" id="img-${c.id}" accept="image/*" style="font-size:12px">
          <button class="btn secondary" onclick="uploadImage(${c.id})">Upload ${c.kind === "video" ? "keyframe" : "image"}</button></span>`
     + (["killed","approved","launched","live"].includes(c.status)
@@ -1013,6 +1068,7 @@ function queueCard(c){
     ${verdictChips(c)}
     ${displayLine(c)}
     <div style="margin-top:10px">${buttons}</div>
+    ${editCopyForm(c)}
   </div>`;
 }
 
