@@ -1977,14 +1977,22 @@ async function renderSettings() {
     + '<p>Status: ' + (ig.cron_secret.set
       ? present(true, 'cron secret set')
       : present(false, 'cron secret not set')) + '</p>'
-    + '<p class="muted small">Point a scheduler (GitHub Actions or a '
-    + 'cron service) at <code>outbound/api/cron.php?secret=YOUR_SECRET'
-    + '&amp;action=run_due</code>. It runs discovery for every Active '
-    + 'campaign, at most once per client per 6 hours.</p>'
+    + '<p class="muted small">Two scheduled actions, both gated by '
+    + 'the secret and both discovery-only (free; Apollo credits are '
+    + 'never spent by a schedule). <code>action=run_all</code> runs '
+    + 'discovery for every workspace with an ICP — point a daily '
+    + 'cron here. <code>action=run_due</code> runs discovery for '
+    + 'Active campaigns only. Either way a workspace is skipped if '
+    + 'it ran less than 6 hours ago. URL shape: '
+    + '<code>outbound/api/cron.php?secret=YOUR_SECRET&amp;action=run_all</code>.</p>'
     + '<label class="f"><span>New cron secret (12+ characters)</span>'
     + '<input type="text" id="cronSecret" autocomplete="off"></label>'
     + '<div class="btnrow"><button class="btn" id="cronSave">Save cron secret</button></div>'
-    + '<div id="cronMsg"></div></div>'
+    + '<div id="cronMsg"></div>'
+    + '<label class="f"><span>Notification email (digest when a scheduled run finds new signals or failures; blank = no email)</span>'
+    + '<input type="text" id="notifyEmail" value="' + esc((ig.notify_email || {}).value || '') + '"></label>'
+    + '<div class="btnrow"><button class="btn" id="notifySave">Save notification email</button></div>'
+    + '<div id="notifyMsg"></div></div>'
     + '<div class="panel"><h3>Client operating settings</h3>'
     + '<div class="formrow">'
     + '<label class="f"><span>Apollo enrichment budget (credits per month)</span>'
@@ -2036,6 +2044,16 @@ async function renderSettings() {
     await apiPost('settings.php?action=save_settings', { gmail_disconnect: true });
     toast('Gmail disconnected.');
     renderSettings();
+  };
+  $('#notifySave').onclick = async () => {
+    try {
+      await apiPost('settings.php?action=save_notify_email',
+        { email: $('#notifyEmail').value, omit_client: true });
+      toast('Notification email saved.');
+      renderSettings();
+    } catch (err) {
+      $('#notifyMsg').innerHTML = errBox(err);
+    }
   };
   $('#cronSave').onclick = async () => {
     try {

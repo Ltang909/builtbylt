@@ -63,6 +63,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'cron_secret' => [
                 'set' => $cronHash !== null && (string)$cronHash !== '',
             ],
+            'notify_email' => [
+                'value' => (string)obe_setting($pdo, null,
+                                               'notify_email', ''),
+            ],
         ],
         'settings' => obe_client_settings($pdo, $clientId),
     ]);
@@ -105,6 +109,16 @@ if ($action === 'save_cron_secret') {
     obe_set_setting($pdo, null, 'cron_secret',
                     password_hash($secret, PASSWORD_DEFAULT));
     json_out(['cron_secret' => 'set']);
+}
+
+if ($action === 'save_notify_email') {
+    $email = trim((string)($data['email'] ?? ''));
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        json_out(['error' => 'that does not look like an email '
+                  . 'address'], 400);
+    }
+    obe_set_setting($pdo, null, 'notify_email', $email);
+    json_out(['notify_email' => $email]);
 }
 
 if ($action === 'save_settings') {
