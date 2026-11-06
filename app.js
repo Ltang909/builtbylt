@@ -1024,7 +1024,7 @@ function renderExperiments(){
       <h4>Generate creatives (Step 2)</h4>
       <div class="formnote">Copy via the routed copy model (default gpt-4o-mini), images via the routed art model. Nothing runs — and nothing is charged — until you see an estimate and confirm it. That gate is the rule, not a courtesy.</div>
       <div class="rowline">
-        <label>Variants <input type="number" id="gen-variants-${e.id}" value="6" min="1" max="24" style="width:70px" onchange="genInvalidate(${e.id})"></label>
+        <label>Copy variants <input type="number" id="gen-variants-${e.id}" value="6" min="1" max="24" style="width:70px" onchange="genInvalidate(${e.id})"></label>
         <label>Images <input type="number" id="gen-images-${e.id}" value="2" min="0" max="24" style="width:70px" onchange="genInvalidate(${e.id})"></label>
         <label>Image quality <select id="gen-quality-${e.id}" onchange="genInvalidate(${e.id})">
           <option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select></label>
@@ -1184,6 +1184,11 @@ function batchHeaderHtml(batchId, members){
     + controls
     + `<div class="rowline" style="margin-top:8px"><button class="btn danger" onclick="clearBatch(${batchId})">Clear batch</button>`
     + `<span class="formnote" style="margin:0">Deletes this batch's creatives, their verdicts and performance rows, and its generated image files. Nothing else is touched.</span></div>`
+    + ((typeof gads !== "undefined" && gads && gads.connection && gads.connection.customer_id)
+      ? `<div class="rowline" style="margin-top:8px"><button class="btn" onclick="batchPushGads(${batchId}, [${members.filter(c => !(c.google_ads_pushes || []).length).map(c => c.id).join(",")}])">Push batch to Google Ads (paused)</button>`
+        + `<span class="formnote" style="margin:0">One PAUSED campaign per unpushed creative in this batch — $1/day each, zero spend until you enable them in Google Ads. Creatives missing an image or over Google's copy limits are skipped and named.</span></div>`
+        + `<div class="rowline"><span class="msg" id="bp-msg-${batchId}"></span></div>`
+      : ``)
     + `</div>`;
 }
 
@@ -1366,6 +1371,50 @@ async function recordLearning(id){
   const reason = prompt("Reason (what did we learn?):") || "";
   await api("learnings.php", jsonOpts({workspace_id: WS, creative_id: id, final_verdict, reason}));
   loadAll(); gotoTab("learnings");
+}
+
+async function batchPushGads(batchId, ids){
+  const m = document.getElementById("bp-msg-" + batchId);
+  const say = (txt, cls) => { if (m){ m.className = "msg " + (cls || ""); m.textContent = txt; } };
+  if (!ids.length){ say("Nothing to push — every creative in this batch has already been pushed.", "err"); return; }
+  say("Checking " + ids.length + " creative(s)…");
+  const ready = [], skipped = [];
+  let firstPrev = null;
+  for (const cid of ids){
+    const prev = await api("google_ads.php", jsonOpts({action: "preview", creative_id: cid}));
+    if (prev.error){ skipped.push("#" + cid + " (" + prev.error + ")"); continue; }
+    if (!firstPrev) firstPrev = prev;
+    if (prev.ready) ready.push(cid);
+    else skipped.push("#" + cid + " (" + (prev.problems[0] || "not ready") + ")");
+  }
+  if (!ready.length){ say("Nothing pushable: " + skipped.join("; "), "err"); return; }
+  let url = (firstPrev && firstPrev.default_final_url) || "";
+  if (!url){
+    url = prompt("Landing page URL for these campaigns (the workspace default is empty):", "https://") || "";
+    if (!url){ say("Push cancelled — no landing page URL.", "err"); return; }
+  }
+  const lines = [
+    `Push ${ready.length} creative(s) from batch #${batchId} to Google Ads account ${firstPrev ? firstPrev.customer_id : ""}?`,
+    "",
+    "Each becomes its own PAUSED Responsive Display campaign ($1/day budget) — zero spend until you enable it in Google Ads.",
+    `Final URL: ${url}`,
+    `Guardrails: ${firstPrev ? (firstPrev.guardrails || "") : ""}`,
+  ];
+  if (skipped.length) lines.push("", "Skipped: " + skipped.join("; "));
+  if (!confirm(lines.join("\n"))) { say("Batch push cancelled."); return; }
+  const done = [], failed = [];
+  for (let i = 0; i < ready.length; i++){
+    say(`Pushing ${i + 1}/${ready.length}…`);
+    const out = await api("google_ads.php", jsonOpts({action: "push", creative_id: ready[i], final_url: url, confirm: true}));
+    if (out.error) failed.push("#" + ready[i] + " (" + out.error + ")");
+    else done.push("#" + ready[i]);
+  }
+  const parts = [];
+  if (done.length) parts.push("Pushed (paused): " + done.join(", "));
+  if (failed.length) parts.push("Failed: " + failed.join("; "));
+  if (skipped.length) parts.push("Skipped: " + skipped.join("; "));
+  say(parts.join(" · "), failed.length ? "err" : "ok");
+  await loadAll();
 }
 
 // ---------- approvals: REMOVED (Update 11.5, operator's call) ---
