@@ -13,13 +13,18 @@
 
 const OPENAI_BASE_URL = 'https://api.openai.com/v1';
 const OPENAI_TIMEOUT_S = 60;
+// Image calls get a longer leash: an edit carrying reference
+// images routinely runs past 60s, and a curl timeout there
+// surfaced as an empty panel response (batch #36, 2026-11-06).
+const OPENAI_IMAGE_TIMEOUT_S = 180;
 
 /**
  * POST JSON to OpenAI. Returns the decoded response array.
  * Throws RuntimeException with the provider's own error message on any
  * HTTP or transport failure.
  */
-function openai_http_post(string $apiKey, string $path, array $payload): array {
+function openai_http_post(string $apiKey, string $path, array $payload,
+                          int $timeoutS = OPENAI_TIMEOUT_S): array {
     $ch = curl_init(OPENAI_BASE_URL . $path);
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
@@ -29,7 +34,7 @@ function openai_http_post(string $apiKey, string $path, array $payload): array {
             'Authorization: Bearer ' . $apiKey,
         ],
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => OPENAI_TIMEOUT_S,
+        CURLOPT_TIMEOUT => $timeoutS,
     ]);
     $raw = curl_exec($ch);
     if ($raw === false) {
@@ -101,7 +106,7 @@ function openai_image(string $apiKey, string $model, string $prompt,
         'size' => $size,
         'quality' => $quality,
         'n' => 1,
-    ]);
+    ], OPENAI_IMAGE_TIMEOUT_S);
     $b64 = $data['data'][0]['b64_json'] ?? null;
     if (!is_string($b64) || $b64 === '') {
         throw new RuntimeException(
@@ -145,7 +150,7 @@ function openai_image_edit(string $apiKey, string $model,
         CURLOPT_POSTFIELDS => $fields,
         CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $apiKey],
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => OPENAI_TIMEOUT_S,
+        CURLOPT_TIMEOUT => OPENAI_IMAGE_TIMEOUT_S,
     ]);
     $raw = curl_exec($ch);
     if ($raw === false) {

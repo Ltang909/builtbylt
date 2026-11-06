@@ -500,14 +500,16 @@ log_ledger($pdo, $wsid, 'copy_gen', 'openai', $p['copy_model'], 'ok',
         . '(actual, from API usage)', $batchId, $usage['input_tokens'],
         $usage['output_tokens'], $chatCost));
 
-// Spend-gate principle: one confirmed run = ONE copy call, and
-// whatever it returns is what the run uses. A short or over-long
-// return is accepted as-is — select_variants() trims extras and the
-// batch notes record the shortfall — and is NEVER re-rolled: a
-// retry would be a second provider call spending money that was
-// never confirmed. Hard failures stay hard: no "variants" array,
-// zero usable variants, an unparseable response, or a provider
-// error (handled above) all fail the batch as before.
+// Spend-gate principle: one confirmed run = the confirmed
+// variant count. An over-long return is trimmed by
+// select_variants() and noted. A SHORT return triggers ONE
+// bounded top-up call for exactly the missing count (added
+// 2026-11-06 after batch #36 returned 1 of 3): the run's
+// estimate priced every requested variant, so the top-up
+// spends nothing beyond the confirmed scope, and it is never
+// itself topped up. Hard failures stay hard: no "variants"
+// array, zero usable variants, an unparseable response, or a
+// provider error (handled above) all fail the batch as before.
 $rawVariants = $decoded['variants'] ?? null;
 if (!is_array($rawVariants)) {
     $msg = 'Generation response had no "variants" array.';
@@ -530,6 +532,51 @@ try {
 }
 $variants = $selection['use'];
 $countNote = $selection['note'];
+// Bounded top-up (2026-11-06): gpt-4o-mini sometimes returns
+// fewer variants than requested (batch #36: 1 of 3, out=119
+// tokens). ONE extra call asks for exactly the missing count.
+// It stays inside the confirmed scope — the run's estimate
+// priced every requested variant — and it is never itself
+// topped up: a short top-up is accepted and noted.
+if (count($variants) < $p['variants']) {
+    $missing = $p['variants'] - count($variants);
+    $topUser = $prompts['user']
+        . "\n\nTOP-UP: your previous reply contained only "
+        . count($variants) . ' of the ' . $p['variants']
+        . ' requested variants. Reply with the same JSON shape '
+        . 'containing exactly ' . $missing . ' NEW variant(s). '
+        . 'Do not repeat these headlines already created: '
+        . implode(' | ', array_column($variants, 'headline'));
+    try {
+        [$decoded2, $usage2] = openai_chat_json(
+            $apiKey, $p['copy_model'], $prompts['system'], $topUser);
+        $topCost = est_copy_cost($p['copy_model'],
+            $usage2['input_tokens'], $usage2['output_tokens']);
+        $chatCost += $topCost;
+        log_ledger($pdo, $wsid, 'copy_gen', 'openai',
+            $p['copy_model'], 'ok',
+            sprintf('batch #%d top-up: in=%d out=%d tokens; '
+                . 'chat cost $%.4f (actual, from API usage)',
+                $batchId, $usage2['input_tokens'],
+                $usage2['output_tokens'], $topCost));
+        $extra = $decoded2['variants'] ?? null;
+        if (is_array($extra) && $extra !== []) {
+            $selection = select_variants(
+                array_merge($rawVariants, $extra), $p['variants']);
+            $variants = $selection['use'];
+            $countNote = trim(($selection['note'] ?? '')
+                . ' One bounded top-up call was made.');
+        }
+    } catch (Throwable $exc) {
+        log_ledger($pdo, $wsid, 'copy_gen', 'openai',
+            $p['copy_model'], 'error',
+            'batch #' . $batchId . ' top-up: '
+            . substr($exc->getMessage(), 0, 280));
+        $countNote = trim(($countNote ?? '')
+            . ' Top-up call failed: ' . $exc->getMessage());
+    }
+}
+
 
 // Insert the creatives in the panel's existing draft state.
 $ins = $pdo->prepare(

@@ -28,6 +28,12 @@ require __DIR__ . '/db.php';
 require_once __DIR__ . '/../lib/pricing.php';
 require_once __DIR__ . '/../lib/openai.php';
 require_api_auth($pdo);
+// Image generations can outlast the web server's patience:
+// finish the job (file write + ledger) even if the client or
+// proxy hangs up first, instead of dying mid-call with an
+// empty response (batch #36, 2026-11-06).
+ignore_user_abort(true);
+set_time_limit(0);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_out(['error' => 'method not allowed'], 405);
