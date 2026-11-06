@@ -384,12 +384,15 @@ function gads_push_creative(PDO $pdo, array $creative, array $conn,
         throw new RuntimeException('This creative has no image yet; '
             . 'a display ad needs at least the square asset.');
     }
-    $srcAbs = PANEL_ROOT . '/' . (string)$creative['image_path'];
-    $squareBytes = is_file($srcAbs) ? @file_get_contents($srcAbs) : false;
-    if ($squareBytes === false) {
-        throw new RuntimeException('The creative image file could '
-            . 'not be read from uploads/.');
+    // The square slot must be a true 1:1 file: a square master
+    // goes up untouched; any other aspect (portrait masters)
+    // goes up as the derived 1024x1024 rendition. Uploading the
+    // raw portrait here is what Google rejected on 2026-11-06.
+    $sq = display_square_bytes($pdo, $creative);
+    if (!$sq['ok']) {
+        throw new RuntimeException((string)$sq['error']);
     }
+    $squareBytes = $sq['bytes'];
     $land = display_landscape_bytes($pdo, $creative);
     if (!$land['ok']) {
         throw new RuntimeException((string)$land['error']);

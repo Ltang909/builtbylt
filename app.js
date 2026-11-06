@@ -32,8 +32,9 @@ const jsonOpts = body => ({method: "POST", headers: {"Content-Type": "applicatio
 async function loadWorkspaces(){
   workspaces = await fetch(API + "workspaces.php").then(r => r.json());
   if (!WS && workspaces.length){
-    // Update 6: CodeRabbit is the home workspace when it exists.
-    const home = workspaces.find(w => w.name === "CodeRabbit");
+    // Home workspace: Leaveittobumbum (Leon's call, 2026-11-06;
+    // was CodeRabbit under Update 6).
+    const home = workspaces.find(w => w.name === "Leaveittobumbum");
     WS = home ? home.id : workspaces[0].id;
   }
   const sel = $("#ws-select");

@@ -48,6 +48,8 @@ const RDA_DESCRIPTION_MAX = 90;
 const RDA_BUSINESS_MAX = 25;
 const RDA_LANDSCAPE_W = 1200;
 const RDA_LANDSCAPE_H = 628;
+const RDA_SQUARE_W = 1024;
+const RDA_SQUARE_H = 1024;
 
 function rda_len(string $text): int {
     return function_exists('mb_strlen')
@@ -186,13 +188,18 @@ function display_assets_for(PDO $pdo, array $creative): array {
             $h = (int)$info[1];
         }
     }
+    // The square asset is the derived 1:1 rendition when the
+    // master is not itself square (display_square_bytes); the
+    // URL serves exactly the bytes the push uploads.
+    $isSquare = $w !== null && $h !== null && $w === $h;
     $assets[] = [
         'kind' => 'square',
         'label' => 'Square 1:1',
-        'url' => 'api/image.php?creative_id=' . $cid,
-        'width' => $w,
-        'height' => $h,
-        'ratio_ok' => $w !== null && $h !== null && $w === $h,
+        'url' => 'api/display_image.php?creative_id=' . $cid
+            . '&kind=square',
+        'width' => $isSquare ? $w : RDA_SQUARE_W,
+        'height' => $isSquare ? $h : RDA_SQUARE_H,
+        'ratio_ok' => true,
         'recorded' => true,
     ];
     $landPath = null;
@@ -232,6 +239,93 @@ function display_generated_landscape(array $creative): ?string {
         }
     }
     return null;
+}
+
+/**
+ * The square asset's bytes for a creative. A source that is
+ * already 1:1 is returned untouched, byte for byte — the
+ * long-standing behavior for square-native workspaces. Any other
+ * aspect (the Bum Bum portrait masters) is derived once into a
+ * true 1024x1024 center crop and cached, because Google rejects
+ * a non-1:1 file in the square_marketing_images slot (seen live
+ * 2026-11-06: a 1024x1536 master uploaded raw). Shared by
+ * api/display_image.php (serves it) and the Google Ads push
+ * (uploads it). Same return contract as display_landscape_bytes.
+ */
+function display_square_bytes(PDO $pdo, array $creative): array {
+    if (empty($creative['image_path'])) {
+        return ['ok' => false, 'status' => 404,
+                'error' => 'creative has no image'];
+    }
+    $cid = (int)$creative['id'];
+    $wsid = (int)$creative['workspace_id'];
+    $srcAbs = realpath(PANEL_ROOT . '/'
+                       . (string)$creative['image_path']);
+    $uploadsRoot = realpath(PANEL_ROOT . '/uploads');
+    if ($srcAbs === false || $uploadsRoot === false
+        || strpos($srcAbs, $uploadsRoot) !== 0
+        || !is_file($srcAbs)) {
+        return ['ok' => false, 'status' => 404,
+                'error' => 'source image not found'];
+    }
+    $info = @getimagesize($srcAbs);
+    if ($info !== false && (int)$info[0] === (int)$info[1]) {
+        $bytes = @file_get_contents($srcAbs);
+        if ($bytes !== false) {
+            return ['ok' => true, 'bytes' => $bytes,
+                    'path' => (string)$creative['image_path']];
+        }
+    }
+    $rel = 'uploads/ws' . $wsid . '/' . $cid . '_square.jpg';
+    $abs = PANEL_ROOT . '/' . $rel;
+    if (is_file($abs)) {
+        $bytes = @file_get_contents($abs);
+        if ($bytes !== false) {
+            return ['ok' => true, 'bytes' => $bytes, 'path' => $rel];
+        }
+    }
+    if (!function_exists('imagecreatefromstring')) {
+        return ['ok' => false, 'status' => 501,
+                'error' => 'Square derivation needs the GD '
+                    . 'extension, which this PHP does not have. '
+                    . 'Generate a native square image for this '
+                    . 'creative, or crop the master to 1:1 before '
+                    . 'uploading it.'];
+    }
+    $raw = @file_get_contents($srcAbs);
+    $src = $raw === false ? false : @imagecreatefromstring($raw);
+    if ($src === false) {
+        return ['ok' => false, 'status' => 500,
+                'error' => 'source image could not be read'];
+    }
+    $sw = imagesx($src);
+    $sh = imagesy($src);
+    $side = min($sw, $sh);
+    $cropX = (int)(($sw - $side) / 2);
+    $cropY = (int)(($sh - $side) / 2);
+    $dst = imagecreatetruecolor(RDA_SQUARE_W, RDA_SQUARE_H);
+    imagecopyresampled($dst, $src, 0, 0, $cropX, $cropY,
+                       RDA_SQUARE_W, RDA_SQUARE_H, $side, $side);
+    $wsDir = PANEL_ROOT . '/uploads/ws' . $wsid;
+    if (!is_dir($wsDir)) {
+        mkdir($wsDir, 0775, true);
+    }
+    $saved = @imagejpeg($dst, $abs, 90);
+    imagedestroy($src);
+    imagedestroy($dst);
+    if (!$saved) {
+        return ['ok' => false, 'status' => 500,
+                'error' => 'derived image could not be saved under '
+                    . 'uploads/'];
+    }
+    display_record_asset($pdo, $cid, 'square', $rel,
+                         RDA_SQUARE_W, RDA_SQUARE_H);
+    $bytes = @file_get_contents($abs);
+    if ($bytes === false) {
+        return ['ok' => false, 'status' => 500,
+                'error' => 'derived image saved but not readable'];
+    }
+    return ['ok' => true, 'bytes' => $bytes, 'path' => $rel];
 }
 
 /**
