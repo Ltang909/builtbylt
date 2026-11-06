@@ -611,12 +611,23 @@ async function genLandscape(id){
   loadAll();
 }
 async function genImage(id){
-  const est = await api("generate_image.php", jsonOpts({creative_id: id, action: "estimate"})).catch(() => null);
+  const tpls = ((workspaces.find(w => w.id === WS) || {}).image_templates || []);
+  let tplKey = null;
+  if (tpls.length > 1){
+    const pick = prompt("Template for this image: " + tpls.map(t => t.key).join(" or "), tpls[0].key);
+    if (pick === null) return;
+    tplKey = pick.trim() || tpls[0].key;
+  } else if (tpls.length === 1){ tplKey = tpls[0].key; }
+  const estBody = {creative_id: id, action: "estimate"};
+  if (tplKey) estBody.template = tplKey;
+  const est = await api("generate_image.php", jsonOpts(estBody)).catch(() => null);
   if (!est){ alert("Could not price the image generation."); return; }
   if (est.already){ alert(`Creative #${id} already has an image.`); return; }
   if (!est.ok){ alert("Image generation is blocked: " + (est.error || "unknown reason")); return; }
-  if (!confirm(`Generate the square image (1024x1024) for creative #${id} with the routed art model?\nEstimated cost: $${Number(est.cost_usd).toFixed(4)}.`)) return;
-  const out = await api("generate_image.php", jsonOpts({creative_id: id, confirm: true})).catch(() => null);
+  if (!confirm(`Generate the image (${est.size || "1024x1024"}) for creative #${id} with the routed art model?\nEstimated cost: $${Number(est.cost_usd).toFixed(4)}.`)) return;
+  const runBody = {creative_id: id, confirm: true};
+  if (tplKey) runBody.template = tplKey;
+  const out = await api("generate_image.php", jsonOpts(runBody)).catch(() => null);
   if (!out || !out.ok){ alert("Image generation failed: " + ((out && out.error) || "request failed")); return; }
   loadAll();
 }
@@ -871,7 +882,7 @@ async function genEstimate(expId){
   const out = await api("generate.php", jsonOpts({action: "estimate",
     experiment_id: expId, hypothesis: i.hypothesis, variants: i.variants,
     images: i.images, image_quality: i.image_quality,
-    image_text: i.image_text}));
+    image_text: i.image_text, template: i.template_key}));
   if (out.error){ box.innerHTML = `<span class="msg err">${esc(out.error)}</span>`; return; }
   genState[expId] = {key: genKey(expId), est: out};
   box.innerHTML = `<div class="formnote"><strong>Cost estimate</strong> (estimate — nothing has run, nothing charged):<br>`
@@ -942,6 +953,8 @@ async function genRun(expId){
   // workspace's templates round-robin across the batch's images —
   // templates are interchangeable, never an either/or choice.
   const wsTplKeys = ((workspaces.find(w => w.id === WS) || {}).image_templates || []).map(t => t.key);
+  const wsTplSizes = {};
+  (((workspaces.find(w => w.id === WS) || {}).image_templates) || []).forEach(t => { wsTplSizes[t.key] = t.size || null; });
   const tplForIndex = k => i.template_key === "alternate" && wsTplKeys.length > 1
     ? wsTplKeys[k % wsTplKeys.length] : i.template_key;
   let imagesMade = 0, landMade = 0, imageCost = 0;
@@ -964,8 +977,13 @@ async function genRun(expId){
         imagesMade++; imageCost += Number(r.cost_usd || 0);
         // Update 11.5: the native landscape variant rides the same
         // confirmed run — the estimate priced both generations.
-        if (label) label.textContent = `Generating landscape variant ${k + 1} of ${pending.length}…`;
-        try {
+        // Portrait templates skip it: the native 2:3 generation IS
+        // the asset, and a landscape version would be a crop.
+        if (wsTplSizes[tplForIndex(k)] === "1024x1536"){
+          if (label) label.textContent = `Portrait template: no landscape variant for image ${k + 1} of ${pending.length}`;
+        }
+        else if (label) label.textContent = `Generating landscape variant ${k + 1} of ${pending.length}…`;
+        if (wsTplSizes[tplForIndex(k)] !== "1024x1536") try {
           const lr = await api("generate_landscape.php", jsonOpts({creative_id: pending[k],
             template: tplForIndex(k), confirm: true}));
           if (lr && lr.ok){ landMade++; imageCost += Number(lr.cost_usd || 0); }

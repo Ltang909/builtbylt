@@ -89,9 +89,12 @@ if (trim($prompt) === '') {
               'error' => 'creative has no image prompt or art direction']);
 }
 if ($action === 'estimate') {
+    $estSize = ad_template_size($pdo, $wsid,
+        trim((string)($data['template'] ?? '')) !== ''
+            ? trim((string)$data['template']) : null) ?? '1024x1024';
     json_out(['ok' => true, 'creative_id' => $cid,
-              'cost_usd' => image_unit_price($quality, '1024x1024'),
-              'size' => '1024x1024', 'quality' => $quality]);
+              'cost_usd' => image_unit_price($quality, $estSize),
+              'size' => $estSize, 'quality' => $quality]);
 }
 $artRoute = get_route($pdo, 'art_gen');
 $artModel = (string)($artRoute['model'] ?: 'gpt-image-2.5-sunburst');
@@ -152,7 +155,11 @@ $slots = [
     'INTEGRATIONS' => $defaults['INTEGRATIONS']
         ?? 'NONE — show no integration logos.',
 ];
-$size = '1024x1024';
+// The selected template's own canvas when it carries one
+// (Bum Bum's portrait designs render at native 1024x1536);
+// the square canvas otherwise.
+$size = ad_template_size($pdo, $wsid,
+    $tplKey !== '' ? $tplKey : null) ?? '1024x1024';
 $finalPrompt = build_template_image_prompt($template, $slots);
 // Real-logo reference (Update 10.9): when the workspace has logo
 // files on disk (taken from the brand's own site), they ride along

@@ -90,6 +90,12 @@ function gen_params(PDO $pdo, array $data): array {
         'has_template' => ($wsidTpl = resolve_workspace($pdo, $data))
             !== null
             && workspace_image_template($pdo, $wsidTpl) !== null,
+        'image_size' => ($wsidSz = resolve_workspace($pdo, $data))
+            !== null
+            ? ad_template_size($pdo, $wsidSz,
+                trim((string)($data['template'] ?? '')) !== ''
+                    ? trim((string)$data['template']) : null)
+            : null,
         'copy_provider' => $copyRoute['provider'] ?: 'openai',
         'copy_model' => (string)($data['copy_model']
             ?? ($copyRoute['model'] ?: 'gpt-4o-mini')),
@@ -102,8 +108,16 @@ function gen_estimate(array $p): array {
     $copyCost = est_copy_cost($p['copy_model'], GEN_EST_INPUT_TOKENS,
         GEN_EST_OUTPUT_TOKENS_PER_VARIANT * $p['variants']);
     // Update 11.5: every imaged creative gets TWO generations —
-    // the square plus a native 1.91:1 landscape variant.
-    $imageCost = est_image_cost($p['image_quality'], $p['images'] * 2);
+    // the square plus a native 1.91:1 landscape variant. Portrait
+    // templates are the exception (Bum Bum's 2:3 social designs):
+    // ONE native generation per creative at the template's own
+    // size, no landscape variant, priced at that size.
+    $portraitTpl = ($p['image_size'] ?? null) === '1024x1536';
+    $imgCount = $portraitTpl ? $p['images'] : $p['images'] * 2;
+    $imageCost = $portraitTpl
+        ? image_unit_price($p['image_quality'], '1024x1536')
+            * $p['images']
+        : est_image_cost($p['image_quality'], $imgCount);
     $verifyCost = est_verify_cost(
         $p['variants'], JEV_EST_INPUT_TOKENS_PER_CREATIVE);
     $lines = [
@@ -116,11 +130,15 @@ function gen_estimate(array $p): array {
         ['item' => 'images', 'label' => 'estimate',
          'detail' => sprintf('%s: %d image(s) at %s quality; %s; '
              . 'priced at the largest size',
-             $p['art_model'], $p['images'] * 2, $p['image_quality'],
+             $p['art_model'], $imgCount, $p['image_quality'],
              !empty($p['has_template'])
-                 ? 'rendered from the workspace ad template '
-                     . '(square 1024x1024 + native landscape '
-                     . '1216x640 per creative), headline on image'
+                 ? ($portraitTpl
+                     ? 'rendered from the workspace ad template '
+                         . '(portrait 1024x1536 per creative, no '
+                         . 'landscape variant), headline on image'
+                     : 'rendered from the workspace ad template '
+                         . '(square 1024x1024 + native landscape '
+                         . '1216x640 per creative), headline on image')
                  : 'headline rendered on the image; canvas follows '
                      . 'each variant\'s format'),
          'cost_usd' => round($imageCost, 6)],

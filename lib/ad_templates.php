@@ -260,10 +260,133 @@ The result should feel like another creative from the same established brand cam
 TPL;
 }
 
+/**
+ * BB-NOTES-001: the pink-studio portrait, from Leon's reference
+ * design (2026-11-06). One tool per ad; the real cat at a pink
+ * desk with the tool's themed prop and a laptop showing its UI.
+ */
+function ad_template_bumbum_notes_text(): string {
+    return <<<'TPL'
+Create a polished social ad for Leave It To Bum Bum in a portrait 1024 x 1536 pixel format (2:3). Photorealistic scene, playful premium pet-brand campaign.
+
+**DESIGN SYSTEM**
+
+- Canvas: 1024 x 1536 px, 2:3 portrait. Keep everything important at least 60 px from every edge; nothing is cropped.
+- Palette: blush pink studio backdrop and desk (#F6C7D3 to #F9DCE3), cream paper #FFF9E9, ink #17150F, deep burgundy #5B2333 for the headline serif, chartreuse green #B5E048 for the CTA pill, hot pink #EF5DA8 accents.
+- Type: Fraunces bold serif for the headline, subheadline and CTA; clean sans for any small text.
+- Lighting: soft, bright, warm studio light. Crisp, commercial, expensive-looking.
+
+**THE CAT (character consistency is the point of this template)**
+
+- The hero is a REAL PHOTOGRAPH of the exact cat in the attached reference image: a cream and light silver-grey British Shorthair with a round face, very large round blue-green eyes, a pink nose and plush short fur. Same cat, same face, same markings in every variation. Never an illustration, never a different cat, no other animals.
+
+**EXACT COMPOSITION**
+
+1. **Brand header (top 3-9%):** at the top left, a small circular badge showing the cat's face with a tiny gold crown on top of the circle, beside the wordmark: "LEAVE IT TO" in small black capitals over "Bum Bum" in large bold black Fraunces serif.
+
+2. **Headline (12-32%):** the headline text in enormous burgundy Fraunces serif across two torn-paper strips: the first part on a cream strip, the last word or two on a pale pink strip. Strips slightly rotated, starting around 30% from the left edge.
+
+3. **Subheadline (33-40%):** the subheadline in burgundy Fraunces serif, two lines maximum, beneath the strips toward the right side.
+
+4. **Hero photo (30-78%):** the cat sits at the pink desk on the left, upright, looking into the camera, one paw resting on the scene's themed prop described in the variables. On the right of the desk, a laptop shows the tool's simple friendly interface: the small brand lockup at its top, one big green action button, and a few soft grey content lines. No readable claims inside the screen beyond a button label taken from the CTA.
+
+5. **CTA (84-93%):** one wide chartreuse pill with a thin black outline, centered, holding the CTA text in bold black Fraunces serif in title case (first letter capitalised, the rest lower case, never all capitals), with one small simple black icon at its left when an icon fits the tool.
+
+6. **Accents:** two or three small hand-drawn hot-pink hearts and sparkle bursts, sparingly placed. Nothing else decorative.
+
+**VISUAL RULES**
+
+- Keep positions, hierarchy, relative scale, palette and typography identical across all variations; only the supplied words, the prop and the laptop theme change.
+- Use only the exact words supplied below, plus the brand wordmark. No invented claims, prices, metrics or extra text anywhere.
+- Photorealistic cat matching the reference exactly; no cartoon version.
+
+**VARIABLE CONTENT**
+
+Brand: {{BRAND}}
+
+Headline: {{HEADLINE}}
+
+Subheadline: {{SUBHEADLINE}}
+
+CTA: {{CTA}}
+
+Scene and prop: {{PRODUCT_VISUAL}}
+
+**OUTPUT**
+
+Produce one finished, pixel-sharp, 1024 x 1536 portrait ad.
+TPL;
+}
+
+/**
+ * BB-TOOLBOX-001: the blue statement portrait, from Leon's
+ * reference design (2026-11-06). Brand-level ad: both cats at a
+ * laptop, a fixed card of four real tools, the site URL footer.
+ */
+function ad_template_bumbum_toolbox_text(): string {
+    return <<<'TPL'
+Create a polished social ad for Leave It To Bum Bum in a portrait 1024 x 1536 pixel format (2:3). Photorealistic cats, bold torn-paper headline treatment, premium pet-brand campaign.
+
+**DESIGN SYSTEM**
+
+- Canvas: 1024 x 1536 px, 2:3 portrait. Keep everything important at least 60 px from every edge; nothing is cropped.
+- Palette: vivid royal blue backdrop (#2456C8), cream torn paper #FFF6E5, pale yellow strip #FCE9A8, dark navy ink #14265C for the headline serif, chartreuse green #B5E048 for the CTA pill, hot pink #EF5DA8 underline and accents.
+- Type: Fraunces bold serif for the headline, subheadline and CTA.
+- Lighting: bright, warm, commercial.
+
+**THE CATS (character consistency is the point of this template)**
+
+- Two REAL cats, photographed, never illustrated. The main cat is the exact cat in the attached reference image: a cream and light silver-grey British Shorthair with a round face, very large round blue-green eyes and a pink nose. Beside him, a fluffy long-haired white Persian cat with green eyes and a pink nose. The same two cats in every variation, no other animals.
+
+**EXACT COMPOSITION**
+
+1. **Brand header (top 2-9%):** centered on a torn cream paper strip: a small circular badge with the main cat's face and a tiny gold crown, beside "LEAVE IT TO" in small black capitals over "Bum Bum" in large dark navy Fraunces serif.
+
+2. **Headline (10-30%):** the headline text in enormous dark navy Fraunces serif on a big torn cream paper banner, two lines, with a thick hot-pink hand-drawn underline beneath the last line.
+
+3. **Subheadline (29-35%):** the subheadline in dark navy Fraunces serif on a pale yellow torn strip.
+
+4. **Hero photo (42-76%):** a wooden desk against the blue backdrop. The main cat sits center behind a pink laptop, paws on its edge, a small hand-drawn gold crown floating above his head; the white cat leans in from the left. The laptop lid carries a cute cat-face sticker and a pink heart sticker. A cream mug at the left reads "BUSYWORK HANDLED" in black capitals.
+
+5. **Tool list card (right side, 44-74%):** a white rounded card with four rows, each row a small pastel icon square, a bold black tool name and a one-line grey description, exactly these four rows:
+- Invoice Reminder: Nudge late invoices, politely.
+- Client Follow-Up Tracker: Never drop a follow-up again.
+- Voice Notes to Text: Turn spoken thoughts into text.
+- Subscription Tracker: See every recurring charge.
+
+6. **CTA (80-88%):** one wide chartreuse pill with a thin navy outline, centered, holding the CTA text in bold black Fraunces serif in title case (never all capitals), followed by a simple right arrow.
+
+7. **Footer (92-97%):** a small torn cream strip centered with "leaveittobumbum.com" in black Fraunces serif, underlined in hot pink.
+
+**VISUAL RULES**
+
+- Keep positions, hierarchy, relative scale, palette and typography identical across all variations; only the supplied headline, subheadline and CTA words change.
+- Use only the exact words supplied below, the four fixed tool rows, the mug text and the footer URL. No invented claims, prices or metrics, and no other text anywhere.
+- Photorealistic cats matching the descriptions and the reference exactly.
+
+**VARIABLE CONTENT**
+
+Brand: {{BRAND}}
+
+Headline: {{HEADLINE}}
+
+Subheadline: {{SUBHEADLINE}}
+
+CTA: {{CTA}}
+
+**OUTPUT**
+
+Produce one finished, pixel-sharp, 1024 x 1536 portrait ad.
+TPL;
+}
+
 /** The workspace's default (first) built-in template, or null. */
 function ad_template_builtin(int $wsid): ?string {
     if ($wsid === 3) {
         return ad_template_dark_text();
+    }
+    if ($wsid === 4) {
+        return ad_template_bumbum_notes_text();
     }
     return null;
 }
@@ -288,7 +411,37 @@ function ad_templates_for(PDO $pdo, int $wsid): array {
                           'text' => ad_template_product_text()],
         ];
     }
+    if ($wsid === 4) {
+        // Leon's two reference designs (2026-11-06), both native
+        // 1024x1536 portraits: generation renders at the
+        // template's own size — no square render, no crop.
+        return [
+            'notes' => ['name' => 'Bum Bum Notes — pink studio (portrait)',
+                        'text' => ad_template_bumbum_notes_text(),
+                        'size' => '1024x1536'],
+            'toolbox' => ['name' => 'Toolbox — blue statement (portrait)',
+                          'text' => ad_template_bumbum_toolbox_text(),
+                          'size' => '1024x1536'],
+        ];
+    }
     return [];
+}
+
+/**
+ * The generation size of the template a key resolves to (same
+ * resolution as ad_template_text), or null when the template
+ * carries no size — the caller falls back to the square canvas.
+ */
+function ad_template_size(PDO $pdo, int $wsid, ?string $key): ?string {
+    $templates = ad_templates_for($pdo, $wsid);
+    if ($templates === []) {
+        return null;
+    }
+    if ($key !== null && isset($templates[$key])) {
+        return $templates[$key]['size'] ?? null;
+    }
+    $first = reset($templates);
+    return $first['size'] ?? null;
 }
 
 /**
@@ -362,6 +515,18 @@ function ad_slot_defaults(PDO $pdo, int $wsid): array {
                 . 'attached reference images as the exact logo.',
             'SOCIAL_PROOF' => null,
             'INTEGRATIONS' => 'GitHub and GitLab',
+        ],
+        4 => [
+            'LOGO_DESCRIPTION' => 'the Leave It To Bum Bum '
+                . 'lockup: a small circular badge with the real '
+                . 'cat\'s face (cream British Shorthair, very '
+                . 'large round blue-green eyes) wearing a tiny '
+                . 'gold crown, beside the words LEAVE IT TO in '
+                . 'small black capitals over Bum Bum in large bold '
+                . 'black serif. Use the attached reference photo '
+                . 'for the cat\'s exact face.',
+            'SOCIAL_PROOF' => null,
+            'INTEGRATIONS' => null,
         ],
     ];
     $base = $builtins[$wsid] ?? [
