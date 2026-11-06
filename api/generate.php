@@ -443,6 +443,28 @@ $stmt->execute([$wsid, $experimentId, $hypothesis, $p['copy_model'],
                 $estGenOnly]);
 $batchId = (int)$pdo->lastInsertId();
 
+// Update 11.7 schema: the copy_variants column must exist BEFORE
+// the creative INSERT is prepared (PDO prepares are real with
+// EMULATE_PREPARES off, so a missing column kills the run at
+// prepare time). Install and verify here — before the copy call
+// spends anything — and fail the batch with a readable error
+// instead of an empty response.
+creative_copy_variants_install($pdo);
+$cvHas = $pdo->query("SHOW COLUMNS FROM creatives "
+    . "LIKE 'copy_variants'")->fetch() !== false;
+if (!$cvHas) {
+    $msg = 'The creatives table is missing its copy_variants '
+        . 'column and it could not be added automatically. '
+        . 'Nothing was generated.';
+    $pdo->prepare(
+        'UPDATE generation_batches SET status = \'failed\', '
+        . 'error = ? WHERE id = ?')->execute([$msg, $batchId]);
+    log_ledger($pdo, $wsid, 'copy_gen', 'openai', $p['copy_model'],
+               'error', 'batch #' . $batchId . ': ' . $msg);
+    json_out(['ok' => false, 'status' => 'schema', 'error' => $msg,
+              'batch_id' => $batchId], 500);
+}
+
 $failBatch = function (string $status, string $error) use ($pdo, $batchId) {
     $pdo->prepare(
         'UPDATE generation_batches SET status = ?, error = ? WHERE id = ?')
@@ -586,7 +608,6 @@ $ins = $pdo->prepare(
     . 'VALUES (?, ?, ?, \'static\', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '
     . '\'generated\')');
 $createdIds = [];
-creative_copy_variants_install($pdo);
 $copyFields = function (array $v): array {
     return [
         'headline' => (string)($v['headline'] ?? ''),
