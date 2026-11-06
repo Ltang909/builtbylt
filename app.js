@@ -1545,7 +1545,7 @@ function tplRowsHtml(){
   return tpls.map(t => `<div class="rowline">`
     + (t.uploaded && t.id ? `<img src="api/template_image.php?id=${t.id}" alt="" style="height:56px;width:56px;object-fit:cover;border-radius:6px">` : "")
     + `<span style="flex:1"><strong>${esc(t.name)}</strong><br><span class="meta">${t.uploaded ? "uploaded design" : "built-in"} · canvas ${esc(t.size || "1024x1024")}</span></span>`
-    + (t.uploaded && t.id ? `<button class="btn secondary" onclick="tplDelete(${t.id})">Delete</button>` : "")
+    + (t.uploaded && t.id ? `<button class="btn secondary" onclick="tplDelete(${t.id}, this)">Delete</button>` : "")
     + `</div>`).join("");
 }
 async function tplUpload(){
@@ -1563,8 +1563,18 @@ async function tplUpload(){
   if (!out || !out.ok){ if (msg) msg.textContent = "Upload failed: " + ((out && out.error) || "request failed"); return; }
   await loadAll(); renderSettings();
 }
-async function tplDelete(id){
-  if (!confirm("Delete this uploaded template? Creatives already generated from it keep their images.")) return;
+async function tplDelete(id, btn){
+  // Two-tap inline confirm instead of a native confirm() dialog:
+  // the dialog is swallowed entirely by some browsers and
+  // automation, which made the button look dead (upload loop
+  // test, 2026-11-06). First tap arms, second tap deletes.
+  if (!btn || btn.dataset.armed !== "1"){
+    if (btn){
+      btn.dataset.armed = "1"; btn.textContent = "Confirm delete?";
+      setTimeout(() => { if (btn.isConnected){ btn.dataset.armed = ""; btn.textContent = "Delete"; } }, 3000);
+    }
+    return;
+  }
   const out = await api("templates.php", jsonOpts({action: "delete", id})).catch(() => null);
   if (!out || !out.ok){ alert("Delete failed: " + ((out && out.error) || "request failed")); return; }
   await loadAll(); renderSettings();
