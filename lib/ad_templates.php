@@ -261,20 +261,76 @@ TPL;
 }
 
 /**
- * BB-NOTES-001: the pink-studio portrait, from Leon's reference
- * design (2026-11-06). One tool per ad; the real cat at a pink
- * desk with the tool's themed prop and a laptop showing its UI.
+ * BB-TOOLBOX-002: the pink tin toolbox, from Leon's reference
+ * design (2026-11-06). Brand-level square: both cats peeking
+ * over a hot-pink toolbox of tool cards.
  */
-function ad_template_bumbum_notes_text(): string {
+function ad_template_bumbum_toolbox_text(): string {
     return <<<'TPL'
-Create a polished social ad for Leave It To Bum Bum in a portrait 1024 x 1536 pixel format (2:3). Photorealistic scene, playful premium pet-brand campaign.
+Create a polished social ad for Leave It To Bum Bum in a square 1024 x 1024 pixel format (1:1). Photorealistic cats, playful premium pet-brand campaign.
 
 **DESIGN SYSTEM**
 
-- Canvas: 1024 x 1536 px, 2:3 portrait. Keep everything important at least 60 px from every edge; nothing is cropped.
-- Palette: blush pink studio backdrop and desk (#F6C7D3 to #F9DCE3), cream paper #FFF9E9, ink #17150F, deep burgundy #5B2333 for the headline serif, chartreuse green #B5E048 for the CTA pill, hot pink #EF5DA8 accents.
-- Type: Fraunces bold serif for the headline, subheadline and CTA; clean sans for any small text.
-- Lighting: soft, bright, warm studio light. Crisp, commercial, expensive-looking.
+- Canvas: 1024 x 1024 px, 1:1 square. Keep everything important at least 50 px from every edge.
+- Palette: warm cream backdrop (#FBF3E4) with large soft pink blob shapes (#F7C9D4), hot pink #EC4E8F for the toolbox, black ink #17150F for the headline serif, pale yellow #FCE9A8 highlighter strip, chartreuse green #B5E048 for the CTA pill.
+- Type: Fraunces bold serif for the headline, subheadline and CTA.
+- Lighting: bright, warm, commercial. A pale marble surface at the bottom.
+
+**THE CATS (character consistency is the point of this template)**
+
+- Two REAL cats, photographed, never illustrated. The main cat is the exact cat in the attached reference image: a cream and light silver-grey British Shorthair with a round face, very large round blue-green eyes and a pink nose. Beside him, a fluffy long-haired white Persian cat with green eyes and a pink nose. The same two cats in every variation, no other animals.
+
+**EXACT COMPOSITION**
+
+1. **Brand header (top 2-9%):** centered: a small circular badge with the main cat's face and a tiny gold crown with little gold rays, beside "LEAVE IT TO" in small black capitals over "Bum Bum" in large bold black Fraunces serif.
+
+2. **Headline (11-30%):** the headline text in enormous black Fraunces serif across two lines; the second line sits on a pale yellow highlighter strip.
+
+3. **Subheadline (30-36%):** the subheadline in black Fraunces serif, one line, centered.
+
+4. **Hero photo (36-82%):** both cats peek over the rim of an open hot-pink metal toolbox, front paws resting on the rim, looking into the camera. The toolbox front reads "Bum Bum's Toolbox" in white friendly script between two white paw prints. Standing inside the box, four cream tool cards with small colourful illustrations, labelled exactly: "Meal Scanner", "Poster to Calendar", "Ghostwriter", "And More!".
+
+5. **CTA (86-95%):** one wide chartreuse pill with a thin black outline, centered, holding the CTA text in bold black Fraunces serif in title case (first letter capitalised, the rest lower case, never all capitals), followed by a simple right arrow, with small hot-pink sparkle bursts at both ends of the pill.
+
+6. **Accents:** one small pink heart outline near the cats. Nothing else decorative.
+
+**VISUAL RULES**
+
+- Keep positions, hierarchy, relative scale, palette and typography identical across all variations; only the supplied headline, subheadline and CTA words change.
+- Use only the exact words supplied below, the toolbox lettering and the four fixed card labels. No invented claims, prices or metrics, and no other text anywhere.
+- Photorealistic cats matching the descriptions and the reference exactly.
+
+**VARIABLE CONTENT**
+
+Brand: {{BRAND}}
+
+Headline: {{HEADLINE}}
+
+Subheadline: {{SUBHEADLINE}}
+
+CTA: {{CTA}}
+
+**OUTPUT**
+
+Produce one finished, pixel-sharp, 1024 x 1024 square ad.
+TPL;
+}
+
+/**
+ * BB-HEARSAY-001: the lavender chat design, from Leon's
+ * reference (2026-11-06), for the AI Mention Tracker. The cat
+ * listens at a brass ear trumpet; chat bubbles and a scan card.
+ */
+function ad_template_bumbum_hearsay_text(): string {
+    return <<<'TPL'
+Create a polished social ad for Leave It To Bum Bum in a square 1024 x 1024 pixel format (1:1). Photorealistic cat, playful premium pet-brand campaign.
+
+**DESIGN SYSTEM**
+
+- Canvas: 1024 x 1024 px, 1:1 square. Keep everything important at least 50 px from every edge.
+- Palette: soft lavender backdrop (#D9CFF5) with lighter lilac blob shapes, ink #17150F for the headline serif, purple #8B5CF6 accents, chartreuse green #B5E048 for the CTA pill, hot pink #EF5DA8 small accents.
+- Type: Fraunces bold serif for the headline, subheadline and CTA; clean sans inside the UI card.
+- Lighting: bright, soft, commercial.
 
 **THE CAT (character consistency is the point of this template)**
 
@@ -282,22 +338,22 @@ Create a polished social ad for Leave It To Bum Bum in a portrait 1024 x 1536 pi
 
 **EXACT COMPOSITION**
 
-1. **Brand header (top 3-9%):** at the top left, a small circular badge showing the cat's face with a tiny gold crown on top of the circle, beside the wordmark: "LEAVE IT TO" in small black capitals over "Bum Bum" in large bold black Fraunces serif.
+1. **Brand header (top 2-9%):** centered: a small circular badge with the cat's face and a tiny gold crown with little gold rays, beside "LEAVE IT TO" in small black capitals over "Bum Bum" in large bold black Fraunces serif.
 
-2. **Headline (12-32%):** the headline text in enormous burgundy Fraunces serif across two torn-paper strips: the first part on a cream strip, the last word or two on a pale pink strip. Strips slightly rotated, starting around 30% from the left edge.
+2. **Headline (11-26%):** the headline text in enormous black Fraunces serif, one word or a short phrase, left of center.
 
-3. **Subheadline (33-40%):** the subheadline in burgundy Fraunces serif, two lines maximum, beneath the strips toward the right side.
+3. **Subheadline (26-36%):** the subheadline in black Fraunces serif, two lines, with a short yellow hand-drawn underline beneath its last word or two.
 
-4. **Hero photo (30-78%):** the cat sits at the pink desk on the left, upright, looking into the camera, one paw resting on the scene's themed prop described in the variables. On the right of the desk, a laptop shows the tool's simple friendly interface: the small brand lockup at its top, one big green action button, and a few soft grey content lines. No readable claims inside the screen beyond a button label taken from the CTA.
+4. **Hero photo (36-84%):** the cat fills the left half, close up, holding an ornate brass ear trumpet to his ear with one paw, head tilted, looking up into the camera. Down the right side, three rounded chat bubbles (white and pale lavender) each with a coloured avatar dot (purple, blue, light blue) and two or three soft grey text lines. Beneath the bubbles, a white rounded UI card: the small brand lockup at its top, a bold title taken from the CTA words, a small "Brand name" label, and an input field holding a sample small-business name in grey.
 
-5. **CTA (84-93%):** one wide chartreuse pill with a thin black outline, centered, holding the CTA text in bold black Fraunces serif in title case (first letter capitalised, the rest lower case, never all capitals), with one small simple black icon at its left when an icon fits the tool.
+5. **CTA (86-95%):** one wide chartreuse pill with a thin black outline at the bottom left-to-center, holding the CTA text in bold black Fraunces serif in title case (first letter capitalised, the rest lower case, never all capitals), followed by a simple right arrow.
 
-6. **Accents:** two or three small hand-drawn hot-pink hearts and sparkle bursts, sparingly placed. Nothing else decorative.
+6. **Accents:** small purple sparkle bursts and one pink heart outline, sparingly placed.
 
 **VISUAL RULES**
 
-- Keep positions, hierarchy, relative scale, palette and typography identical across all variations; only the supplied words, the prop and the laptop theme change.
-- Use only the exact words supplied below, plus the brand wordmark. No invented claims, prices, metrics or extra text anywhere.
+- Keep positions, hierarchy, relative scale, palette and typography identical across all variations; only the supplied words and the scene prop in the variables change.
+- Use only the exact words supplied below, plus the brand wordmark and generic UI labels. No invented claims, prices, metrics or extra text anywhere.
 - Photorealistic cat matching the reference exactly; no cartoon version.
 
 **VARIABLE CONTENT**
@@ -314,54 +370,48 @@ Scene and prop: {{PRODUCT_VISUAL}}
 
 **OUTPUT**
 
-Produce one finished, pixel-sharp, 1024 x 1536 portrait ad.
+Produce one finished, pixel-sharp, 1024 x 1024 square ad.
 TPL;
 }
 
 /**
- * BB-TOOLBOX-001: the blue statement portrait, from Leon's
- * reference design (2026-11-06). Brand-level ad: both cats at a
- * laptop, a fixed card of four real tools, the site URL footer.
+ * BB-POSTER-001: the sky-blue design, from Leon's reference
+ * (2026-11-06), for Poster to Calendar. Both cats, a phone
+ * showing an event poster, a calendar card.
  */
-function ad_template_bumbum_toolbox_text(): string {
+function ad_template_bumbum_poster_text(): string {
     return <<<'TPL'
-Create a polished social ad for Leave It To Bum Bum in a portrait 1024 x 1536 pixel format (2:3). Photorealistic cats, bold torn-paper headline treatment, premium pet-brand campaign.
+Create a polished social ad for Leave It To Bum Bum in a square 1024 x 1024 pixel format (1:1). Photorealistic cats, playful premium pet-brand campaign.
 
 **DESIGN SYSTEM**
 
-- Canvas: 1024 x 1536 px, 2:3 portrait. Keep everything important at least 60 px from every edge; nothing is cropped.
-- Palette: vivid royal blue backdrop (#2456C8), cream torn paper #FFF6E5, pale yellow strip #FCE9A8, dark navy ink #14265C for the headline serif, chartreuse green #B5E048 for the CTA pill, hot pink #EF5DA8 underline and accents.
-- Type: Fraunces bold serif for the headline, subheadline and CTA.
-- Lighting: bright, warm, commercial.
+- Canvas: 1024 x 1024 px, 1:1 square. Keep everything important at least 50 px from every edge.
+- Palette: sky blue backdrop (#A9D7F2) with soft white cloud blobs, dark navy ink #1B2A4A for the headline serif, pale yellow #FCE9A8 highlighter strip, royal blue #2456C8 accents and button, chartreuse green #B5E048 for the CTA pill.
+- Type: Fraunces bold serif for the headline, subheadline and CTA; clean sans inside the phone and the calendar card.
+- Lighting: bright, cheerful, commercial. One green leaf sprig in the top right corner.
 
 **THE CATS (character consistency is the point of this template)**
 
-- Two REAL cats, photographed, never illustrated. The main cat is the exact cat in the attached reference image: a cream and light silver-grey British Shorthair with a round face, very large round blue-green eyes and a pink nose. Beside him, a fluffy long-haired white Persian cat with green eyes and a pink nose. The same two cats in every variation, no other animals.
+- Two REAL cats, photographed, never illustrated. The main cat is the exact cat in the attached reference image: a cream and light silver-grey British Shorthair with a round face, very large round blue-green eyes and a pink nose. In front of him, a fluffy long-haired white Persian cat with green eyes and a pink nose. The same two cats in every variation, no other animals.
 
 **EXACT COMPOSITION**
 
-1. **Brand header (top 2-9%):** centered on a torn cream paper strip: a small circular badge with the main cat's face and a tiny gold crown, beside "LEAVE IT TO" in small black capitals over "Bum Bum" in large dark navy Fraunces serif.
+1. **Brand header (top 2-9%):** centered: a small circular badge with the main cat's face and a tiny gold crown with little gold rays, beside "LEAVE IT TO" in small black capitals over "Bum Bum" in large bold dark navy Fraunces serif.
 
-2. **Headline (10-30%):** the headline text in enormous dark navy Fraunces serif on a big torn cream paper banner, two lines, with a thick hot-pink hand-drawn underline beneath the last line.
+2. **Headline (10-29%):** the headline text in enormous dark navy Fraunces serif across two lines.
 
-3. **Subheadline (29-35%):** the subheadline in dark navy Fraunces serif on a pale yellow torn strip.
+3. **Subheadline (29-35%):** the subheadline in black Fraunces serif on a pale yellow highlighter strip, one line.
 
-4. **Hero photo (42-76%):** a wooden desk against the blue backdrop. The main cat sits center behind a pink laptop, paws on its edge, a small hand-drawn gold crown floating above his head; the white cat leans in from the left. The laptop lid carries a cute cat-face sticker and a pink heart sticker. A cream mug at the left reads "BUSYWORK HANDLED" in black capitals.
+4. **Hero photo (35-84%):** on the left, the main cat sits upright holding a smartphone toward the camera; the phone shows a colourful illustrated poster for a sample local evening market event (string lights, stalls, the event name in bold friendly type, a sample date and place in small type). The white cat lies in front, looking up at the camera. On the right, a white rounded calendar card: a calendar icon, the same sample event name in bold, three rows with small icons (a sample date, a sample time range, a sample place), and a royal blue "Save to Calendar" button with a small calendar-plus icon.
 
-5. **Tool list card (right side, 44-74%):** a white rounded card with four rows, each row a small pastel icon square, a bold black tool name and a one-line grey description, exactly these four rows:
-- Invoice Reminder: Nudge late invoices, politely.
-- Client Follow-Up Tracker: Never drop a follow-up again.
-- Voice Notes to Text: Turn spoken thoughts into text.
-- Subscription Tracker: See every recurring charge.
+5. **CTA (86-95%):** one wide chartreuse pill with a thin black outline, centered, holding the CTA text in bold black Fraunces serif in title case (first letter capitalised, the rest lower case, never all capitals), followed by a simple right arrow, with small blue sparkle bursts at both ends.
 
-6. **CTA (80-88%):** one wide chartreuse pill with a thin navy outline, centered, holding the CTA text in bold black Fraunces serif in title case (never all capitals), followed by a simple right arrow.
-
-7. **Footer (92-97%):** a small torn cream strip centered with "leaveittobumbum.com" in black Fraunces serif, underlined in hot pink.
+6. **Accents:** short blue dash bursts around the headline and one white heart outline near the cats. Nothing else decorative.
 
 **VISUAL RULES**
 
-- Keep positions, hierarchy, relative scale, palette and typography identical across all variations; only the supplied headline, subheadline and CTA words change.
-- Use only the exact words supplied below, the four fixed tool rows, the mug text and the footer URL. No invented claims, prices or metrics, and no other text anywhere.
+- Keep positions, hierarchy, relative scale, palette and typography identical across all variations; only the supplied words change. The event details on the phone and the card are sample UI content: keep them generic, plausible and clearly a demo (a local market, a Saturday evening), never a real claim about the brand.
+- Use only the exact words supplied below, plus the brand wordmark, the "Save to Calendar" button label and the sample event details. No invented claims, prices or metrics anywhere else.
 - Photorealistic cats matching the descriptions and the reference exactly.
 
 **VARIABLE CONTENT**
@@ -376,7 +426,63 @@ CTA: {{CTA}}
 
 **OUTPUT**
 
-Produce one finished, pixel-sharp, 1024 x 1536 portrait ad.
+Produce one finished, pixel-sharp, 1024 x 1024 square ad.
+TPL;
+}
+
+/**
+ * BB-PURRCODE-001: the pink QR design, from Leon's reference
+ * (2026-11-06), for the QR Code Generator. The cat presents a
+ * big styled QR board beside a link-and-colors UI card.
+ */
+function ad_template_bumbum_purrcode_text(): string {
+    return <<<'TPL'
+Create a polished social ad for Leave It To Bum Bum in a square 1024 x 1024 pixel format (1:1). Photorealistic cat, playful premium pet-brand campaign.
+
+**DESIGN SYSTEM**
+
+- Canvas: 1024 x 1024 px, 1:1 square. Keep everything important at least 50 px from every edge.
+- Palette: warm cream backdrop (#FBF3E4) with soft pink blob shapes (#F7C9D4) and a pink desk surface, ink #17150F for the headline serif, warm orange #E85D26 for the QR pattern, hot pink #EF5DA8 accents, chartreuse green #B5E048 for the CTA pill.
+- Type: Fraunces bold serif for the headline, subheadline and CTA; clean sans inside the UI card.
+- Lighting: bright, warm, commercial. A potted green plant at each side edge.
+
+**THE CAT (character consistency is the point of this template)**
+
+- The hero is a REAL PHOTOGRAPH of the exact cat in the attached reference image: a cream and light silver-grey British Shorthair with a round face, very large round blue-green eyes, a pink nose and plush short fur. Same cat, same face, same markings in every variation. Never an illustration, never a different cat, no other animals.
+
+**EXACT COMPOSITION**
+
+1. **Brand header (top 2-9%):** centered: a small circular badge with the cat's face and a tiny gold crown with little gold rays, beside "LEAVE IT TO" in small black capitals over "Bum Bum" in large bold black Fraunces serif.
+
+2. **Headline (11-30%):** the headline text in enormous black Fraunces serif across two lines at the left; if the headline contains the word "Code", its letter "o" is a pink paw print.
+
+3. **Subheadline (30-38%):** the subheadline in black Fraunces serif across two lines on a torn pale-pink paper strip.
+
+4. **Hero photo (34-84%):** the cat sits on the right at the pink desk, both front paws resting on top of a large cream rounded board he presents to the camera: a stylised QR code in warm orange dots, its three corner squares outlined in orange each holding a pink heart, and at its center the small crowned cat-face badge. On the left, a white rounded UI card: a "Your link" label over a field showing "https://leaveittobumbum.com", a "Colors" label over a row of seven small colour swatches (orange, pink, green, yellow, blue, lavender, black), and "Ink" and "Paper" selector chips. A small stack of pink books at the bottom left.
+
+5. **CTA (86-95%):** one wide chartreuse pill with a thin black outline, centered, holding the CTA text in bold black Fraunces serif in title case (first letter capitalised, the rest lower case, never all capitals), followed by a simple right arrow, with small pink sparkle bursts at both ends.
+
+6. **Accents:** one pink heart outline above the cat. Nothing else decorative.
+
+**VISUAL RULES**
+
+- Keep positions, hierarchy, relative scale, palette and typography identical across all variations; only the supplied words change.
+- Use only the exact words supplied below, plus the brand wordmark, the site URL and the generic UI labels named above. No invented claims, prices, metrics or extra text anywhere.
+- Photorealistic cat matching the reference exactly; no cartoon version.
+
+**VARIABLE CONTENT**
+
+Brand: {{BRAND}}
+
+Headline: {{HEADLINE}}
+
+Subheadline: {{SUBHEADLINE}}
+
+CTA: {{CTA}}
+
+**OUTPUT**
+
+Produce one finished, pixel-sharp, 1024 x 1024 square ad.
 TPL;
 }
 
@@ -386,7 +492,7 @@ function ad_template_builtin(int $wsid): ?string {
         return ad_template_dark_text();
     }
     if ($wsid === 4) {
-        return ad_template_bumbum_notes_text();
+        return ad_template_bumbum_toolbox_text();
     }
     return null;
 }
@@ -412,16 +518,21 @@ function ad_templates_for(PDO $pdo, int $wsid): array {
         ];
     }
     if ($wsid === 4) {
-        // Leon's two reference designs (2026-11-06), both native
-        // 1024x1536 portraits: generation renders at the
-        // template's own size — no square render, no crop.
+        // Leon's four reference designs (2026-11-06), all native
+        // squares (1254x1254 files): no size on any entry, so
+        // generation uses the standard square canvas, masters
+        // push to Google as true 1:1 files, and the landscape
+        // variant flow applies as usual. (These replaced the
+        // same-day portrait pair at Leon's word.)
         return [
-            'notes' => ['name' => 'Bum Bum Notes — pink studio (portrait)',
-                        'text' => ad_template_bumbum_notes_text(),
-                        'size' => '1024x1536'],
-            'toolbox' => ['name' => 'Toolbox — blue statement (portrait)',
-                          'text' => ad_template_bumbum_toolbox_text(),
-                          'size' => '1024x1536'],
+            'toolbox' => ['name' => 'Toolbox — pink tin (square)',
+                          'text' => ad_template_bumbum_toolbox_text()],
+            'hearsay' => ['name' => 'Hearsay — lavender chat (square)',
+                          'text' => ad_template_bumbum_hearsay_text()],
+            'poster' => ['name' => 'Poster to Calendar — sky blue (square)',
+                         'text' => ad_template_bumbum_poster_text()],
+            'purrcode' => ['name' => 'Purr Code — pink QR (square)',
+                           'text' => ad_template_bumbum_purrcode_text()],
         ];
     }
     return [];
