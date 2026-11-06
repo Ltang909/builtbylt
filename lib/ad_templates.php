@@ -323,6 +323,10 @@ function workspace_logo_files(PDO $pdo, int $wsid): array {
     $map = [
         3 => ['assets/logo-coderabbit-icon.png',
               'assets/logo-coderabbit-lockup.png'],
+        // Leaveittobumbum has no logo lockup file (the site header
+        // mark is styled text); the reference is the brand's real
+        // cat photo from leaveittobumbum.com's own public assets.
+        4 => ['assets/logo-bumbum-photo.png'],
     ];
     $out = [];
     foreach ($map[$wsid] ?? [] as $rel) {
