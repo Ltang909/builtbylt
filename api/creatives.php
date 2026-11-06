@@ -116,6 +116,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . implode(', ', $sets) . ' WHERE id = ?')
                 ->execute($vals);
         }
+        if ($sets) {
+            // Keep the attached copy variant set in step (Update
+            // 11.7): the edited face copy replaces its own entry in
+            // the set, matched on the pre-edit headline + primary
+            // text. If it is not found, the edit becomes the whole
+            // set — the operator rewrote the copy either way.
+            creative_copy_variants_install($pdo);
+            $set = creative_copy_variants($row);
+            $merged = $row;
+            foreach ($fields as $f) {
+                if (array_key_exists($f, $data)) {
+                    $merged[$f] = $data[$f] === null
+                        ? '' : (string)$data[$f];
+                }
+            }
+            $entry = [
+                'headline' => (string)($merged['headline'] ?? ''),
+                'primary_text' =>
+                    (string)($merged['primary_text'] ?? ''),
+                'description' =>
+                    (string)($merged['description'] ?? ''),
+                'cta' => (string)($merged['cta'] ?? ''),
+                'offer_text' => (string)($merged['offer_text'] ?? ''),
+            ];
+            $hit = null;
+            foreach ($set as $i => $sv) {
+                if ($sv['headline']
+                        === (string)($row['headline'] ?? '')
+                    && $sv['primary_text']
+                        === (string)($row['primary_text'] ?? '')) {
+                    $hit = $i;
+                    break;
+                }
+            }
+            if ($hit !== null) {
+                $set[$hit] = $entry;
+            } else {
+                $set = [$entry];
+            }
+            $pdo->prepare('UPDATE creatives SET copy_variants = ? '
+                . 'WHERE id = ?')
+                ->execute([json_encode($set), $cid]);
+        }
         // The verdicts judged the old copy; they no longer apply.
         $pdo->prepare('DELETE FROM verdicts WHERE creative_id = ?')
             ->execute([$cid]);

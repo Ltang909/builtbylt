@@ -1022,7 +1022,7 @@ function renderExperiments(){
       <tr><td>${esc(e.pass_metric)}</td><td>${esc(e.fail_metric)}</td>
           <td>${esc(e.kill_metric)}</td><td>${money(e.spend_floor)}</td></tr></table>
       <h4>Generate creatives (Step 2)</h4>
-      <div class="formnote">Copy via the routed copy model (default gpt-4o-mini), images via the routed art model. Nothing runs — and nothing is charged — until you see an estimate and confirm it. That gate is the rule, not a courtesy.</div>
+      <div class="formnote">Copy via the routed copy model (default gpt-4o-mini), images via the routed art model. Images are the ads: each image becomes one creative carrying all the copy variants, and Google mixes the headlines and descriptions. Nothing runs — and nothing is charged — until you see an estimate and confirm it. That gate is the rule, not a courtesy.</div>
       <div class="rowline">
         <label>Copy variants <input type="number" id="gen-variants-${e.id}" value="6" min="1" max="24" style="width:70px" onchange="genInvalidate(${e.id})"></label>
         <label>Images <input type="number" id="gen-images-${e.id}" value="2" min="0" max="24" style="width:70px" onchange="genInvalidate(${e.id})"></label>
@@ -1098,6 +1098,13 @@ function batchInfo(batchId){
   return batchRows.find(b => Number(b.id) === Number(batchId)) || null;
 }
 
+function copySetLine(c){
+  let set = null;
+  try { set = typeof c.copy_variants === "string" ? JSON.parse(c.copy_variants) : c.copy_variants; } catch (e) { set = null; }
+  if (!Array.isArray(set) || set.length <= 1) return "";
+  const others = set.map(v => v.headline).filter(h => h && h !== c.headline);
+  return `<div class="copy"><span class="lbl">Copy set</span>All ${set.length} copy variants ride this ad — Google mixes them.${others.length ? " Also: " + esc(others.join(" · ")) : ""}</div>`;
+}
 function queueCard(c){
   const exp = experiments.find(e => e.id === Number(c.experiment_id));
   const img = c.image_url
@@ -1126,6 +1133,7 @@ function queueCard(c){
     ${img}
     <div class="copy"><span class="lbl">Primary text</span>\n${esc(c.primary_text)}</div>
     ${c.description ? `<div class="copy"><span class="lbl">Description</span>\n${esc(c.description)}</div>` : ""}
+    ${copySetLine(c)}
     ${c.art_direction ? `<div class="artdir"><span class="lbl">Art direction</span>${esc(c.art_direction)}</div>` : ""}
     ${verdictChips(c)}
     ${displayLine(c)}

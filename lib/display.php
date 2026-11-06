@@ -102,6 +102,74 @@ function display_record_asset(PDO $pdo, int $cid, string $kind,
  * math on the row plus the workspace name — no table access, safe
  * to call on every read.
  */
+
+/**
+ * Lazy self-install for the copy_variants column (Update 11.7),
+ * following the codebase's SHOW COLUMNS pattern: safe to call on
+ * every request, a no-op once the column exists.
+ */
+function creative_copy_variants_install(PDO $pdo): void {
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+    try {
+        $has = $pdo->query("SHOW COLUMNS FROM creatives "
+            . "LIKE 'copy_variants'")->fetch() !== false;
+        if (!$has) {
+            $pdo->exec('ALTER TABLE creatives ADD COLUMN '
+                . 'copy_variants MEDIUMTEXT NULL');
+        }
+    } catch (Throwable $e) {
+        // Reads fall back to the scalar fields; writes surface
+        // their own errors at the INSERT/UPDATE.
+    }
+}
+
+/**
+ * The creative's copy variant set (Update 11.7). Image-first
+ * creatives carry the whole batch set in copy_variants; anything
+ * without a stored set reads as the single variant formed by its
+ * scalar fields, so legacy creatives behave exactly as before.
+ * Each entry: headline, primary_text, description, cta, offer_text.
+ */
+function creative_copy_variants(array $creative): array {
+    $raw = $creative['copy_variants'] ?? null;
+    $set = is_string($raw) ? json_decode($raw, true) : null;
+    $out = [];
+    if (is_array($set)) {
+        foreach ($set as $v) {
+            if (!is_array($v)) {
+                continue;
+            }
+            $out[] = [
+                'headline' => trim((string)($v['headline'] ?? '')),
+                'primary_text' =>
+                    trim((string)($v['primary_text'] ?? '')),
+                'description' =>
+                    trim((string)($v['description'] ?? '')),
+                'cta' => trim((string)($v['cta'] ?? '')),
+                'offer_text' =>
+                    trim((string)($v['offer_text'] ?? '')),
+            ];
+        }
+    }
+    if ($out === []) {
+        $out[] = [
+            'headline' => trim((string)($creative['headline'] ?? '')),
+            'primary_text' =>
+                trim((string)($creative['primary_text'] ?? '')),
+            'description' =>
+                trim((string)($creative['description'] ?? '')),
+            'cta' => trim((string)($creative['cta'] ?? '')),
+            'offer_text' =>
+                trim((string)($creative['offer_text'] ?? '')),
+        ];
+    }
+    return $out;
+}
+
 function display_spec(PDO $pdo, array $creative): array {
     $wsStmt = $pdo->prepare('SELECT name FROM workspaces WHERE id = ?');
     $wsStmt->execute([(int)($creative['workspace_id'] ?? 0)]);
@@ -112,6 +180,93 @@ function display_spec(PDO $pdo, array $creative): array {
     $offer = trim((string)($creative['offer_text'] ?? ''));
     $description = trim((string)($creative['description'] ?? ''));
     $primary = trim((string)($creative['primary_text'] ?? ''));
+
+    // Update 11.7: a multi-variant set ships as ONE responsive ad —
+    // headlines and descriptions come from the whole set (Google
+    // mixes them), capped at the panel's 5-and-5. Every variant is
+    // length-checked; one over-limit variant fails the spec, same
+    // as an over-limit single creative.
+    $set = creative_copy_variants($creative);
+    if (count($set) > 1) {
+        $headlines = [];
+        foreach ($set as $v) {
+            if ($v['headline'] !== ''
+                && !in_array($v['headline'], $headlines, true)
+                && count($headlines) < 5) {
+                $headlines[] = $v['headline'];
+            }
+        }
+        foreach ($set as $v) {
+            if (count($headlines) >= 5) {
+                break;
+            }
+            if ($v['offer_text'] !== ''
+                && rda_len($v['offer_text']) <= RDA_HEADLINE_MAX
+                && !in_array($v['offer_text'], $headlines, true)) {
+                $headlines[] = $v['offer_text'];
+            }
+        }
+        $descriptions = [];
+        foreach ($set as $v) {
+            if ($v['description'] !== ''
+                && !in_array($v['description'], $descriptions, true)
+                && count($descriptions) < 5) {
+                $descriptions[] = $v['description'];
+            }
+        }
+        foreach ($set as $v) {
+            if (count($descriptions) >= 5) {
+                break;
+            }
+            if ($v['primary_text'] !== ''
+                && !in_array($v['primary_text'], $descriptions, true)) {
+                $descriptions[] = $v['primary_text'];
+            }
+        }
+        $checks = [];
+        $field = function (string $name, string $value, int $max)
+            use (&$checks) {
+            $len = rda_len($value);
+            $checks[] = [
+                'field' => $name,
+                'chars' => $len,
+                'max' => $max,
+                'ok' => $value !== '' && $len <= $max,
+                'empty' => $value === '',
+            ];
+        };
+        foreach ($set as $i => $v) {
+            $n = $i + 1;
+            $field('headline (variant ' . $n . ')', $v['headline'],
+                   RDA_HEADLINE_MAX);
+            $field('description (variant ' . $n . ')',
+                   $v['primary_text'] !== ''
+                       ? $v['primary_text'] : $v['description'],
+                   RDA_DESCRIPTION_MAX);
+        }
+        $field('long_headline', $set[0]['description'],
+               RDA_LONG_HEADLINE_MAX);
+        $field('business_name', $business, RDA_BUSINESS_MAX);
+        return [
+            'format' => 'responsive_display',
+            'business_name' => $business,
+            'headlines' => $headlines,
+            'long_headline' => $set[0]['description'],
+            'descriptions' => $descriptions,
+            'cta' => $set[0]['cta'],
+            'variant_count' => count($set),
+            'final_url' => null,
+            'final_url_note' => 'Not stored in the panel — set the '
+                . 'landing page URL in Google Ads at upload.',
+            'logo_note' => 'Upload the workspace logo as its own '
+                . 'asset in Google Ads (the panel never renders a '
+                . 'logo into the display crop).',
+            'checks' => $checks,
+            'copy_ok' => !in_array(false,
+                array_map(function ($c) { return $c['ok']; },
+                          $checks), true),
+        ];
+    }
 
     $headlines = [];
     if ($headline !== '') {
@@ -154,6 +309,7 @@ function display_spec(PDO $pdo, array $creative): array {
         'long_headline' => $description,
         'descriptions' => $descriptions,
         'cta' => (string)($creative['cta'] ?? ''),
+        'variant_count' => 1,
         'final_url' => null,
         'final_url_note' => 'Not stored in the panel — set the '
             . 'landing page URL in Google Ads at upload.',

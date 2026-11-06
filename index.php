@@ -87,6 +87,6 @@ require_page_auth($pdo);
     <section id="tab-settings"></section>
   </div>
 </main>
-<script src="app.js?v=20261106-7"></script>
+<script src="app.js?v=20261106-8"></script>
 </body>
 </html>

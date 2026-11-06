@@ -582,11 +582,33 @@ if (count($variants) < $p['variants']) {
 $ins = $pdo->prepare(
     'INSERT INTO creatives (workspace_id, experiment_id, batch_id, kind, '
     . 'game_name, headline, primary_text, description, cta, offer_text, '
-    . 'template_id, format, art_direction, image_prompt, status) '
-    . 'VALUES (?, ?, ?, \'static\', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '
+    . 'template_id, format, art_direction, image_prompt, status, copy_variants) '
+    . 'VALUES (?, ?, ?, \'static\', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '
     . '\'generated\')');
 $createdIds = [];
-foreach ($variants as $v) {
+creative_copy_variants_install($pdo);
+$copyFields = function (array $v): array {
+    return [
+        'headline' => (string)($v['headline'] ?? ''),
+        'primary_text' => (string)($v['primary_text'] ?? ''),
+        'description' => (string)($v['description'] ?? ''),
+        'cta' => (string)($v['cta'] ?? ''),
+        'offer_text' => (string)($v['offer_text'] ?? ''),
+    ];
+};
+$fullSetJson = json_encode(array_map($copyFields, $variants));
+// Update 11.7 (the operator's model): images are the creatives.
+// When the run asks for images, create one creative per image —
+// the first N variants supply the image concepts and each
+// creative's face copy — and attach the batch's FULL copy variant
+// set to every one of them: a Responsive Display Ad mixes
+// headlines and descriptions itself, so each image ships with all
+// the copy. With images = 0 the run stays per-variant, as before.
+$imageFirst = $p['images'] >= 1;
+$leads = $imageFirst
+    ? array_slice($variants, 0, min($p['images'], count($variants)))
+    : $variants;
+foreach ($leads as $v) {
     // Template mode (Update 10.8): the workspace template is a
     // square composition, so template workspaces' creatives are
     // 1:1 regardless of the format the copy model picked.
@@ -600,11 +622,13 @@ foreach ($variants as $v) {
         // fall back to the variant's own copy as the image prompt.
         $imgPrompt = trim($v['headline'] . ' — ' . $v['primary_text']);
     }
+    $setJsonForLead = $imageFirst ? $fullSetJson
+        : json_encode([$copyFields($v)]);
     $ins->execute([
         $wsid, $experimentId, $batchId, $v['game_name'], $v['headline'],
         $v['primary_text'], $v['description'], $v['cta'], $v['offer_text'],
         'tmpl-gen-' . ($fmtSlug !== '' ? $fmtSlug : 'draft'),
-        $fmt, $artDir, $imgPrompt,
+        $fmt, $artDir, $imgPrompt, $setJsonForLead,
     ]);
     $createdIds[] = (int)$pdo->lastInsertId();
 }
@@ -635,6 +659,21 @@ foreach ($createdIds as $cid) {
             . $flag['message'];
     }
 }
+if ($imageFirst && count($variants) > count($createdIds)
+    && $createdIds !== []) {
+    $firstSaved = fetch_creative($pdo, $createdIds[0]);
+    if ($firstSaved !== null) {
+        for ($vi = count($createdIds); $vi < count($variants);
+             $vi++) {
+            $synth = array_merge($firstSaved,
+                                 $copyFields($variants[$vi]));
+            foreach (lint_flags_for($pdo, $synth) as $flag) {
+                $lintNotes[] = 'Lint: copy variant ' . ($vi + 1)
+                    . ' — ' . $flag['message'];
+            }
+        }
+    }
+}
 $notes = array_merge(
     $countNote !== null ? [$countNote] : [], $lintNotes);
 $pendingImages = array_slice($createdIds, 0, $p['images']);
@@ -663,5 +702,6 @@ json_out([
     'created' => count($createdIds),
     'images_made' => 0,
     'pending_images' => $pendingImages,
+    'model' => $imageFirst ? 'image_first' : 'per_variant',
     'actual_cost_usd' => $actual,
 ]);
