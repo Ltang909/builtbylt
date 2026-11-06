@@ -498,12 +498,134 @@ function ad_template_builtin(int $wsid): ?string {
 }
 
 /**
+ * Uploaded design templates (2026-11-06): operators can add a
+ * template by uploading a finished design image (Settings,
+ * Image templates card). Rows live in the ad_templates table;
+ * the design file lives under uploads/templates/ws<N>/ and
+ * rides along as the first reference image at generation time,
+ * with the generic wrapper below as its prompt text.
+ */
+function ad_templates_install(PDO $pdo): void {
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS ad_templates ('
+        . 'id INT AUTO_INCREMENT PRIMARY KEY, '
+        . 'workspace_id INT NOT NULL, '
+        . 'name VARCHAR(120) NOT NULL, '
+        . 'image_path VARCHAR(255) NOT NULL, '
+        . 'created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
+        . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+}
+
+/** Uploaded template rows for a workspace ([] when none, or on any failure). */
+function ad_template_uploaded_rows(PDO $pdo, int $wsid): array {
+    try {
+        ad_templates_install($pdo);
+        $stmt = $pdo->prepare(
+            'SELECT id, name, image_path FROM ad_templates '
+            . 'WHERE workspace_id = ? ORDER BY id');
+        $stmt->execute([$wsid]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
+/** The generation canvas matching an uploaded design's own aspect. */
+function ad_template_aspect_size(int $w, int $h): string {
+    if ($w <= 0 || $h <= 0) {
+        return '1024x1024';
+    }
+    $r = $w / $h;
+    if ($r > 1.1) {
+        return '1536x1024';
+    }
+    if ($r < 0.91) {
+        return '1024x1536';
+    }
+    return '1024x1024';
+}
+
+/** The prompt for an uploaded design template: recreate the design, swap the copy. */
+function ad_template_image_wrapper(): string {
+    return <<<'TPL'
+Recreate the attached template design as a finished ad for {{BRAND}}, using the copy supplied below. The FIRST attached image is the template: keep its composition, layout, palette, typography, props and characters exactly — the same cat or cats, the same faces, the same style, photorealistic where the design is photographic. Change ONLY the words: render the headline, subheadline and CTA below in the design's headline, subheadline and call-to-action positions, in the design's own type style. Render the CTA in title case, never all capitals. Use only the exact words supplied, plus the brand wordmark and any generic user-interface labels the design itself shows. No invented claims, prices, metrics or extra text.
+
+VARIABLE CONTENT
+
+Brand: {{BRAND}}
+
+Headline: {{HEADLINE}}
+
+Subheadline: {{SUBHEADLINE}}
+
+CTA: {{CTA}}
+
+Scene direction: {{PRODUCT_VISUAL}}
+
+OUTPUT
+
+Produce one finished, pixel-sharp ad matching the attached template design.
+TPL;
+}
+
+/**
+ * Absolute path of the design image for the template a key
+ * resolves to (same resolution as ad_template_text), or null
+ * when that template is not an uploaded design.
+ */
+function ad_template_image_file(PDO $pdo, int $wsid, ?string $key): ?string {
+    $templates = ad_templates_for($pdo, $wsid);
+    if ($templates === []) {
+        return null;
+    }
+    if ($key !== null && isset($templates[$key])) {
+        $entry = $templates[$key];
+    } else {
+        $entry = reset($templates);
+    }
+    if (!is_array($entry) || empty($entry['image'])) {
+        return null;
+    }
+    $abs = PANEL_ROOT . '/' . (string)$entry['image'];
+    return is_file($abs) ? $abs : null;
+}
+
+/**
  * All templates available to a workspace, as an ordered map of
- * key => ['name' => ..., 'text' => ...]. A non-empty
- * 'image_template' setting replaces the built-ins with a single
- * custom template.
+ * key => ['name' => ..., 'text' => ...]. The built-in map (or a
+ * non-empty 'image_template' setting, which replaces the
+ * built-ins with a single custom template) comes first; the
+ * workspace's uploaded design templates merge in after.
  */
 function ad_templates_for(PDO $pdo, int $wsid): array {
+    $base = ad_templates_builtin_for($pdo, $wsid);
+    foreach (ad_template_uploaded_rows($pdo, $wsid) as $row) {
+        $abs = PANEL_ROOT . '/' . (string)$row['image_path'];
+        if (!is_file($abs)) {
+            continue;
+        }
+        $info = @getimagesize($abs);
+        $base['up-' . (int)$row['id']] = [
+            'name' => (string)$row['name'],
+            'text' => ad_template_image_wrapper(),
+            'size' => $info !== false
+                ? ad_template_aspect_size((int)$info[0], (int)$info[1])
+                : '1024x1024',
+            'image' => (string)$row['image_path'],
+            'uploaded' => true,
+            'id' => (int)$row['id'],
+        ];
+    }
+    return $base;
+}
+
+/** Built-in + settings-custom templates only (uploads merge in ad_templates_for). */
+function ad_templates_builtin_for(PDO $pdo, int $wsid): array {
     $fromSettings = get_setting($pdo, $wsid, 'image_template');
     if ($fromSettings !== null && trim($fromSettings) !== '') {
         return ['custom' => ['name' => 'Workspace template',

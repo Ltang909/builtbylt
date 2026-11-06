@@ -1538,6 +1538,37 @@ function brandCard(theme){
 }
 
 const TOKEN_FIELDS = ["colors","fonts","cta_allowlist","banned_words","compliance_strings","offer_table"];
+function tplRowsHtml(){
+  const ws = workspaces.find(w => w.id === WS) || {};
+  const tpls = ws.image_templates || [];
+  if (!tpls.length) return '<div class="empty">No templates for this workspace yet. Upload a design below to add the first one.</div>';
+  return tpls.map(t => `<div class="rowline">`
+    + (t.uploaded && t.id ? `<img src="api/template_image.php?id=${t.id}" alt="" style="height:56px;width:56px;object-fit:cover;border-radius:6px">` : "")
+    + `<span style="flex:1"><strong>${esc(t.name)}</strong><br><span class="meta">${t.uploaded ? "uploaded design" : "built-in"} · canvas ${esc(t.size || "1024x1024")}</span></span>`
+    + (t.uploaded && t.id ? `<button class="btn secondary" onclick="tplDelete(${t.id})">Delete</button>` : "")
+    + `</div>`).join("");
+}
+async function tplUpload(){
+  const name = ((document.getElementById("tpl-name") || {}).value || "").trim();
+  const input = document.getElementById("tpl-file");
+  const msg = document.getElementById("tpl-msg");
+  if (!name){ if (msg) msg.textContent = "Give the template a name first."; return; }
+  if (!input || !input.files.length){ if (msg) msg.textContent = "Pick a design image first."; return; }
+  const file = input.files[0];
+  const buf = await file.arrayBuffer();
+  let bin = ""; const bytes = new Uint8Array(buf);
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  const out = await api("templates.php", jsonOpts({action: "upload", workspace_id: WS,
+    name, filename: file.name, image_base64: btoa(bin)})).catch(() => null);
+  if (!out || !out.ok){ if (msg) msg.textContent = "Upload failed: " + ((out && out.error) || "request failed"); return; }
+  await loadAll(); renderSettings();
+}
+async function tplDelete(id){
+  if (!confirm("Delete this uploaded template? Creatives already generated from it keep their images.")) return;
+  const out = await api("templates.php", jsonOpts({action: "delete", id})).catch(() => null);
+  if (!out || !out.ok){ alert("Delete failed: " + ((out && out.error) || "request failed")); return; }
+  await loadAll(); renderSettings();
+}
 function renderSettings(){
   const el = $("#tab-settings");
   const theme = brandTheme();
@@ -1567,6 +1598,14 @@ function renderSettings(){
       <textarea class="code" id="tok-tone" style="width:100%">${esc(tokens ? tokens.tone_text : "")}</textarea></label>
     <div class="rowline"><button class="btn" onclick="saveTokens()">Save tokens</button>
     <span class="msg" id="tok-msg"></span></div>
+  </div>
+
+  <div class="card"><h3>Image templates — this workspace</h3>
+    <div class="formnote">Generation renders the picked template with each creative's copy. Built-in templates come from the panel's design specs. Upload a finished design image and it becomes a template too: the design itself rides along as the reference image, and the generation canvas follows the design's own aspect (square, portrait or landscape).</div>
+    ${tplRowsHtml()}
+    <div class="rowline"><input type="text" id="tpl-name" placeholder="Template name, e.g. Spring sale — pink" style="flex:1;min-width:220px">
+      <input type="file" id="tpl-file" accept="image/png,image/jpeg,image/webp">
+      <button class="btn" onclick="tplUpload()">Upload template</button><span class="msg" id="tpl-msg"></span></div>
   </div>
 
   <div class="card"><h3>Rules — this workspace</h3>

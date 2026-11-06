@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         // the workspace's available ad templates from here.
         $r['image_templates'] = [];
         foreach (ad_templates_for($pdo, (int)$r['id']) as $k => $t) {
-            $r['image_templates'][] = ['key' => $k, 'name' => $t['name'], 'size' => $t['size'] ?? null];
+            $r['image_templates'][] = ['key' => $k, 'name' => $t['name'], 'size' => $t['size'] ?? null, 'uploaded' => !empty($t['uploaded']), 'id' => $t['id'] ?? null];
         }
     }
     json_out($rows);
