@@ -356,10 +356,15 @@ function gads_cta_text(string $cta): ?string {
  */
 
 /* ------------------------------------------------------------------
- * Display guardrails (Update 11.6): per-workspace placement safety
- * applied to every push as negative campaign criteria in the same
- * mutate that creates the campaign, so the exclusions exist from
- * the campaign's first moment (it is created PAUSED regardless).
+ * Display guardrails (Update 11.6): per-workspace placement safety,
+ * applied to the connected Google Ads ACCOUNT as customer negative
+ * criteria (content labels, placements, mobile app categories),
+ * where they cover every campaign in the account. Campaign-level
+ * content-label criteria are rejected by the API for the
+ * suitability types (verified live 2026-11-06: CANNOT_EXCLUDE on
+ * campaign_criterion), so pushes carry no criteria of their own;
+ * the operator applies the guardrails to the account once (and
+ * re-applies after changing them) from Settings.
  *
  * Stored as one JSON setting ('display_guardrails') per workspace:
  *   {labels: [ContentLabelType, ...], exclude_apps: bool,
@@ -493,6 +498,145 @@ function gads_app_category_resources(PDO $pdo, array $conn,
     return $out;
 }
 
+
+/**
+ * What already sits on the account as customer negative criteria:
+ * label types, placement urls and app-category resource names.
+ */
+function gads_customer_negative_existing(PDO $pdo, array $conn,
+                                         string $cust): array {
+    $data = gads_api($pdo, $conn, $cust . '/googleAds:search', [
+        'query' => 'SELECT customer_negative_criterion.type, '
+            . 'customer_negative_criterion.content_label.type, '
+            . 'customer_negative_criterion.placement.url, '
+            . 'customer_negative_criterion.mobile_app_category'
+            . '.mobile_app_category_constant '
+            . 'FROM customer_negative_criterion',
+    ]);
+    $labels = [];
+    $placements = [];
+    $apps = [];
+    foreach ((array)($data['results'] ?? []) as $r) {
+        $c = $r['customerNegativeCriterion'] ?? [];
+        if (!empty($c['contentLabel']['type'])) {
+            $labels[] = (string)$c['contentLabel']['type'];
+        }
+        if (!empty($c['placement']['url'])) {
+            $placements[] = (string)$c['placement']['url'];
+        }
+        if (!empty($c['mobileAppCategory']
+                   ['mobileAppCategoryConstant'])) {
+            $apps[] = (string)$c['mobileAppCategory']
+                ['mobileAppCategoryConstant'];
+        }
+    }
+    return ['labels' => $labels, 'placements' => $placements,
+            'app_categories' => $apps];
+}
+
+/**
+ * Coverage of the workspace's guardrail setting on its account:
+ * how many of the wanted labels / placements / app categories are
+ * already excluded at account level. Throws on API failure; the
+ * callers decide how to present an unreadable account.
+ */
+function gads_guardrails_status(PDO $pdo, array $conn,
+                                int $wsid): array {
+    $customerId = preg_replace('/\D/', '',
+        (string)($conn['customer_id'] ?? ''));
+    $cust = 'customers/' . $customerId;
+    $want = gads_display_guardrails($pdo, $wsid);
+    $have = gads_customer_negative_existing($pdo, $conn, $cust);
+    $labelsOn = count(array_intersect($want['labels'],
+                                      $have['labels']));
+    $placesOn = count(array_intersect($want['placements'],
+                                      $have['placements']));
+    $appsOn = !$want['exclude_apps'] ? null
+        : count($have['app_categories']);
+    $text = $labelsOn . '/' . count($want['labels'])
+        . ' content labels, ' . $placesOn . '/'
+        . count($want['placements']) . ' placements';
+    if ($appsOn !== null) {
+        $text .= ', ' . $appsOn . ' app categories';
+    }
+    $text .= ' excluded on this account';
+    $complete = $labelsOn === count($want['labels'])
+        && $placesOn === count($want['placements'])
+        && ($appsOn === null || $appsOn > 0);
+    return ['labels_on' => $labelsOn,
+            'labels_wanted' => count($want['labels']),
+            'placements_on' => $placesOn,
+            'placements_wanted' => count($want['placements']),
+            'app_categories_on' => $appsOn,
+            'complete' => $complete, 'text' => $text];
+}
+
+/**
+ * Apply the workspace's guardrails to its connected account:
+ * creates only the customer negative criteria that are missing
+ * (criteria are immutable; nothing is removed). Ledgered as
+ * google_ads_guardrails. Returns the created counts.
+ */
+function gads_apply_guardrails(PDO $pdo, array $conn,
+                               int $wsid): array {
+    $customerId = preg_replace('/\D/', '',
+        (string)($conn['customer_id'] ?? ''));
+    if ($customerId === '') {
+        throw new RuntimeException('No Google Ads account is '
+            . 'selected for this workspace yet.');
+    }
+    $cust = 'customers/' . $customerId;
+    $want = gads_display_guardrails($pdo, $wsid);
+    $have = gads_customer_negative_existing($pdo, $conn, $cust);
+    $ops = [];
+    $made = ['labels' => 0, 'placements' => 0, 'app_categories' => 0];
+    foreach ($want['labels'] as $type) {
+        if (!in_array($type, $have['labels'], true)) {
+            $ops[] = ['create' => ['contentLabel' => ['type' => $type]]];
+            $made['labels']++;
+        }
+    }
+    foreach ($want['placements'] as $url) {
+        if (!in_array($url, $have['placements'], true)) {
+            $ops[] = ['create' => ['placement' => ['url' => $url]]];
+            $made['placements']++;
+        }
+    }
+    if ($want['exclude_apps'] && $have['app_categories'] === []) {
+        foreach (gads_app_category_resources($pdo, $conn, $cust)
+                 as $rn) {
+            $ops[] = ['create' => ['mobileAppCategory' => [
+                'mobileAppCategoryConstant' => $rn]]];
+            $made['app_categories']++;
+        }
+    }
+    if ($ops !== []) {
+        try {
+            gads_api($pdo, $conn,
+                     $cust . '/customerNegativeCriteria:mutate',
+                     ['operations' => $ops]);
+        } catch (Throwable $e) {
+            log_ledger($pdo, $wsid, 'google_ads_guardrails', 'google',
+                       GADS_API_VERSION, 'error',
+                       substr('apply failed: ' . $e->getMessage(),
+                              0, 240));
+            throw $e;
+        }
+    }
+    log_ledger($pdo, $wsid, 'google_ads_guardrails', 'google',
+               GADS_API_VERSION, 'ok',
+               substr('account ' . $customerId . ': created '
+                   . $made['labels'] . ' labels, '
+                   . $made['placements'] . ' placements, '
+                   . $made['app_categories'] . ' app categories '
+                   . '(already on file: '
+                   . count($have['labels']) . ' labels, '
+                   . count($have['placements']) . ' placements, '
+                   . count($have['app_categories'])
+                   . ' app categories)', 0, 240));
+    return $made;
+}
+
 function gads_push_creative(PDO $pdo, array $creative, array $conn,
                             string $finalUrl): array {
     $wsid = (int)$creative['workspace_id'];
@@ -618,44 +762,6 @@ function gads_push_creative(PDO $pdo, array $creative, array $conn,
             ],
         ]]],
     ];
-    // Display guardrails: negative criteria ride the same mutate,
-    // so the exclusions exist from the campaign's first moment.
-    $guard = gads_display_guardrails($pdo, $wsid);
-    foreach ($guard['labels'] as $gtype) {
-        $ops[] = ['campaignCriterionOperation' => ['create' => [
-            'campaign' => $campaignRes,
-            'negative' => true,
-            'contentLabel' => ['type' => $gtype],
-        ]]];
-    }
-    foreach ($guard['placements'] as $gurl) {
-        $ops[] = ['campaignCriterionOperation' => ['create' => [
-            'campaign' => $campaignRes,
-            'negative' => true,
-            'placement' => ['url' => $gurl],
-        ]]];
-    }
-    $appsNote = '';
-    if ($guard['exclude_apps']) {
-        try {
-            $cats = gads_app_category_resources($pdo, $conn, $cust);
-            foreach ($cats as $rn) {
-                $ops[] = ['campaignCriterionOperation' => ['create' => [
-                    'campaign' => $campaignRes,
-                    'negative' => true,
-                    'mobileAppCategory' => [
-                        'mobileAppCategoryConstant' => $rn,
-                    ],
-                ]]];
-            }
-            $appsNote = $cats === [] ? ', apps: none returned'
-                : ', apps: ' . count($cats) . ' categories';
-        } catch (Throwable $e) {
-            // The push itself must not die on the category lookup;
-            // the ledger note records that apps were not excluded.
-            $appsNote = ', apps: lookup failed';
-        }
-    }
     try {
         $resp = gads_api($pdo, $conn, $cust . '/googleAds:mutate',
                          ['mutateOperations' => $ops,
@@ -688,12 +794,9 @@ function gads_push_creative(PDO $pdo, array $creative, array $conn,
     $pushId = (int)$pdo->lastInsertId();
     log_ledger($pdo, $wsid, 'google_ads_push', 'google',
                GADS_API_VERSION, 'ok',
-               substr('creative #' . $cid . ': paused campaign '
+               'creative #' . $cid . ': paused campaign '
                . (string)$campaignResource . ' in customer '
-               . $customerId . ' | guardrails: '
-               . count($guard['labels']) . ' labels, '
-               . count($guard['placements']) . ' placements'
-               . $appsNote, 0, 240));
+               . $customerId);
     $stmt = $pdo->prepare(
         'SELECT * FROM creative_google_ads_pushes WHERE id = ?');
     $stmt->execute([$pushId]);

@@ -52,6 +52,19 @@ if ($method === 'GET') {
             'redirect_uri' => gads_redirect_uri(),
             'connection' => gads_public_conn(
                 gads_connection($pdo, $wsid)),
+            'guardrails_status' => (function () use ($pdo, $wsid) {
+                $conn = gads_connection($pdo, $wsid);
+                if ($conn === null
+                    || empty($conn['customer_id'])) {
+                    return null;
+                }
+                try {
+                    return gads_guardrails_status($pdo, $conn,
+                                                  $wsid)['text'];
+                } catch (Throwable $e) {
+                    return null;
+                }
+            })(),
         ]);
     }
     if ($action === 'connect_url') {
@@ -123,6 +136,24 @@ if ($action === 'disconnect') {
     json_out(['ok' => true, 'connection' => null]);
 }
 
+if ($action === 'apply_guardrails') {
+    $wsid = (int)($data['workspace_id'] ?? 0);
+    $conn = $wsid > 0 ? gads_connection($pdo, $wsid) : null;
+    if ($conn === null || empty($conn['customer_id'])) {
+        json_out(['error' => 'This workspace is not connected to '
+            . 'a Google Ads account yet.'], 400);
+    }
+    try {
+        $made = gads_apply_guardrails($pdo, $conn, $wsid);
+        $status = gads_guardrails_status($pdo, $conn, $wsid);
+    } catch (Throwable $e) {
+        json_out(['error' => $e->getMessage()], 502);
+    }
+    json_out(['ok' => true, 'created' => $made,
+              'guardrails_status' => $status['text'],
+              'complete' => $status['complete']]);
+}
+
 if ($action === 'preview' || $action === 'push') {
     $cid = (int)($data['creative_id'] ?? 0);
     $creative = $cid > 0 ? fetch_creative($pdo, $cid) : null;
@@ -165,8 +196,24 @@ if ($action === 'preview' || $action === 'push') {
                 ? $conn['default_final_url'] : null,
             'customer_id' => $conn !== null
                 ? $conn['customer_id'] : null,
-            'guardrails' => gads_guardrails_summary(
-                gads_display_guardrails($pdo, $wsid)),
+            'guardrails' => (function () use ($pdo, $conn, $wsid) {
+                $want = gads_guardrails_summary(
+                    gads_display_guardrails($pdo, $wsid));
+                if ($conn === null
+                    || empty($conn['customer_id'])) {
+                    return $want . ' wanted; account not readable';
+                }
+                try {
+                    $st = gads_guardrails_status($pdo, $conn, $wsid);
+                    return ($st['complete']
+                        ? 'on account: ' : 'PARTLY on account: ')
+                        . $st['text'] . ' (setting wants: ' . $want
+                        . ')';
+                } catch (Throwable $e) {
+                    return $want . ' wanted; account status '
+                        . 'unreadable';
+                }
+            })(),
         ]);
     }
     // push

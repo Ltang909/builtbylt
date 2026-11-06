@@ -1905,12 +1905,14 @@ function gadsGuardrailsHtml(){
   const places = cur ? (cur.placements || []).join("\n") : "";
   const boxes = cat.map(x => `<label style="display:inline-block;margin:2px 12px 2px 0;font-size:12px"><input type="checkbox" class="gr-label" value="${esc(x.type)}" ${on.includes(x.type) ? "checked" : ""}> ${esc(x.label)}</label>`).join("");
   return `<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:10px">
-    <div class="formnote"><strong>Display guardrails — applied to every push from this workspace.</strong> These exclusions ride along as negative criteria on each new campaign, which is created PAUSED, so they are in place before anything can serve. The account-wide inventory type (Maximum / Moderate / Limited) lives in Google Ads itself under Tools, Content suitability; the panel does not change it. Google applies exclusions on a best-effort basis, not as a guarantee.</div>
+    <div class="formnote"><strong>Display guardrails — account-level exclusions for this workspace's Google Ads account.</strong> Google only accepts these content exclusions at account level, where they cover every campaign in the account, including ones the panel pushes. Save the setting here, then apply it to the account (once, and again after any change). The account-wide inventory type (Maximum / Moderate / Limited) lives in Google Ads itself under Tools, Content suitability; the panel does not change it. Google applies exclusions on a best-effort basis, not as a guarantee.</div>
     <div>${boxes}</div>
     <div class="rowline"><label style="font-size:12px"><input type="checkbox" id="gr-apps" ${apps ? "checked" : ""}> Exclude mobile app inventory (all app categories)</label></div>
     <div class="rowline"><textarea id="gr-placements" rows="3" style="flex:1;min-width:320px" placeholder="Placement exclusions, one per line — e.g. example.com">${esc(places)}</textarea></div>
     <div class="rowline"><button class="btn secondary" onclick="gadsSaveGuardrails()">Save guardrails</button>
-    <span class="msg" id="gr-msg"></span></div></div>`;
+    <button class="btn" onclick="gadsApplyGuardrails()">Apply to this Google Ads account</button>
+    <span class="msg" id="gr-msg"></span></div>
+    <div class="formnote" id="gr-status">${gads && gads.guardrails_status ? "On the account now: " + esc(gads.guardrails_status) : ""}</div></div>`;
 }
 async function gadsSaveGuardrails(){
   const labels = Array.from(document.querySelectorAll(".gr-label:checked")).map(x => x.value);
@@ -1920,7 +1922,17 @@ async function gadsSaveGuardrails(){
   const m = document.getElementById("gr-msg");
   if (out.error){ if (m){ m.className = "msg err"; m.textContent = out.error; } return; }
   panelSettings = await api("settings.php").catch(() => panelSettings);
-  if (m){ m.className = "msg ok"; m.textContent = "Saved — applies to the next push."; }
+  if (m){ m.className = "msg ok"; m.textContent = "Saved. Use Apply to push these onto the account (or re-apply after changes)."; }
+}
+async function gadsApplyGuardrails(){
+  const m = document.getElementById("gr-msg");
+  if (m){ m.className = "msg"; m.textContent = "Applying…"; }
+  const out = await api("google_ads.php", jsonOpts({action: "apply_guardrails", workspace_id: WS}));
+  if (out.error){ if (m){ m.className = "msg err"; m.textContent = out.error; } return; }
+  if (gads) gads.guardrails_status = out.guardrails_status;
+  const st = document.getElementById("gr-status");
+  if (st) st.textContent = "On the account now: " + (out.guardrails_status || "");
+  if (m){ m.className = "msg ok"; m.textContent = `Applied: ${out.created.labels} labels, ${out.created.placements} placements, ${out.created.app_categories} app categories newly added (anything already on the account was left as is).`; }
 }
 async function gadsConnect(){
   const out = await api("google_ads.php?action=connect_url&workspace_id=" + WS);
