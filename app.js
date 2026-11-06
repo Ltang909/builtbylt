@@ -1894,7 +1894,33 @@ function gadsCard(){
     <div class="rowline"><button class="btn" onclick="gadsSaveCustomer()">Save account choice</button>
     <button class="btn danger" onclick="gadsDisconnect()">Disconnect</button>
     <span class="msg" id="gads-msg"></span></div>`;
+  html += gadsGuardrailsHtml();
   return html;
+}
+function gadsGuardrailsHtml(){
+  const cat = (panelSettings && panelSettings.display_guardrail_labels) || [];
+  const cur = (panelSettings && panelSettings.display_guardrails) || null;
+  const on = cur ? (cur.labels || []) : cat.filter(x => x.default).map(x => x.type);
+  const apps = cur ? !!cur.exclude_apps : true;
+  const places = cur ? (cur.placements || []).join("\n") : "";
+  const boxes = cat.map(x => `<label style="display:inline-block;margin:2px 12px 2px 0;font-size:12px"><input type="checkbox" class="gr-label" value="${esc(x.type)}" ${on.includes(x.type) ? "checked" : ""}> ${esc(x.label)}</label>`).join("");
+  return `<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:10px">
+    <div class="formnote"><strong>Display guardrails — applied to every push from this workspace.</strong> These exclusions ride along as negative criteria on each new campaign, which is created PAUSED, so they are in place before anything can serve. The account-wide inventory type (Maximum / Moderate / Limited) lives in Google Ads itself under Tools, Content suitability; the panel does not change it. Google applies exclusions on a best-effort basis, not as a guarantee.</div>
+    <div>${boxes}</div>
+    <div class="rowline"><label style="font-size:12px"><input type="checkbox" id="gr-apps" ${apps ? "checked" : ""}> Exclude mobile app inventory (all app categories)</label></div>
+    <div class="rowline"><textarea id="gr-placements" rows="3" style="flex:1;min-width:320px" placeholder="Placement exclusions, one per line — e.g. example.com">${esc(places)}</textarea></div>
+    <div class="rowline"><button class="btn secondary" onclick="gadsSaveGuardrails()">Save guardrails</button>
+    <span class="msg" id="gr-msg"></span></div></div>`;
+}
+async function gadsSaveGuardrails(){
+  const labels = Array.from(document.querySelectorAll(".gr-label:checked")).map(x => x.value);
+  const out = await api("settings.php", jsonOpts({action: "save_display_guardrails", workspace_id: WS,
+    labels, exclude_apps: !!((document.getElementById("gr-apps") || {}).checked),
+    placements: (document.getElementById("gr-placements") || {}).value || ""}));
+  const m = document.getElementById("gr-msg");
+  if (out.error){ if (m){ m.className = "msg err"; m.textContent = out.error; } return; }
+  panelSettings = await api("settings.php").catch(() => panelSettings);
+  if (m){ m.className = "msg ok"; m.textContent = "Saved — applies to the next push."; }
 }
 async function gadsConnect(){
   const out = await api("google_ads.php?action=connect_url&workspace_id=" + WS);
@@ -1938,7 +1964,7 @@ async function gadsPush(creativeId){
   const url = prompt("Landing page URL for this ad (final URL):", prev.default_final_url || "https://");
   if (!url) return;
   const s = prev.spec || {};
-  if (!confirm(`Create a PAUSED Responsive Display campaign in Google Ads account ${prev.customer_id}?\n\nHeadline: ${s.headlines ? s.headlines[0] || "" : ""}\nBusiness: ${s.business_name || ""}\nFinal URL: ${url}\n\nEverything is created PAUSED — zero spend until you enable it in Google Ads.`)) return;
+  if (!confirm(`Create a PAUSED Responsive Display campaign in Google Ads account ${prev.customer_id}?\n\nHeadline: ${s.headlines ? s.headlines[0] || "" : ""}\nBusiness: ${s.business_name || ""}\nFinal URL: ${url}\nGuardrails: ${prev.guardrails || ""}\n\nEverything is created PAUSED — zero spend until you enable it in Google Ads.`)) return;
   const out = await api("google_ads.php", jsonOpts({action: "push", creative_id: creativeId, final_url: url, confirm: true}));
   if (out.error){ alert("Push failed: " + out.error); return; }
   alert("Pushed. Campaign: " + out.push.campaign_resource + " (PAUSED).");

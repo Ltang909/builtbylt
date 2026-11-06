@@ -33,6 +33,7 @@
  */
 require __DIR__ . '/db.php';
 require_once __DIR__ . '/../lib/settings.php';
+require_once __DIR__ . '/../lib/google_ads.php';
 require_once __DIR__ . '/../lib/evaluate.php';
 require_api_auth($pdo);
 
@@ -56,6 +57,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $pdo, $wsid),
         'cron_token' => (string)get_setting($pdo, 0, 'cron_token', ''),
         'notion_configured' => vault_key($pdo, 'notion') !== null,
+        'display_guardrails' => gads_display_guardrails($pdo, $wsid),
+        'display_guardrail_labels' => array_map(
+            function ($type, $meta) {
+                return ['type' => $type, 'label' => $meta[0],
+                        'default' => $meta[1]];
+            },
+            array_keys(gads_content_label_catalog()),
+            array_values(gads_content_label_catalog())),
     ]);
 }
 
@@ -99,6 +108,20 @@ if ($action === 'save') {
     set_setting($pdo, $wsid, 'use_learnings_in_prompt',
                 !empty($data['use_learnings_in_prompt']) ? '1' : '0');
     json_out(['ok' => true]);
+}
+
+if ($action === 'save_display_guardrails') {
+    if (!settings_ready($pdo)) {
+        migration_required('Settings');
+    }
+    $clean = gads_guardrails_sanitize([
+        'labels' => $data['labels'] ?? null,
+        'exclude_apps' => $data['exclude_apps'] ?? null,
+        'placements' => $data['placements'] ?? [],
+    ]);
+    set_setting($pdo, $wsid, 'display_guardrails',
+                json_encode($clean));
+    json_out(['ok' => true, 'display_guardrails' => $clean]);
 }
 
 if ($action === 'test_email') {

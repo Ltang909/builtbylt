@@ -165,6 +165,8 @@ if ($action === 'preview' || $action === 'push') {
                 ? $conn['default_final_url'] : null,
             'customer_id' => $conn !== null
                 ? $conn['customer_id'] : null,
+            'guardrails' => gads_guardrails_summary(
+                gads_display_guardrails($pdo, $wsid)),
         ]);
     }
     // push

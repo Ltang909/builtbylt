@@ -39,6 +39,8 @@ const GADS_API_VERSION = 'v26';
 const GADS_API_BASE = 'https://googleads.googleapis.com';
 const GADS_SCOPE = 'https://www.googleapis.com/auth/adwords';
 
+require_once __DIR__ . '/settings.php';
+
 function gads_install(PDO $pdo): void {
     static $done = false;
     if ($done) {
@@ -352,6 +354,145 @@ function gads_cta_text(string $cta): ?string {
  * operator-readable message (Google's own words where Google is
  * the source) on any failure.
  */
+
+/* ------------------------------------------------------------------
+ * Display guardrails (Update 11.6): per-workspace placement safety
+ * applied to every push as negative campaign criteria in the same
+ * mutate that creates the campaign, so the exclusions exist from
+ * the campaign's first moment (it is created PAUSED regardless).
+ *
+ * Stored as one JSON setting ('display_guardrails') per workspace:
+ *   {labels: [ContentLabelType, ...], exclude_apps: bool,
+ *    placements: [url, ...]}
+ * Unset means the defaults below. The account-wide inventory type
+ * (Maximum / Moderate / Limited) is NOT touched here: it lives in
+ * Google Ads under Tools - Content suitability.
+ * ---------------------------------------------------------------- */
+
+/** Content label catalog: type => [operator label, on by default]. */
+function gads_content_label_catalog(): array {
+    return [
+        'VIDEO_RATING_DV_MA' => ['Mature-audience rating (DV-MA)', true],
+        'VIDEO_RATING_DV_T' => ['Teen rating (DV-T)', true],
+        'VIDEO_NOT_YET_RATED' => ['Videos not yet rated', true],
+        'SEXUALLY_SUGGESTIVE' => ['Sexually suggestive', true],
+        'PROFANITY' => ['Profanity and rough language', true],
+        'TRAGEDY' => ['Tragedy and conflict', true],
+        'SOCIAL_ISSUES' => ['Sensitive social issues', true],
+        'BRAND_SUITABILITY_POLITICS' => ['Politics (content theme)', true],
+        'BRAND_SUITABILITY_RELIGION' => ['Religion (content theme)', true],
+        'PARKED_DOMAIN' => ['Parked domains', true],
+        'BELOW_THE_FOLD' => ['Below-the-fold placements', true],
+        'LIVE_STREAMING_VIDEO' => ['Live-streaming video', true],
+        'EMBEDDED_VIDEO' => ['Embedded videos', false],
+        'VIDEO_RATING_DV_PG' => ['Parental-guidance rating (DV-PG)', false],
+        'JUVENILE' => ['Juvenile content', false],
+        'BRAND_SUITABILITY_GAMES_MATURE' =>
+            ['Mature games (content theme)', false],
+        'BRAND_SUITABILITY_GAMES_FIGHTING' =>
+            ['Fighting games (content theme)', false],
+        'BRAND_SUITABILITY_HEALTH_SENSITIVE' =>
+            ['Sensitive health (content theme)', false],
+        'BRAND_SUITABILITY_NEWS_SENSITIVE' =>
+            ['Sensitive news (content theme)', false],
+    ];
+}
+
+/**
+ * Normalize a raw guardrails payload (decoded JSON setting or a
+ * save request) against the catalog. Null / non-array input yields
+ * the defaults; an explicit empty labels array is respected.
+ */
+function gads_guardrails_sanitize($raw): array {
+    $cat = gads_content_label_catalog();
+    $labels = [];
+    $in = is_array($raw) ? ($raw['labels'] ?? null) : null;
+    if (is_array($in)) {
+        foreach ($in as $type) {
+            $type = (string)$type;
+            if (isset($cat[$type]) && !in_array($type, $labels, true)) {
+                $labels[] = $type;
+            }
+        }
+    } else {
+        foreach ($cat as $type => $meta) {
+            if ($meta[1]) {
+                $labels[] = $type;
+            }
+        }
+    }
+    $apps = is_array($raw) && array_key_exists('exclude_apps', $raw)
+        ? !empty($raw['exclude_apps']) : true;
+    $placements = [];
+    $pin = is_array($raw) ? ($raw['placements'] ?? []) : [];
+    if (is_string($pin)) {
+        $pin = preg_split('/\r?\n/', $pin);
+    }
+    if (is_array($pin)) {
+        foreach ($pin as $pl) {
+            $pl = trim((string)$pl);
+            $pl = preg_replace('#^https?://#i', '', $pl);
+            $pl = rtrim((string)$pl, '/');
+            if ($pl === '' || preg_match('/\s/', $pl)
+                || strlen($pl) > 190) {
+                continue;
+            }
+            if (!in_array($pl, $placements, true)) {
+                $placements[] = $pl;
+            }
+            if (count($placements) >= 200) {
+                break;
+            }
+        }
+    }
+    return ['labels' => $labels, 'exclude_apps' => $apps,
+            'placements' => $placements];
+}
+
+/** Effective guardrails for a workspace (defaults when unset). */
+function gads_display_guardrails(PDO $pdo, int $wsid): array {
+    $raw = get_setting($pdo, $wsid, 'display_guardrails');
+    if ($raw === null || trim((string)$raw) === '') {
+        return gads_guardrails_sanitize(null);
+    }
+    $dec = json_decode((string)$raw, true);
+    return gads_guardrails_sanitize(is_array($dec) ? $dec : null);
+}
+
+/** One-line summary for the push preview and the ledger note. */
+function gads_guardrails_summary(array $g): string {
+    $n = count($g['labels']);
+    $s = $n . ' content label' . ($n === 1 ? '' : 's') . ' excluded';
+    if (!empty($g['exclude_apps'])) {
+        $s .= ', mobile apps excluded';
+    }
+    $m = count($g['placements']);
+    $s .= ', ' . $m . ' placement' . ($m === 1 ? '' : 's') . ' excluded';
+    return $s;
+}
+
+/**
+ * Every mobile app category constant in the account, as resource
+ * names — excluding the categories excludes app inventory as a
+ * class. Category constants are account-independent reference
+ * data; the search runs against the connected customer.
+ */
+function gads_app_category_resources(PDO $pdo, array $conn,
+                                     string $cust): array {
+    $data = gads_api($pdo, $conn, $cust . '/googleAds:search', [
+        'query' => 'SELECT mobile_app_category_constant.resource_name '
+            . 'FROM mobile_app_category_constant',
+    ]);
+    $out = [];
+    foreach ((array)($data['results'] ?? []) as $r) {
+        $rn = $r['mobileAppCategoryConstant']['resourceName'] ?? null;
+        if (is_string($rn) && $rn !== '') {
+            $out[] = $rn;
+        }
+    }
+    return $out;
+}
+
 function gads_push_creative(PDO $pdo, array $creative, array $conn,
                             string $finalUrl): array {
     $wsid = (int)$creative['workspace_id'];
@@ -477,6 +618,44 @@ function gads_push_creative(PDO $pdo, array $creative, array $conn,
             ],
         ]]],
     ];
+    // Display guardrails: negative criteria ride the same mutate,
+    // so the exclusions exist from the campaign's first moment.
+    $guard = gads_display_guardrails($pdo, $wsid);
+    foreach ($guard['labels'] as $gtype) {
+        $ops[] = ['campaignCriterionOperation' => ['create' => [
+            'campaign' => $campaignRes,
+            'negative' => true,
+            'contentLabel' => ['type' => $gtype],
+        ]]];
+    }
+    foreach ($guard['placements'] as $gurl) {
+        $ops[] = ['campaignCriterionOperation' => ['create' => [
+            'campaign' => $campaignRes,
+            'negative' => true,
+            'placement' => ['url' => $gurl],
+        ]]];
+    }
+    $appsNote = '';
+    if ($guard['exclude_apps']) {
+        try {
+            $cats = gads_app_category_resources($pdo, $conn, $cust);
+            foreach ($cats as $rn) {
+                $ops[] = ['campaignCriterionOperation' => ['create' => [
+                    'campaign' => $campaignRes,
+                    'negative' => true,
+                    'mobileAppCategory' => [
+                        'mobileAppCategoryConstant' => $rn,
+                    ],
+                ]]];
+            }
+            $appsNote = $cats === [] ? ', apps: none returned'
+                : ', apps: ' . count($cats) . ' categories';
+        } catch (Throwable $e) {
+            // The push itself must not die on the category lookup;
+            // the ledger note records that apps were not excluded.
+            $appsNote = ', apps: lookup failed';
+        }
+    }
     try {
         $resp = gads_api($pdo, $conn, $cust . '/googleAds:mutate',
                          ['mutateOperations' => $ops,
@@ -509,9 +688,12 @@ function gads_push_creative(PDO $pdo, array $creative, array $conn,
     $pushId = (int)$pdo->lastInsertId();
     log_ledger($pdo, $wsid, 'google_ads_push', 'google',
                GADS_API_VERSION, 'ok',
-               'creative #' . $cid . ': paused campaign '
+               substr('creative #' . $cid . ': paused campaign '
                . (string)$campaignResource . ' in customer '
-               . $customerId);
+               . $customerId . ' | guardrails: '
+               . count($guard['labels']) . ' labels, '
+               . count($guard['placements']) . ' placements'
+               . $appsNote, 0, 240));
     $stmt = $pdo->prepare(
         'SELECT * FROM creative_google_ads_pushes WHERE id = ?');
     $stmt->execute([$pushId]);
