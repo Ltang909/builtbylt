@@ -1022,7 +1022,7 @@ function renderExperiments(){
       <tr><td>${esc(e.pass_metric)}</td><td>${esc(e.fail_metric)}</td>
           <td>${esc(e.kill_metric)}</td><td>${money(e.spend_floor)}</td></tr></table>
       <h4>Generate creatives (Step 2)</h4>
-      <div class="formnote">Copy via the routed copy model (default gpt-4o-mini), images via the routed art model. Images are the ads: each image becomes one creative carrying all the copy variants, and Google mixes the headlines and descriptions. Nothing runs — and nothing is charged — until you see an estimate and confirm it. That gate is the rule, not a courtesy.</div>
+      <div class="formnote">Copy via the routed copy model (default gpt-4o-mini), images via the routed art model. Images are the ads: each image becomes one creative carrying all the copy variants, and Google mixes the headlines and descriptions. Nothing runs, and nothing is charged, until you see an estimate and confirm it. That estimate-and-confirm step is required on every run.</div>
       <div class="rowline">
         <label>Copy variants <input type="number" id="gen-variants-${e.id}" value="6" min="1" max="24" style="width:70px" onchange="genInvalidate(${e.id})"></label>
         <label>Images <input type="number" id="gen-images-${e.id}" value="2" min="0" max="24" style="width:70px" onchange="genInvalidate(${e.id})"></label>
@@ -1473,7 +1473,7 @@ function renderPerformance(){
         <td>${money(p.total_spend)}</td><td>${p.total_customers}</td>
         <td>${money(p.cac)}</td>
         <td>${perfChip(p)}</td></tr>`).join("")
-    + `</table><div class="formnote" style="margin-top:10px">Verdicts are computed, not chosen: KILL when CAC &gt; the kill threshold after the spend floor; FAIL when CAC is above the fail value; PASS when CAC is at or below the pass value; otherwise MONITORING. Precedence: KILL &gt; FAIL &gt; PASS. A PASS / FAIL / KILL outcome records a learning, and a transition into FAIL or KILL emails the address in Settings. Unattributed revenue is a program-level adjustment and is never assigned per-creative.</div>`;
+    + `</table><div class="formnote" style="margin-top:10px">Verdicts come from each experiment's thresholds: KILL when CAC &gt; the kill threshold after the spend floor; FAIL when CAC is above the fail value; PASS when CAC is at or below the pass value; otherwise MONITORING. Precedence: KILL &gt; FAIL &gt; PASS. A PASS / FAIL / KILL outcome records a learning, and a transition into FAIL or KILL emails the address in Settings. Unattributed revenue is a program-level adjustment and is never assigned per-creative.</div>`;
 }
 
 // ---------- learnings ----------
