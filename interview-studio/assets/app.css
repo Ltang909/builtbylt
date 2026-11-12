@@ -6,3 +6,24 @@
 .voiceprefs input{width:14px;height:14px;accent-color:#586a56;padding:0;margin:0}
 .livecaption{max-width:430px;padding:10px 12px;margin-top:14px;border-radius:9px;border:1px solid #e0d9ce;background:#fff;color:#5a605b;font-size:13px;line-height:1.5}
 @media(max-width:580px){.voiceprefs{flex-direction:column;align-items:flex-start;padding:0 12px}}
+
+/* Interview Studio v0.2: unmistakable voice state */
+.micstatus{display:flex;align-items:center;justify-content:center;gap:9px;background:#eeece6;border:1px solid #e0ded7;border-radius:100px;padding:7px 13px;font-size:12px;font-weight:650;color:#5e615b;max-width:100%;margin-bottom:10px}
+.statusdot{width:9px;height:9px;border-radius:50%;background:#989b91;flex:none}
+.micstatus[data-kind="listening"]{background:#e7f4ea;color:#28613c;border-color:#bfe1c7}
+.micstatus[data-kind="listening"] .statusdot{background:#319e56;box-shadow:0 0 0 4px #319e5626;animation:micpulse 1.3s infinite}
+.micstatus[data-kind="speaking"]{background:#f1e9dc;color:#80603b}
+.micstatus[data-kind="speaking"] .statusdot{background:#b48a57}
+.micstatus[data-kind="thinking"] .statusdot{background:#b48a57}
+.micstatus[data-kind="error"]{background:#fae7e4;color:#923b32;border-color:#f0bab5}
+.micstatus[data-kind="error"] .statusdot{background:#c8463f}
+@keyframes micpulse{50%{box-shadow:0 0 0 8px #319e5612}}
+.livecaption{display:block;min-height:54px;margin-top:12px;max-width:560px;width:100%;font-weight:600;font-size:15px;color:#2a4734;background:#fff;border:2px solid #b9d8bf;text-align:left;overflow-wrap:anywhere}
+.speechhint{font-size:11px!important;margin:10px 0 0!important;color:#777c73!important;max-width:460px!important}
+.voiceoptions{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+.voiceoptions label{font-size:11px;font-weight:700;color:#5a5b53}
+.voiceoptions select{font:inherit;font-size:12px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 12px;max-width:260px;min-height:38px}
+.voiceoptions .btn{font-size:12px;min-height:38px;padding:8px 12px}
+.callbox{padding:24px 16px;min-height:320px}
+.callbox h3{margin-top:8px}
+.logo-mark{font-family:system-ui,sans-serif;font-size:16px;background:#e9ebe9;border-color:#d7ddd9}

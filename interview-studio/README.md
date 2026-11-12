@@ -1,6 +1,6 @@
-# Bum Bum Interview Studio — Gemini (PHP edition)
+# Interview Studio — Gemini (PHP edition)
 
-**A no-build PHP + vanilla JavaScript app for one user.** Interview by talking or typing, evaluate whether your real experience is worth a LinkedIn post, and draft in your own words. Adapted for standard Hostinger shared PHP hosting.
+**A no-build PHP + vanilla JavaScript app for one user. This studio is brand-independent; it does not assume you are writing about Leave It to Bum Bum.** Interview by talking or typing, evaluate whether your real experience is worth a LinkedIn post, and draft in your own words. Adapted for standard Hostinger shared PHP hosting.
 
 **No OpenAI API key, Node, npm, Composer, ElevenLabs, or database needed.**
 
@@ -74,3 +74,9 @@ Visit `http://localhost:8080/`. Browsers consider `localhost` secure for the mic
 - REST text generation: https://ai.google.dev/gemini-api/docs/generate-content/text-generation
 
 **Verification note:** PHP lint, JavaScript syntax, and local page/login/security smoke tests were completed during development. Live Gemini requests with your personal API key and live browser microphone conversations require testing after deployment.
+
+## Voice reliability notes (v0.2)
+
+The status chip shows **Mic off**, **Listening**, **Recognizing your words**, **Speaking**, **Thinking**, or **Voice error**. Live speech is shown on-screen before submission. Permission to use the microphone is not the same as permission for the Chrome speech recognition service. If Chrome reports `network` or `service-not-allowed`, browser speech recognition may be blocked by network, browser policy, or a provider service even though the microphone itself works. Text mode remains available. The interviewer voice is chosen from the voices installed in your browser/operating system, so quality varies; the Preview button lets you compare them. This is still free browser synthesis, not premium neural voice generation.
+
+To update an existing install, back up `private/config.php` and replace **index.php**, **api.php**, **private/bootstrap.php**, **assets/app.js**, and **assets/app.css**. Retain your original config key and password.

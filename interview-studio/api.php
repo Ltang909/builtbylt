@@ -49,6 +49,6 @@ try {
     }
     json_out(['error'=>'Unknown action'],404);
 } catch (Throwable $e) {
-    error_log('Bum Bum Studio Gemini: '.$e->getMessage());
+    error_log('Interview Studio Gemini: '.$e->getMessage());
     json_out(['error'=>$e->getMessage()],502);
 }

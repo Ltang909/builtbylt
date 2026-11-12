@@ -1,12 +1,13 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const STORAGE = 'bb-interview-gemini-v1';
+  const STORAGE = 'bb-interview-gemini-v1'; // Keep existing key so saved interviews survive upgrades
   const FIRST = "What's something you've built, tried, or learned recently that you keep thinking about?";
   const freshId = () => (globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const newTurn = (role,text,final=true) => ({ id:freshId(),role,text,final,createdAt:Date.now() });
   let state = {id:freshId(),stage:'interview',mode:'voice',status:'idle',voiceActive:false,turns:[],context:'',evaluation:null,draft:null,draftText:'',rating:0,feedback:'',busy:false,history:[]};
   let recognition=null,utterance=null,timer=null,startedAt=0,voiceGeneration=0;
+  let voiceList=[],voiceError='',micHasHeardWords=false;
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   try { state.history = JSON.parse(localStorage.getItem(STORAGE)||'[]'); if (!Array.isArray(state.history)) state.history=[]; } catch { state.history=[]; }
 
@@ -52,23 +53,39 @@
     }
     el.scrollTop=el.scrollHeight;
   }
+  function micStatus(label,kind='idle') {
+    text($('micStatusText'),label);
+    $('micStatus').dataset.kind=kind;
+  }
+  function availableVoices() {
+    if (!('speechSynthesis' in window)) return;
+    voiceList=window.speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang));
+    voiceList.sort((a,b)=>Number(b.name.includes('Natural'))-Number(a.name.includes('Natural')) || Number(b.name.includes('Google'))-Number(a.name.includes('Google')) || a.name.localeCompare(b.name));
+    const sel=$('voiceSelect'); const previous=sel.value || localStorage.getItem('studio-voice') || '';
+    sel.replaceChildren();const defaultOption=document.createElement('option');defaultOption.value='';text(defaultOption,'System default');sel.appendChild(defaultOption);
+    for(const v of voiceList){const option=document.createElement('option');option.value=v.voiceURI;text(option,`${v.name} (${v.lang})`);sel.appendChild(option);}
+    if([...sel.options].some(o=>o.value===previous))sel.value=previous;
+  }
+  function selectedVoice(){return voiceList.find(v=>v.voiceURI===$('voiceSelect').value)||null;}
   function renderControls() {
     const voice=state.mode==='voice' && state.voiceActive;
     const st=state.status;
     const latest=[...state.turns].reverse().find(t=>t.role==='assistant');
-    let title='Start with a thought.';
-    let description='An experiment, a frustrating problem, something you learned. No polished brief needed.';
-    if(st==='speaking'){title='Here’s my next question.';description=latest?.text||FIRST;}
-    else if(st==='listening'){title='I’m listening.';description='Talk normally. I’ll ask a follow-up when you finish.';}
-    else if(st==='thinking'){title='Thinking about your answer…';description='Looking for something specific worth exploring.';}
-    else if(st==='ready'){title='There may be a post here.';description='Evaluate now, or keep talking if there’s more to the story.';}
-    else if(state.turns.some(t=>t.role==='user')){title='Keep exploring.';description=latest?.text||'Pick up where we left off.';}
+    let title='Tell me what happened.';
+    let description=latest?.text || 'An experiment, a frustrating problem, something you learned. No polished brief needed.';
+    if(st==='speaking'){title='Interviewer speaking';description=latest?.text||FIRST;micStatus('Interviewer speaking · microphone waiting','speaking');}
+    else if(st==='listening'){title=micHasHeardWords?'I can hear your words.':'Your microphone is listening';description=micHasHeardWords?'Keep talking, or press Finish answer.':'Speak now. Words appear below as they are recognized.';micStatus(micHasHeardWords?'Speech recognized · recording':'Listening · waiting for speech','listening');}
+    else if(st==='thinking'){title='Finding the next question';description='Working from what you said.';micStatus('Processing answer · microphone off','thinking');}
+    else if(st==='ready'){title='Ready to evaluate';description='You can evaluate, or keep talking.';micStatus('Microphone off · ready to evaluate','idle');}
+    else if(st==='paused'&&voiceError){title='Speech recognition unavailable';description='The microphone can be allowed while the browser’s transcription service is blocked. Try again, or switch to text.';micStatus('Speech recognition error · see details below','error');}
+    else if(state.turns.some(t=>t.role==='user')){title='Keep exploring';description=latest?.text||'Pick up where we left off.';micStatus('Microphone off · ready','idle');}
+    else {micStatus('Microphone off · press Start talking','idle');}
     text($('callTitle'),title); text($('callDescription'),description);
     const activeVoice=voice && ['speaking','listening','thinking'].includes(st);
     show($('voiceBtn'),!activeVoice);
-    text($('voiceBtn'),voice?'◉  Speak another answer':state.turns.some(t=>t.role==='user')?'◉  Continue voice interview':'◉  Start talking');
+    text($('voiceBtn'),state.turns.some(t=>t.role==='user')?'🎙 Continue talking':'🎙 Start talking');
     show($('muteBtn'),voice && (st==='speaking'||st==='listening'));
-    text($('muteBtn'),st==='speaking'?'Skip question audio':'Finish answer');
+    text($('muteBtn'),st==='speaking'?'Skip voice playback':'✓ Finish answer');
     show($('stopBtn'),voice);
     show($('callTimer'),voice);
     $('soundMark').classList.toggle('live',st==='listening'||st==='speaking');
@@ -108,6 +125,7 @@
   function render() { renderStages();renderControls();renderTranscript();renderEvaluation();renderDraft(); }
   function cancelVoiceMedia() {
     voiceGeneration++;
+    micHasHeardWords=false;
     const r=recognition; recognition=null;
     if(r){try{r.abort();}catch{}}
     if('speechSynthesis' in window){try{window.speechSynthesis.cancel();}catch{}}
@@ -123,33 +141,45 @@
   function showCaption(value) {text($('liveCaption'),value);show($('liveCaption'),!!value);}
   function listen() {
     if(!state.voiceActive || state.busy || state.stage!=='interview')return;
-    if(!SpeechRecognition){error('Speech recognition is not available in this browser. Try desktop Chrome, or use the text interview.');state.status='paused';renderControls();return;}
+    if(!SpeechRecognition){voiceError='unsupported';error('This browser does not provide speech recognition. Use desktop Chrome or choose text interview.');state.status='paused';renderControls();return;}
     if('speechSynthesis' in window)window.speechSynthesis.cancel();
     const generation=voiceGeneration;
     const r=new SpeechRecognition();recognition=r;
-    r.lang='en-CA';r.continuous=false;r.interimResults=true;r.maxAlternatives=1;
-    let finalText='',errorCode='';
-    r.onstart=()=>{if(recognition!==r||!state.voiceActive)return;state.status='listening';showCaption('Listening…');renderControls();};
+    r.lang='en-CA';r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
+    let finalText='',latestPartial='',errorCode='', submitted=false;
+    micHasHeardWords=false;voiceError='';
+    r.onstart=()=>{if(recognition!==r||!state.voiceActive)return;state.status='listening';showCaption('Listening for your words…');renderControls();};
     r.onresult=e=>{
       if(recognition!==r)return;
       let final='',partial='';
       for(let i=0;i<e.results.length;i++){
         const part=e.results[i][0]?.transcript||'';
-        if(e.results[i].isFinal)final+=part+' '; else partial+=part+' ';
+        if(e.results[i].isFinal)final+=part+' ';else partial+=part+' ';
       }
-      finalText=final.trim();showCaption((final+' '+partial).trim()||'Listening…');
+      finalText=final.trim();latestPartial=partial.trim();
+      const heard=(finalText+' '+latestPartial).trim();
+      if(heard){micHasHeardWords=true;renderControls();}
+      showCaption(heard?`You said: “${heard}”`:'Listening for your words…');
     };
-    r.onerror=e=>{if(recognition!==r)return;errorCode=e.error||'unknown';if(errorCode==='not-allowed'||errorCode==='service-not-allowed')error('Microphone permission or speech recognition was denied. Use the text interview if needed.');else if(errorCode!=='no-speech'&&errorCode!=='aborted')error(`Speech recognition: ${errorCode}. Try again or type instead.`);};
+    r.onerror=e=>{
+      if(recognition!==r)return;
+      errorCode=e.error||'unknown';voiceError=errorCode;
+      if(errorCode==='not-allowed')error('Chrome blocked the microphone or speech-recognition permission. Check the lock/settings icon beside the address bar, allow the microphone, then reload.');
+      else if(errorCode==='service-not-allowed')error('Your microphone may be permitted, but Chrome’s speech recognition service is blocked by the browser or a policy. Try updating Chrome or use the text interview.');
+      else if(errorCode==='network')error('Chrome could not reach its speech-recognition service. Your microphone permission may be fine. Check your connection, VPN, browser extensions, or try text mode.');
+      else if(errorCode!=='no-speech'&&errorCode!=='aborted')error(`Speech-recognition error (${errorCode}). Try again or type your answer.`);
+    };
     r.onend=()=>{
-      if(recognition!==r||generation!==voiceGeneration)return;
-      recognition=null;showCaption('');
+      if(recognition!==r||generation!==voiceGeneration||submitted)return;
+      recognition=null;
       if(!state.voiceActive || state.stage!=='interview')return;
-      if(finalText){submitAnswer(finalText,true);return;}
+      const captured=(finalText+' '+latestPartial).trim();
+      if(captured){showCaption(`Captured: “${captured}”`);submitAnswer(captured,true);return;}
       state.status='paused';renderControls();
-      if(!errorCode||errorCode==='no-speech')error('I didn’t catch anything. Click “Speak another answer” or type your reply.');
+      if(!errorCode||errorCode==='no-speech')error('Microphone started, but no words were recognized. Try speaking close to the microphone, or use the text box.');
     };
     try{r.start();state.status='listening';renderControls();}
-    catch(e){recognition=null;state.status='paused';renderControls();error('Could not start speech recognition. Try again or use the text interview.');}
+    catch(e){recognition=null;voiceError=e.name||'start failed';state.status='paused';renderControls();error(`Could not start browser recognition (${voiceError}). Try again or use text mode.`);}
   }
   function speakQuestion(question,canAutoListen=true) {
     if(!state.voiceActive)return;
@@ -161,7 +191,8 @@
     const generation=voiceGeneration;
     try{
       window.speechSynthesis.cancel();
-      const u=new SpeechSynthesisUtterance(question);utterance=u;u.lang='en-CA';u.rate=1.03;u.pitch=1;
+      const u=new SpeechSynthesisUtterance(question);utterance=u;u.lang='en-CA';u.rate=0.97;u.pitch=1;
+      const voice=selectedVoice();if(voice)u.voice=voice;
       u.onstart=()=>{if(voiceGeneration!==generation)return;state.status='speaking';renderControls();};
       function finish(){if(utterance!==u||generation!==voiceGeneration)return;utterance=null;state.status=canAutoListen?'paused':'ready';renderControls();if(canAutoListen&&$('autoListen').checked)setTimeout(()=>{if(state.voiceActive&&!state.busy&&state.status==='paused'&&generation===voiceGeneration)listen();},420);}
       u.onend=finish;u.onerror=finish;
@@ -170,7 +201,7 @@
   }
   function startVoice() {
     if(state.busy)return;
-    clearError();
+    clearError();voiceError='';
     if(!SpeechRecognition){startText();error('This browser does not support speech recognition. Try Chrome on desktop or use the text interview.');return;}
     state.mode='voice';state.voiceActive=true;
     if(!startedAt)startedAt=Date.now();
@@ -182,7 +213,7 @@
     listen();
   }
   function startText() {
-    stopVoice();clearError();state.mode='text';state.status='paused';
+    stopVoice();voiceError='';clearError();state.mode='text';state.status='paused';
     if(!state.turns.length)state.turns.push(newTurn('assistant',FIRST));
     render();
   }
@@ -206,7 +237,7 @@
     if(utterance){utterance=null;if('speechSynthesis' in window)window.speechSynthesis.cancel();}
     showCaption('');clearError();
     state.turns.push(newTurn('user',answer));state.evaluation=null;state.draft=null;
-    state.status='thinking';renderTranscript();renderControls();
+    state.status='thinking';micHasHeardWords=false;renderTranscript();renderControls();
     requestFollowUp();
   }
   function submitText(){const value=$('reply').value.trim();if(!value||state.busy)return;$('reply').value='';submitAnswer(value,false);}
@@ -229,7 +260,7 @@
     state.evaluation=null;state.draft=null;render();
   }
   function reset() {
-    stopVoice();state.id=freshId();state.stage='interview';state.mode='voice';state.status='idle';state.turns=[];state.context='';state.evaluation=null;state.draft=null;state.draftText='';state.feedback='';state.rating=0;state.busy=false;startedAt=0;text($('callTimer'),'00:00');$('context').value='';$('reply').value='';clearError();render();
+    stopVoice();voiceError='';state.id=freshId();state.stage='interview';state.mode='voice';state.status='idle';state.turns=[];state.context='';state.evaluation=null;state.draft=null;state.draftText='';state.feedback='';state.rating=0;state.busy=false;startedAt=0;text($('callTimer'),'00:00');$('context').value='';$('reply').value='';clearError();render();
   }
   function save() {
     state.feedback=$('feedback').value;
@@ -252,6 +283,14 @@
     show($('historyModal'),true);
   }
   $('voiceBtn').addEventListener('click',startVoice);
+  $('voiceSelect').addEventListener('change',()=>localStorage.setItem('studio-voice',$('voiceSelect').value));
+  $('previewVoice').addEventListener('click',()=>{
+    if(!('speechSynthesis' in window)){error('This browser cannot play synthesized speech.');return;}
+    window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance('Tell me what happened. What did you learn from it?');
+    const v=selectedVoice();if(v){u.voice=v;u.lang=v.lang;}else{u.lang='en-CA';}u.rate=0.97;window.speechSynthesis.speak(u);
+  });
+  if('speechSynthesis' in window){availableVoices();window.speechSynthesis.addEventListener?.('voiceschanged',availableVoices);}
+
   $('stopBtn').addEventListener('click',stopVoice);
   $('muteBtn').addEventListener('click',()=>{
     if(state.status==='listening' && recognition){try{recognition.stop();}catch{}}
