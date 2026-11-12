@@ -4,10 +4,39 @@ require __DIR__.'/private/bootstrap.php';
 if ($_SERVER['REQUEST_METHOD']!=='POST') json_out(['error'=>'Method not allowed'],405);
 if (!$setupReady) json_out(['error'=>'Configure your free Gemini key and a studio password in private/config.php first.'],503);
 require_authed(); check_csrf(); throttle_api();
+// Audio uploads use multipart/form-data, separate from the JSON interview actions.
+$action=(string)($_GET['action']??'');
+if ($action==='transcribe') {
+    try {
+        if (!isset($_FILES['audio']) || !is_array($_FILES['audio'])) json_out(['error'=>'No audio recording was uploaded.'],422);
+        $file=$_FILES['audio'];
+        $uploadError=(int)($file['error']??UPLOAD_ERR_NO_FILE);
+        if ($uploadError!==UPLOAD_ERR_OK) {
+            $message=$uploadError===UPLOAD_ERR_INI_SIZE||$uploadError===UPLOAD_ERR_FORM_SIZE
+                ? 'PHP rejected the recording because it exceeds the server upload limit. Increase upload_max_filesize and post_max_size.'
+                : 'Audio upload failed (PHP code '.$uploadError.').';
+            json_out(['error'=>$message],413);
+        }
+        $size=(int)($file['size']??0);
+        if ($size<800 || $size>7*1024*1024) json_out(['error'=>'Audio recording must be between 800 bytes and 7 MB.'],413);
+        $path=(string)($file['tmp_name']??'');
+        if (!$path || !is_uploaded_file($path)) json_out(['error'=>'Invalid audio upload.'],400);
+        $clientMime=(string)($file['type']??'');
+        $mime=strtolower(trim(explode(';',$clientMime)[0]));
+        $allowed=['audio/webm','audio/mp4','audio/ogg','audio/wav','audio/mpeg','audio/aac','audio/x-m4a'];
+        if (!in_array($mime,$allowed,true)) json_out(['error'=>'Unsupported recording format: '.$mime],415);
+        $bytes=file_get_contents($path);
+        if ($bytes===false || strlen($bytes)!==$size) throw new RuntimeException('Could not read the uploaded audio.');
+        $result=gemini_transcribe_audio($bytes,$mime);
+        json_out(['transcript'=>$result]);
+    } catch (Throwable $e) {
+        error_log('Interview Studio Gemini transcribe: '.$e->getMessage());
+        json_out(['error'=>$e->getMessage()],502);
+    }
+}
 $raw=file_get_contents('php://input',false,null,0,160000);
 $input=json_decode((string)$raw,true);
 if (!is_array($input)) json_out(['error'=>'Expected a JSON request'],400);
-$action=(string)($_GET['action']??'');
 $turns=clean_turns($input['turns']??[]);
 $transcript=mb_safe_substr(conversation($turns),35000);
 $hasAnswer=(bool)array_filter($turns,static fn($t)=>$t['role']==='user');

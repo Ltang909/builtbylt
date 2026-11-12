@@ -1,82 +1,68 @@
-# Interview Studio — Gemini (PHP edition)
+# Interview Studio v0.3 — Gemini transcription + PHP
 
-**A no-build PHP + vanilla JavaScript app for one user. This studio is brand-independent; it does not assume you are writing about Leave It to Bum Bum.** Interview by talking or typing, evaluate whether your real experience is worth a LinkedIn post, and draft in your own words. Adapted for standard Hostinger shared PHP hosting.
+A private, standalone voice-interview-to-LinkedIn-post tool for **standard PHP hosting**, including Hostinger shared hosting. No Node.js, npm, ElevenLabs, OpenAI API, or database.
 
-**No OpenAI API key, Node, npm, Composer, ElevenLabs, or database needed.**
+## What's fixed
 
-## 1. Create a free Gemini key
+The previous version used Chrome's `webkitSpeechRecognition`. That service can fail even when site microphone permission is **allowed** (as shown in the screenshot). **v0.3 removes that dependency entirely**:
 
-1. Visit [Google AI Studio — API keys](https://aistudio.google.com/api-keys).
-2. Create or select a **Free Tier** project and create an API key. Do **not** upgrade the project to paid billing if avoiding charges is your priority.
-3. Check that your project has access to `gemini-3.8-flash` under AI Studio model access / rate limits. Free quotas can change; if this model isn't available, try `gemini-3.5-flash-lite` in the configuration.
+1. Browser `getUserMedia` opens your microphone.
+2. `MediaRecorder` saves the current answer locally while a live input-level indicator confirms sound is arriving.
+3. Press **Finish answer** (up to 90 seconds). The browser uploads the audio through a password-protected PHP endpoint.
+4. PHP securely sends the audio to Gemini with the **existing API key** and returns a transcript.
+5. Your words appear as an editable turn. Gemini then generates a follow-up interview question.
 
-Google says some free-tier prompts and responses may be used to improve its products. Avoid discussing confidential customer details, private event attendee information, passwords, or other sensitive data in interviews. Browser speech recognition can also use your browser vendor's servers to transcribe audio.
+The browser still speaks the interviewer's questions using its installed voices. Voice selection/preview remains available. This is **turn-based**, not full-duplex realtime. The transcript only appears after the recording is finished, not while you're still talking.
 
-## 2. Upload to Hostinger
+## Upgrade an existing installation
 
-1. Extract this ZIP.
-2. Upload the **contents** to `public_html/interview-studio/` (or whatever folder you want).
+1. **Back up your existing `private/config.php`** (contains your Gemini API key and studio password).
+2. Unzip the download. Replace `index.php`, `api.php`, `private/bootstrap.php`, `assets/app.js`, `assets/app.css`, and `README.md` on your server. Keep your **existing** `private/config.php` if already configured.
+3. Hard-refresh at `https://builtbylt.com/interview-studio/` (`Cmd+Shift+R` on Mac, `Ctrl+Shift+R` on Windows). This release also changes the asset version from `v=4` to `v=5`.
+4. Click **Start talking**, answer the first question, and press **Finish answer**. Watch the input level meter while talking. Your transcript should then appear on the right.
+
+All the existing saved sessions use the same localStorage key and will remain available in the same browser. Export important sessions before upgrading.
+
+## Fresh installation
+
+1. Obtain a free API key at <https://aistudio.google.com/api-keys> and keep the project on the **free tier** if you want to avoid API charges.
+2. Upload the **contents** of this ZIP to your PHP hosting folder, e.g. `public_html/interview-studio/`.
 3. Edit `private/config.php`:
 
    ```php
-   'gemini_api_key' => 'YOUR_KEY_FROM_GOOGLE_AI_STUDIO',
-   'studio_password' => 'A_LONG_UNIQUE_PASSWORD',
+   'gemini_api_key' => 'YOUR_FREE_GEMINI_KEY',
+   'studio_password' => 'YOUR_STRONG_PRIVATE_PASSWORD',
    'gemini_model' => 'gemini-3.8-flash',
    ```
 
-   Alternatively you can set the server-side environment variable `GEMINI_API_KEY`, if your hosting supports it.
-4. Enable PHP 8.1 or newer and HTTPS. The host must allow outbound requests to `generativelanguage.googleapis.com`. PHP needs OpenSSL and should have cURL or HTTPS URL wrappers enabled.
-5. Go to `https://yourdomain.com/interview-studio/`, sign in, and try **Start talking** in Chrome on a desktop.
+4. Run PHP 8.1+, use HTTPS, and allow outbound PHP HTTPS requests to `generativelanguage.googleapis.com`.
+5. Ensure your `private` directory is blocked from web access. `private/.htaccess` is supplied for compatible Apache/LiteSpeed hosting. Verify the server does not serve files from that folder; move it above the public web root if the server ignores `.htaccess`.
 
-**Security warning:** `private/config.php` holds your API key and password. The `private/.htaccess` blocks direct web access on Apache / LiteSpeed servers. Verify that `https://yourdomain.com/interview-studio/private/config.php` is blocked. If your server ignores `.htaccess`, move the private directory outside the web root and update the `require` paths before using the app. Never upload API keys to a public Git repository.
+## Important troubleshooting
 
-## 3. Use it
+- **Microphone allowed but no transcript:** Ensure the meter moves when you speak; press **Finish answer** and read the on-screen status. The browser no longer uses Chrome's speech-recognition service.
+- **Mic meter flat:** Check Chrome's selected input device, operating-system mic access, or another app using the microphone. The meter is a best-effort indicator, not definitive proof of intelligible voice audio.
+- **Server rejects audio / HTTP 413 / PHP upload error:** Increase PHP `upload_max_filesize` and `post_max_size` in Hostinger PHP settings to at least **8MB and 10MB** respectively. Keep individual answers under 90 seconds.
+- **Gemini transcription fails:** The UI retains the last recording and exposes **Retry transcription**. You can also type your answer. Confirm your API key, free-tier quota, model access, and outbound PHP HTTPS requests.
+- **Sound of interviewer isn't natural:** The voice selector controls system/browser TTS voices, not Gemini voice generation. This release fixes **input reliability**; higher-quality output voices can be added later.
+- **No transcript while talking:** Expected. The app records first and transcribes when you press **Finish answer**.
 
-- Choose **Start talking**. The interviewer speaks its opening question, the browser listens for your answer, and Gemini selects a specific follow-up.
-- The default **Automatically listen after each question** provides a near-hands-free experience. You can turn this off if your speakers feed back into the microphone. Use **Finish answer** to end a turn early.
-- If speech recognition is unsupported or mishears you, switch to **Use a text interview**. You can edit the transcript in the right-hand panel.
-- When the story has substance, click **Evaluate this interview**. The editorial check can say **Post**, **Dig deeper**, or **Skip**.
-- Generate a draft, edit it, rate it 1–5, add specific feedback, regenerate, and save/export.
+## Data handling and limitations
 
-### Limitations and costs
-
-- This is a **turn-based conversation**, not the low-latency full-duplex Gemini Live API. It speaks one question, listens for one response, then thinks. Interruptions during its speech are not yet natural.
-- Chrome desktop tends to have the best `SpeechRecognition` support. Other browsers may require you to type instead. Transcription and synthetic voice depend on the browser and OS; voice quality and availability will vary.
-- Browser speech recognition may send your audio to a browser vendor's speech service; it is **not guaranteed to be local**.
-- The Gemini API has a **free tier with rate limits**, not unlimited free usage. Access and per-project quota vary. An API key is still required. Keep your Google AI Studio project on the free tier if you want to avoid usage billing.
-- Your transcripts and drafts remain in your browser **only if you explicitly save them**. The text of your interview is sent to Gemini when it requests follow-ups, grades, or drafts. Export a JSON backup to avoid losing work.
-- Your AI-produced writing and its insight score still require your judgment. This system does not predict engagement or automatically publish posts.
-
-## 4. Test locally
-
-From the extracted directory, if PHP is installed:
-
-```bash
-php -S localhost:8080
-```
-
-Visit `http://localhost:8080/`. Browsers consider `localhost` secure for the microphone, but normal hosting requires HTTPS.
+- You speak into the browser. Each answer is uploaded temporarily to PHP, passed to Gemini, and not written to persistent server storage by this app.
+- Your transcript is sent to Gemini again for follow-up questions, editorial evaluation, and drafting.
+- Free-tier Gemini content may be used by Google to improve its products. Avoid confidential customer information and sensitive personal data. Free-tier usage has limits and can change.
+- Saved interviews are kept in **your browser** when you click Save. Export JSON backups for important interviews.
+- This is intentionally a one-person app protected with a password, not a public SaaS service.
+- Live Gemini speech-to-text cannot be tested without a valid API key. All syntax checks and local unauthenticated/login checks can be performed offline.
 
 ## Files
 
-- `index.php` — password login and interface
-- `api.php` — authenticated Gemini actions: `ask`, `evaluate`, `draft`
-- `private/config.php` — your key and password (server-only)
-- `private/bootstrap.php` — secure session, prompts, Gemini REST integration
-- `assets/app.js` — speech recognition, speech synthesis, transcript, client workflow
-- `assets/app.css` — styling
+- `index.php` – app and password login
+- `api.php` – interview, evaluate, draft, and **transcribe** routes
+- `private/bootstrap.php` – API, session, and Gemini helpers
+- `private/config.php` – key/password (never share)
+- `assets/app.js` – MediaRecorder, microphone meter, transcript and editor
+- `assets/app.css` – responsive UI
 
-## API documentation
-
-- Gemini free-tier pricing: https://ai.google.dev/gemini-api/docs/pricing
-- Gemini rate limits: https://ai.google.dev/gemini-api/docs/rate-limits
-- API keys: https://ai.google.dev/gemini-api/docs/api-key
-- REST text generation: https://ai.google.dev/gemini-api/docs/generate-content/text-generation
-
-**Verification note:** PHP lint, JavaScript syntax, and local page/login/security smoke tests were completed during development. Live Gemini requests with your personal API key and live browser microphone conversations require testing after deployment.
-
-## Voice reliability notes (v0.2)
-
-The status chip shows **Mic off**, **Listening**, **Recognizing your words**, **Speaking**, **Thinking**, or **Voice error**. Live speech is shown on-screen before submission. Permission to use the microphone is not the same as permission for the Chrome speech recognition service. If Chrome reports `network` or `service-not-allowed`, browser speech recognition may be blocked by network, browser policy, or a provider service even though the microphone itself works. Text mode remains available. The interviewer voice is chosen from the voices installed in your browser/operating system, so quality varies; the Preview button lets you compare them. This is still free browser synthesis, not premium neural voice generation.
-
-To update an existing install, back up `private/config.php` and replace **index.php**, **api.php**, **private/bootstrap.php**, **assets/app.js**, and **assets/app.css**. Retain your original config key and password.
+Official reference: <https://ai.google.dev/gemini-api/docs/audio>

@@ -121,3 +121,43 @@ function gemini_response(string $instructions,string $input,array $schema,int $m
     if (!is_array($parsed)) throw new RuntimeException('Gemini did not return valid structured content. Please retry.');
     return $parsed;
 }
+
+/** Use the same free-tier Gemini key for uploaded audio, bypassing Chrome SpeechRecognition. */
+function gemini_transcribe_audio(string $audio,string $mime): string {
+    $model=(string)($GLOBALS['config']['gemini_model']??'gemini-3.8-flash');
+    if (!preg_match('/^[a-zA-Z0-9.-]+$/',$model)) throw new RuntimeException('Invalid Gemini model in config.php.');
+    // GenerateContent accepts inline audio encoded in base64; keep answers short for shared PHP hosts.
+    $schema=['type'=>'OBJECT','properties'=>['transcript'=>['type'=>'STRING']],'required'=>['transcript']];
+    $payload=[
+        'systemInstruction'=>['parts'=>[['text'=>'You transcribe spoken English faithfully. Keep the original speaker wording, hesitations, informality, and sentence structure. Do not summarize, rewrite, or add content. Ignore background noise. If there is no intelligible speech, return an empty transcript.']]],
+        'contents'=>[['role'=>'user','parts'=>[
+            ['text'=>'Transcribe only the person speaking in this audio. Preserve their words as naturally spoken. Return JSON with a transcript field.'],
+            ['inlineData'=>['mimeType'=>$mime,'data'=>base64_encode($audio)]],
+        ]]],
+        'generationConfig'=>[
+            'responseMimeType'=>'application/json','responseSchema'=>$schema,
+            'temperature'=>0,'maxOutputTokens'=>2400,
+        ],
+    ];
+    $url='https://generativelanguage.googleapis.com/v1beta/models/'.$model.':generateContent';
+    [$status,$body]=gemini_http_post($url,(string)json_encode($payload,JSON_INVALID_UTF8_SUBSTITUTE));
+    $response=json_decode($body,true);
+    if ($status===429) throw new RuntimeException('Gemini free-tier quota reached. Retry later, or type your answer.');
+    if ($status===401||$status===403) throw new RuntimeException('Gemini denied your API key or project. Check Google AI Studio.');
+    if ($status===404) throw new RuntimeException('Selected Gemini model unavailable. Try gemini-3.5-flash-lite in private/config.php.');
+    if ($status<200||$status>=300) {
+        $reason=mb_safe_substr((string)($response['error']['message']??('HTTP '.$status)),350);
+        throw new RuntimeException('Gemini transcription request failed: '.$reason);
+    }
+    $parts=[];
+    foreach(($response['candidates'][0]['content']['parts']??[]) as $part){
+        if(isset($part['text'])&&is_string($part['text']))$parts[]=$part['text'];
+    }
+    $raw=trim(implode('',$parts));
+    if(str_starts_with($raw,'```'))$raw=trim((string)preg_replace('/^```(?:json)?\s*|\s*```$/','',$raw));
+    $decoded=json_decode($raw,true);
+    if(!is_array($decoded)||!isset($decoded['transcript'])||!is_string($decoded['transcript'])) {
+        throw new RuntimeException('Gemini did not return a transcript. Please retry.');
+    }
+    return trim(mb_safe_substr($decoded['transcript'],12000));
+}

@@ -27,3 +27,12 @@
 .callbox{padding:24px 16px;min-height:320px}
 .callbox h3{margin-top:8px}
 .logo-mark{font-family:system-ui,sans-serif;font-size:16px;background:#e9ebe9;border-color:#d7ddd9}
+
+/* v0.3: reliable browser recording + Gemini transcription */
+.levelwrap{display:flex;align-items:center;gap:10px;width:min(480px,100%);margin:14px auto 0;font-size:12px;color:#42664d;text-align:left}
+.levelwrap .leveltrack{height:9px;background:#dbe9df;flex:1;min-width:90px;border-radius:99px;overflow:hidden}
+.levelfill{height:100%;width:0%;background:#438959;border-radius:99px;transition:width .11s ease}
+.levelwrap strong{font-variant-numeric:tabular-nums;color:#3a5a43}
+#retryAudioBtn{margin-top:11px}
+.soundmark.recording span{background:#408952}
+@media(max-width:580px){.levelwrap{flex-wrap:wrap}.levelwrap .leveltrack{flex-basis:100%}}
