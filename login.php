@@ -67,7 +67,7 @@ $error = $_GET['error'] ?? '';
 <body>
 <div class="wrap">
   <p class="brand">Built by LT</p>
-  <h1>Two agentic tools, behind one login.</h1>
+  <h1>Three tools, behind a login.</h1>
   <p class="sub">Working systems I built and run for real client work: one finds and
   drafts outreach to the right companies, the other generates and grades ad
   creative against a brand book. Watch the demos, then ask for an account.</p>
@@ -107,6 +107,19 @@ $error = $_GET['error'] ?? '';
         and logged in a cost ledger. Bring your own API keys.</li>
       </ul>
       <p class="foot">Live for multiple brand workspaces today.</p>
+    </section>
+
+    <section class="card">
+      <p class="kick">Content</p>
+      <h2>Interview Studio</h2>
+      <ul>
+        <li>Talk through a story, get an honest verdict on whether it is
+        worth posting, and draft the LinkedIn post in your own words.</li>
+        <li>Voice or text interview. The editorial check can say "skip
+        it", and the draft sticks to what the transcript actually says.</li>
+      </ul>
+      <p class="foot"><a href="/interview-studio/" style="color:#e8b84b;font-weight:700">Open the Interview Studio</a><br>
+      It uses its own studio sign-in, separate from the panel login.</p>
     </section>
   </div>
 

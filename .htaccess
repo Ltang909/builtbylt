@@ -8,7 +8,7 @@ DirectoryIndex index.php
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 </IfModule>
 
-<FilesMatch "^(?:README\.md|config\.local\.php)$">
+<FilesMatch "^(?:README\.md|config\.local\.php|private-config\.interview-studio\.php)$">
   Require all denied
 </FilesMatch>
 

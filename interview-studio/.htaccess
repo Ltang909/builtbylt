@@ -1,0 +1,4 @@
+Options -Indexes
+<FilesMatch "^(\.htaccess|README\.md)$">
+  Require all denied
+</FilesMatch>
