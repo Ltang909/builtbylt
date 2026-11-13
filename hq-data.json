@@ -1,0 +1,1163 @@
+{
+ "meta": {
+  "generated_at": "2026-11-13T16:24:27+00:00",
+  "generated_display": "Nov 13, 2026 · 04:24 PM UTC",
+  "today": "2026-11-13",
+  "fleet_launch": "2026-11-13",
+  "version": "1.0"
+ },
+ "projects": [
+  {
+   "id": "bum",
+   "name": "Leave It to Bum Bum",
+   "initial": "B",
+   "category": "Microtools",
+   "gm": "Pet Pet",
+   "owner": "General Manager",
+   "status": "Active",
+   "color": "#c3b8ed",
+   "bg": "#292537",
+   "line": "#534a69",
+   "website": "https://leaveittobumbum.com",
+   "desc": "Free, useful microtools for independent operators. Built, distributed, and iterated quickly.",
+   "goal": "Grow organic acquisition and repeat tool usage",
+   "focus": "SEO sprint under way (technical fixes shipped Nov 12; content and distribution next) and the 60-clip talking-cat video batch.",
+   "primaryLabel": "Workforce",
+   "primaryValue": "7 agents",
+   "primaryTrend": "1 GM · 6 specialists",
+   "kpis": [
+    [
+     "Agents on roster",
+     "7",
+     "1 GM + 6 specialists"
+    ],
+    [
+     "Scheduled fleet",
+     "6 jobs",
+     "Stood up Nov 13, 2026"
+    ],
+    [
+     "Fleet cadence",
+     "Hourly to weekly",
+     "QA daily 7:15 AM · Manager rollup 8:30 PM"
+    ],
+    [
+     "Public site",
+     "leaveittobumbum.com",
+     "Free microtools"
+    ]
+   ],
+   "agents": [
+    {
+     "id": "analytics",
+     "name": "Analytics Agent",
+     "focus": "Watch traffic for anomalies against the trailing baseline once the data feed is restored",
+     "state": "review",
+     "label": "Paused",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "copy",
+     "name": "Copywriting Agent",
+     "focus": "Draft copy from the queue (tool pages, alternatives pages, listings) in the Bum Bum brand voice",
+     "state": "working",
+     "label": "Scheduled · Daily 4:00 PM queue check",
+     "actions": 1,
+     "last": "Daily 4:00 PM. Stood up Nov 13, 2026 as part of the always-on fleet.",
+     "quality": ""
+    },
+    {
+     "id": "experiments",
+     "name": "Growth Experiments Agent",
+     "focus": "Design acquisition experiments and grade them on realism before anything is built",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "product",
+     "name": "Product Agent",
+     "focus": "Prioritize microtool requests and UX friction; run the prebuild check before anything is built",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "qa",
+     "name": "QA Agent",
+     "focus": "Run functional checks on production: key pages, tool pages, registry, JSON endpoints",
+     "state": "working",
+     "label": "Scheduled · QA 7:15 AM + E2E 9:00 AM",
+     "actions": 2,
+     "last": "Daily 7:15 AM. Stood up Nov 13, 2026 as part of the always-on fleet.",
+     "quality": ""
+    },
+    {
+     "id": "seo",
+     "name": "SEO + AEO Agent",
+     "focus": "Monitor organic search and AI answer visibility; run indexing requests and technical fixes during sprints",
+     "state": "working",
+     "label": "On demand · Competitor watch Mondays 9:00 AM",
+     "actions": 1,
+     "last": "Mondays 9:00 AM. Stood up Nov 13, 2026 as part of the always-on fleet.",
+     "quality": ""
+    }
+   ]
+  },
+  {
+   "id": "quartermaster",
+   "name": "Quartermaster",
+   "initial": "Q",
+   "category": "B2B Events",
+   "gm": "Events GM",
+   "owner": "General Manager",
+   "status": "Active",
+   "color": "#b0d0ba",
+   "bg": "#202d29",
+   "line": "#415c4c",
+   "website": "https://quartermaster.studio",
+   "desc": "Executive dinners as a managed service and platform, engineered for pipeline.",
+   "goal": "Convert qualified inquiries into booked executive dinners",
+   "focus": "Executive dinner operations and the Wardroom pipeline. Attio is the source of truth; every outreach draft waits for Leon's send click.",
+   "primaryLabel": "Workforce",
+   "primaryValue": "6 agents",
+   "primaryTrend": "1 GM · 5 specialists",
+   "kpis": [
+    [
+     "Agents on roster",
+     "6",
+     "1 GM + 5 specialists"
+    ],
+    [
+     "Operating model",
+     "Managed service",
+     "Executive dinners, not a marketplace"
+    ],
+    [
+     "CRM of record",
+     "Attio",
+     "Pipeline and guest data"
+    ],
+    [
+     "Send rule",
+     "Drafts only",
+     "Leon sends every outreach himself"
+    ]
+   ],
+   "agents": [
+    {
+     "id": "account-intel",
+     "name": "Account Intelligence Agent",
+     "focus": "Build the account brief: what the company does, who the marketing leader is, why a dinner fits",
+     "state": "idle",
+     "label": "Event-triggered",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "outreach",
+     "name": "Outreach Agent",
+     "focus": "Draft outreach messages in the Operator's Manifesto voice",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "product-marketing",
+     "name": "Product Marketing Agent",
+     "focus": "Watch competitor movement in the executive-events market",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "seo",
+     "name": "SEO + AEO Agent",
+     "focus": "Directory listings and search presence for Quartermaster Studio",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "social-listening",
+     "name": "Social Listening Agent",
+     "focus": "Check intent signals: teams hiring field marketers, event-role postings, dinner-format interest",
+     "state": "idle",
+     "label": "Scheduled",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    }
+   ]
+  },
+  {
+   "id": "creative",
+   "name": "Creative Experiments",
+   "initial": "C",
+   "category": "Creative Systems",
+   "gm": "Creative GM",
+   "owner": "General Manager",
+   "status": "Active",
+   "color": "#ecc7a4",
+   "bg": "#342a23",
+   "line": "#614b39",
+   "website": "",
+   "desc": "AI-assisted character stories, video concepts, assets, and distribution experiments.",
+   "goal": "Increase creative throughput without losing quality",
+   "focus": "Talking-clip production: LTX-2.5 renders on rented Runpod GPUs. Leon writes every script; agents check timing, consistency, and QC.",
+   "primaryLabel": "Workforce",
+   "primaryValue": "6 agents",
+   "primaryTrend": "1 GM · 5 specialists",
+   "kpis": [
+    [
+     "Agents on roster",
+     "6",
+     "1 GM + 5 specialists"
+    ],
+    [
+     "Video batch",
+     "60 clips planned",
+     "$100 budget cap; Leon writes the scripts"
+    ],
+    [
+     "Render route",
+     "Runpod + LTX-2.5",
+     "Open-source model on a rented GPU"
+    ],
+    [
+     "QA rule",
+     "QC on every render",
+     "Character consistency checked on every asset"
+    ]
+   ],
+   "agents": [
+    {
+     "id": "creative-qa",
+     "name": "Character Consistency Agent",
+     "focus": "Check Bum Bum and Pet Pet visual consistency against the verified character cards",
+     "state": "idle",
+     "label": "QA gate · Runs on every asset",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "distribution",
+     "name": "Distribution Agent",
+     "focus": "Prepare platform-ready publishing assets (captions, crops, covers) for Leon's posting",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "script",
+     "name": "Scriptwriting Agent",
+     "focus": "Timing and structure support for scripts: word counts, 15-second fit, setup in the first 5 seconds, punchline in the final 3",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "story",
+     "name": "Storyboard Agent",
+     "focus": "Convert Leon's locked scripts into shot-by-shot generation plans",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "video",
+     "name": "Video Production Agent",
+     "focus": "Generate clips on rented GPU (Runpod, LTX-2.5), stitch, and quality-check every output",
+     "state": "working",
+     "label": "On demand · Runpod scout checks GPU stock hourly",
+     "actions": 2,
+     "last": "US-IL-1: none for 4090/A6000; EUR-IS-1: none; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+     "quality": ""
+    }
+   ]
+  },
+  {
+   "id": "outbound",
+   "name": "Agentic Outbound",
+   "initial": "A",
+   "category": "Sales Automation",
+   "gm": "Outbound GM",
+   "owner": "General Manager",
+   "status": "Active",
+   "color": "#b3ccef",
+   "bg": "#212b38",
+   "line": "#3f5268",
+   "website": "",
+   "desc": "Prospect discovery, enrichment, qualification, and thoughtful outbound workflows.",
+   "goal": "Prove consistent qualified meetings from controlled outreach",
+   "focus": "On-demand only since Nov 13, 2026: no standing schedules in this branch. The Deliverability Agent is the one QA exception, checking before every send.",
+   "primaryLabel": "Workforce",
+   "primaryValue": "6 agents",
+   "primaryTrend": "1 GM · 5 specialists",
+   "kpis": [
+    [
+     "Agents on roster",
+     "6",
+     "1 GM + 5 specialists"
+    ],
+    [
+     "Cadence",
+     "On demand",
+     "No standing schedule (Nov 13 rule)"
+    ],
+    [
+     "Enrichment",
+     "Estimate, then confirm",
+     "Apollo credits are never spent in discovery"
+    ],
+    [
+     "Sending",
+     "Human approved",
+     "Drafts wait for Leon"
+    ]
+   ],
+   "agents": [
+    {
+     "id": "deliver",
+     "name": "Deliverability Agent",
+     "focus": "Monitor sending limits and hygiene; verify a send is safe before it goes",
+     "state": "idle",
+     "label": "QA gate · Runs on checks and builds",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "enrich",
+     "name": "Enrichment Agent",
+     "focus": "Fill missing contact and company fields for prospects Leon selects",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "icp",
+     "name": "ICP Research Agent",
+     "focus": "Score and segment target accounts when Leon starts a discovery run",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "reply",
+     "name": "Reply Classification Agent",
+     "focus": "Tag reply intent and recommend the next response",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "sequence",
+     "name": "Sequence Writer Agent",
+     "focus": "Prepare personal outreach and follow-up drafts",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    }
+   ]
+  },
+  {
+   "id": "interview",
+   "name": "Interview Studio",
+   "initial": "I",
+   "category": "Product Lab",
+   "gm": "Studio GM",
+   "owner": "General Manager",
+   "status": "Active",
+   "color": "#d7c3da",
+   "bg": "#302737",
+   "line": "#59465d",
+   "website": "https://builtbylt.com/interview-studio/",
+   "desc": "An interview-led writing workflow with transcription, feedback, and guided refinement.",
+   "goal": "Ship a stable prototype and validate the interview workflow",
+   "focus": "Live at builtbylt.com/interview-studio (v0.3): browser recording with Gemini transcription, editorial verdict, and a draft in the author's own words.",
+   "primaryLabel": "Workforce",
+   "primaryValue": "5 agents",
+   "primaryTrend": "1 GM · 4 specialists",
+   "kpis": [
+    [
+     "Agents on roster",
+     "5",
+     "1 GM + 4 specialists"
+    ],
+    [
+     "Status",
+     "Live",
+     "builtbylt.com/interview-studio"
+    ],
+    [
+     "Transcription",
+     "Gemini endpoint",
+     "Browser recording, 90-second cap"
+    ],
+    [
+     "Storage",
+     "Browser only",
+     "No database; transcripts stay local"
+    ]
+   ],
+   "agents": [
+    {
+     "id": "dialogue",
+     "name": "Interview Coach Agent",
+     "focus": "Evaluate follow-up logic and prompts (ask, evaluate, draft stages)",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "studio-product",
+     "name": "Product Design Agent",
+     "focus": "Prioritize interactions and prototype UX for the studio",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "transcribe",
+     "name": "Transcription QA Agent",
+     "focus": "Test voice inputs and failure states (recording, transcription endpoint, retry, 90-second cap)",
+     "state": "idle",
+     "label": "QA gate · Runs on checks and builds",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "research",
+     "name": "User Research Agent",
+     "focus": "Synthesize test feedback from studio sessions",
+     "state": "idle",
+     "label": "Session-triggered",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    }
+   ]
+  },
+  {
+   "id": "career",
+   "name": "Career Research",
+   "initial": "R",
+   "category": "Career Operations",
+   "gm": "Research GM",
+   "owner": "General Manager",
+   "status": "Active",
+   "color": "#d4d2a8",
+   "bg": "#302f24",
+   "line": "#55533e",
+   "website": "",
+   "desc": "Research and learning workflows across relevant career opportunities and market trends.",
+   "goal": "Maintain a focused, high-quality opportunity pipeline",
+   "focus": "Daily 10 AM sweep of roles posted in the last 24 hours, verified on each company's own ATS. Agents research and draft; Leon submits every application himself.",
+   "primaryLabel": "Workforce",
+   "primaryValue": "5 agents",
+   "primaryTrend": "1 GM · 4 specialists",
+   "kpis": [
+    [
+     "Agents on roster",
+     "5",
+     "1 GM + 4 specialists"
+    ],
+    [
+     "Sweep",
+     "Daily 10:00 AM",
+     "Last 24 hours, verified on the company ATS"
+    ],
+    [
+     "Resume cap",
+     "3 per day",
+     "Tailored drafts saved to Drive and the tracker"
+    ],
+    [
+     "Applications",
+     "Leon submits",
+     "Agents never submit or contact recruiters"
+    ]
+   ],
+   "agents": [
+    {
+     "id": "job-match",
+     "name": "Fit Analysis Agent",
+     "focus": "Score each verified lead against Leon's criteria and base-resume record before it reaches the tracker",
+     "state": "idle",
+     "label": "Scheduled · Inside the daily sweep",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "job-follow",
+     "name": "Follow-up Agent",
+     "focus": "Draft follow-ups and responses for Leon's review",
+     "state": "idle",
+     "label": "On demand",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "job-scout",
+     "name": "Opportunity Scout Agent",
+     "focus": "Scan postings from the last 24 hours (LinkedIn, ATS boards, nanoglobals) and log verified leads to the tracker",
+     "state": "idle",
+     "label": "Scheduled",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    },
+    {
+     "id": "job-materials",
+     "name": "Portfolio Agent",
+     "focus": "Build tailored resumes from the fixed base docx, upload to Drive, link in the tracker",
+     "state": "idle",
+     "label": "Scheduled · Inside the daily sweep",
+     "actions": 0,
+     "last": "",
+     "quality": ""
+    }
+   ]
+  }
+ ],
+ "roles": [
+  {
+   "project": "Agentic Outbound",
+   "name": "Deliverability Agent",
+   "kind": "Specialist",
+   "task": "Monitor sending limits and hygiene; verify a send is safe before it goes",
+   "cadence": "QA only: before every send; otherwise on demand",
+   "scope": "This is the outbound branch's QA seat, the one scheduled exception Leon kept. Checks sending limits, domain hygiene, and draft integrity before any send Leon approves.",
+   "gm_escalation": "Pre-send checks report to the Outbound GM.",
+   "leon_escalation": "Anything that would risk the sending domain or an account: limit breaches, hygiene failures, bounce spikes.",
+   "output": "Pre-send safety verdict: limits, hygiene, draft integrity",
+   "route": "outbound/deliver"
+  },
+  {
+   "project": "Agentic Outbound",
+   "name": "Enrichment Agent",
+   "kind": "Specialist",
+   "task": "Fill missing contact and company fields for prospects Leon selects",
+   "cadence": "None - on demand only",
+   "scope": "Estimate-then-confirm is hard: no Apollo credits are spent in discovery or on any schedule. Enrichment is manual per prospect, or one batch under a single estimate Leon approved, and stops at the remaining monthly budget.",
+   "gm_escalation": "Completed enrichments report to the Outbound GM with actual credits spent.",
+   "leon_escalation": "Every enrichment batch before it runs (estimate first), and any batch that would exceed the monthly budget.",
+   "output": "Enriched records, behind an approved credit estimate",
+   "route": "outbound/enrich"
+  },
+  {
+   "project": "Agentic Outbound",
+   "name": "ICP Research Agent",
+   "kind": "Specialist",
+   "task": "Score and segment target accounts when Leon starts a discovery run",
+   "cadence": "None - on demand only",
+   "scope": "Discovery is free: Apollo search returns no LinkedIn URL and spends nothing. 'Enriched' does not mean 'has email' - verify the email field exists before counting a prospect as reachable.",
+   "gm_escalation": "Run results go to the Outbound GM.",
+   "leon_escalation": "A segment that needs enrichment spend to be usable.",
+   "output": "Account lists matched to ICP rules",
+   "route": "outbound/icp"
+  },
+  {
+   "project": "Agentic Outbound",
+   "name": "Outbound GM",
+   "kind": "GM",
+   "task": "Review qualification, replies, deliverability and approvals when Leon runs the outbound engine",
+   "cadence": "None - on demand only (Leon's call, Nov 13)",
+   "scope": "The outbound engine runs on Leon's trigger, not on a clock. Discovery runs never spend Apollo credits. Any enrichment is manual per prospect or under one pre-run estimate Leon confirms. Leon's own setup steps (cron secret, notification email, daily cadence) stay his; do not schedule around them.",
+   "gm_escalation": "n/a - branch GM for outbound. Reports to Leon in chat.",
+   "leon_escalation": "Anything needing spend approval, a send decision, or his setup steps.",
+   "output": "Outreach readiness and deliverability summary",
+   "route": "outbound/gm"
+  },
+  {
+   "project": "Agentic Outbound",
+   "name": "Reply Classification Agent",
+   "kind": "Specialist",
+   "task": "Tag reply intent and recommend the next response",
+   "cadence": "None - reply-triggered when Leon is working the inbox",
+   "scope": "Classification and recommendations only; replies are drafted for Leon and never sent by an agent.",
+   "gm_escalation": "Classifications surface to the Outbound GM during Leon's sessions.",
+   "leon_escalation": "A hot reply, a meeting request, or anything time-sensitive.",
+   "output": "Replies tagged by intent, with follow-up routing",
+   "route": "outbound/reply"
+  },
+  {
+   "project": "Agentic Outbound",
+   "name": "Sequence Writer Agent",
+   "kind": "Specialist",
+   "task": "Prepare personal outreach and follow-up drafts",
+   "cadence": "None - on demand only",
+   "scope": "Drafts only, in Leon's voice, grounded in the account brief. Nothing sends without Leon. The outreach link URL must be set per client before any sequence referencing it is used.",
+   "gm_escalation": "Drafts go through the Outbound GM.",
+   "leon_escalation": "Finished drafts ready for his send, or a sequence blocked on the missing outreach link.",
+   "output": "Outreach drafts and follow-up sequences for approval",
+   "route": "outbound/sequence"
+  },
+  {
+   "project": "Career Research",
+   "name": "Fit Analysis Agent",
+   "kind": "Specialist",
+   "task": "Score each verified lead against Leon's criteria and base-resume record before it reaches the tracker",
+   "cadence": "Runs inside the daily 10:00 AM sweep",
+   "scope": "Flags scope mismatches in plain terms (spend scale, team size, PLG depth, sector requirements, US-only eligibility). Works only from facts in the base resume; never inflates a fit.",
+   "gm_escalation": "Every scored lead goes to the Research GM with the sweep results.",
+   "leon_escalation": "A lead that looks strong on title but fails on scope, or an eligibility question only Leon can answer.",
+   "output": "Fit briefs comparing roles to Leon's record",
+   "route": "career/job-match"
+  },
+  {
+   "project": "Career Research",
+   "name": "Follow-up Agent",
+   "kind": "Specialist",
+   "task": "Draft follow-ups and responses for Leon's review",
+   "cadence": "On demand only",
+   "scope": "Drafts only; Leon sends everything himself. No thank-you-note pushing (Leon's standing call). Tracks open loops like the OpsLevel comp/remote/timeline follow-up without stacking check-ins.",
+   "gm_escalation": "Drafts and open loops surface in the Research GM's morning review.",
+   "leon_escalation": "A reply that needs a decision, a deadline inside 48 hours, or a thread that has gone quiet past its expected decision window.",
+   "output": "Follow-up drafts with context, for Leon to send",
+   "route": "career/job-follow"
+  },
+  {
+   "project": "Career Research",
+   "name": "Opportunity Scout Agent",
+   "kind": "Specialist",
+   "task": "Scan postings from the last 24 hours (LinkedIn, ATS boards, nanoglobals) and log verified leads to the tracker",
+   "cadence": "Daily, 10:00 AM",
+   "scope": "Senior performance/growth/demand-gen roles; remote USD first, then remote Canada/GTA at CA$120K+ base. Every lead verified on the company's own ATS before it is presented. Never submits an application, never contacts a recruiter.",
+   "gm_escalation": "All new leads, dedupe conflicts, and drafted resumes route through the Research GM's morning review.",
+   "leon_escalation": "Exceptional fits worth same-day action, postings about to expire, and any day LinkedIn blocks the scan (fall back to ATS boards and say so).",
+   "output": "ATS-verified role leads from the daily sweep",
+   "route": "career/job-scout"
+  },
+  {
+   "project": "Career Research",
+   "name": "Portfolio Agent",
+   "kind": "Specialist",
+   "task": "Build tailored resumes from the fixed base docx, upload to Drive, link in the tracker",
+   "cadence": "On demand; up to 3 tailored resumes per day inside the sweep",
+   "scope": "House rules are hard: strip the Founder Experience section, QA Wolf reads 'Jul 2024 - Present', only facts from the base resume, nothing invented. Drafts only - Leon submits every application himself.",
+   "gm_escalation": "Finished drafts are reported with the sweep so the Research GM can queue Leon's submissions.",
+   "leon_escalation": "A posting asking for experience the base resume does not document (name the gap, never paper over it).",
+   "output": "Tailored resume drafts in Drive, linked in the tracker",
+   "route": "career/job-materials"
+  },
+  {
+   "project": "Career Research",
+   "name": "Research GM",
+   "kind": "GM",
+   "task": "Run the morning review: yesterday's commitments vs today's plan, and coordinate the career search agents",
+   "cadence": "Weekdays, 8 AM morning review",
+   "scope": "Owns the daily review rhythm and the job-search pipeline view. Grades commitments only from Leon's own voice notes, never from the plan alone.",
+   "gm_escalation": "n/a - this is the GM for Career Research. Escalates directly to Leon.",
+   "leon_escalation": "Interview decisions, rejections, comp questions, and anything that changes the submission queue order or a deadline (e.g. League by Nov 16).",
+   "output": "Morning review: yesterday graded from Leon's own log, today's top priorities",
+   "route": "career/gm"
+  },
+  {
+   "project": "Creative Experiments",
+   "name": "Character Consistency Agent",
+   "kind": "Specialist",
+   "task": "Check Bum Bum and Pet Pet visual consistency against the verified character cards",
+   "cadence": "On every creative asset (QA); no other schedule",
+   "scope": "Bum Bum: cream British Shorthair with soft silver-grey tabby striping (lynx-point), pale blue-grey eyes; never orange or ginger, never a dark tabby. Real photos are the anchor; the Nov 12 character sheet is verified accurate for looks. Pet Pet's sheet is looks-only - her personality is hands-off and delegating.",
+   "gm_escalation": "Consistency failures go to the Creative GM with the asset.",
+   "leon_escalation": "Any asset where a cat's look drifts from the cards, before it ships or posts.",
+   "output": "Consistency verdicts on every creative asset",
+   "route": "creative/creative-qa"
+  },
+  {
+   "project": "Creative Experiments",
+   "name": "Creative GM",
+   "kind": "GM",
+   "task": "Prioritize creative tests and review quality when Leon starts a creative session",
+   "cadence": "On demand only - no standing schedule",
+   "scope": "Creative work runs when Leon triggers it. No scheduled tasks in this branch aside from QA checks on assets and builds. Spend follows the $100 / 60-clip budget fences: pilot $10, Tranche A $25, Tranche B $35, hard caps reported before any overrun.",
+   "gm_escalation": "n/a - branch GM. Reports to Leon directly in chat.",
+   "leon_escalation": "Any spend decision, a tranche cap within reach, or a quality call on final clips.",
+   "output": "Creative pipeline summary and quality escalations",
+   "route": "creative/gm"
+  },
+  {
+   "project": "Creative Experiments",
+   "name": "Distribution Agent",
+   "kind": "Specialist",
+   "task": "Prepare platform-ready publishing assets (captions, crops, covers) for Leon's posting",
+   "cadence": "On demand only",
+   "scope": "Prepares; never posts. Posting starts only when at least 30 finals pass QC, then 3x/day at steady Toronto times. Neon lights background is the standing pick for Bum Bum videos; animate from real photos, never the illustrated brand cat.",
+   "gm_escalation": "Publishing readiness is reported to the Creative GM.",
+   "leon_escalation": "When a batch is post-ready, or a platform rule threatens an account.",
+   "output": "Channel-ready exports and captions, ready to post",
+   "route": "creative/distribution"
+  },
+  {
+   "project": "Creative Experiments",
+   "name": "Scriptwriting Agent",
+   "kind": "Specialist",
+   "task": "Timing and structure support for scripts: word counts, 15-second fit, setup in the first 5 seconds, punchline in the final 3",
+   "cadence": "On demand only",
+   "scope": "Leon writes all scripts himself (his rule since Nov 12: AI scripts were not good enough). This agent never writes or rewrites his jokes; it checks length (35-40 spoken words max), slots episodes, and transcribes dictated scripts.",
+   "gm_escalation": "Script readiness is reported to the Creative GM when a batch is being assembled.",
+   "leon_escalation": "A script that cannot fit 15 seconds as written, with the exact overage.",
+   "output": "Timing and word-count checks on Leon's scripts (35-40 words per clip)",
+   "route": "creative/script"
+  },
+  {
+   "project": "Creative Experiments",
+   "name": "Storyboard Agent",
+   "kind": "Specialist",
+   "task": "Convert Leon's locked scripts into shot-by-shot generation plans",
+   "cadence": "On demand only",
+   "scope": "Plans only; generation runs under the Video Production Agent. One continuous talking shot per generation; multi-shot pieces are planned as stitched singles with hard cuts.",
+   "gm_escalation": "Plans go to the Creative GM with the batch proposal.",
+   "leon_escalation": "A script whose shots exceed what a single generation can hold, before any render money is spent.",
+   "output": "Shot lists and sequence plans",
+   "route": "creative/story"
+  },
+  {
+   "project": "Creative Experiments",
+   "name": "Video Production Agent",
+   "kind": "Specialist",
+   "task": "Generate clips on rented GPU (Runpod, LTX-2.5), stitch, and quality-check every output",
+   "cadence": "Per approved script, Leon-triggered; QC on every render (QA)",
+   "scope": "Rent before buying hosted generation. QC per clip: dialogue word-perfect on transcription, identity 8/10 or better, joke clarity on first listen at phone volume. Two attempts per setting, then change one variable; five-attempt ceiling per episode. Pod is terminated after every session.",
+   "gm_escalation": "Session results and spend go to the Creative GM the same day.",
+   "leon_escalation": "GPU stock blocks, spend approaching a tranche cap, or a finished batch ready for his review. Finished clips are delivered in chat, watchable, not as a report about clips.",
+   "output": "Rendered clips with QC results, inside the batch budget rules",
+   "route": "creative/video"
+  },
+  {
+   "project": "Interview Studio",
+   "name": "Interview Coach Agent",
+   "kind": "Specialist",
+   "task": "Evaluate follow-up logic and prompts (ask, evaluate, draft stages)",
+   "cadence": "On demand only",
+   "scope": "Prompts stay brand-independent (v2 rule). Editorial check returns Post / Dig deeper / Skip with a score; drafts must use the author's actual words from the transcript.",
+   "gm_escalation": "Evaluations go to the Studio GM.",
+   "leon_escalation": "Prompt changes that would alter the editorial bar, before they ship.",
+   "output": "Interview flow and follow-up question quality notes",
+   "route": "interview/dialogue"
+  },
+  {
+   "project": "Interview Studio",
+   "name": "Product Design Agent",
+   "kind": "Specialist",
+   "task": "Prioritize interactions and prototype UX for the studio",
+   "cadence": "On demand only",
+   "scope": "Design latitude is staged: propose, then draft, then edit on Leon's say-so. State the blast radius before touching shared code or site-wide headers.",
+   "gm_escalation": "Proposals go to the Studio GM.",
+   "leon_escalation": "Any change touching shared builtbylt code or headers.",
+   "output": "Flow designs and scoped feature specs",
+   "route": "interview/studio-product"
+  },
+  {
+   "project": "Interview Studio",
+   "name": "Studio GM",
+   "kind": "GM",
+   "task": "Triage prototype issues and the learning backlog when Leon works on the studio",
+   "cadence": "On demand only - no standing schedule",
+   "scope": "Interview Studio is live at builtbylt.com/interview-studio. Changes ship by git deploy after Leon's go. Open items it tracks: the Gemini API key vs paid model decision (Leon's), and the scoped microphone Permissions-Policy fix awaiting his approval.",
+   "gm_escalation": "n/a - branch GM. Reports to Leon in chat.",
+   "leon_escalation": "Decisions only he can make (model choice, header change), and any production issue.",
+   "output": "Build and learning summary, open decisions for Leon",
+   "route": "interview/gm"
+  },
+  {
+   "project": "Interview Studio",
+   "name": "Transcription QA Agent",
+   "kind": "Specialist",
+   "task": "Test voice inputs and failure states (recording, transcription endpoint, retry, 90-second cap)",
+   "cadence": "QA only: on every build; otherwise on demand",
+   "scope": "This is the studio's QA seat, the scheduled exception Leon kept for creative tools. Verifies served files after each deploy, not just build output. A 413 on transcription means Hostinger PHP limits need raising (upload 8MB / post 10MB) - flag it, do not silently work around it.",
+   "gm_escalation": "QA results go to the Studio GM after every build.",
+   "leon_escalation": "Any failed voice flow on the served site, or a deploy that did not land.",
+   "output": "Transcription verification on every build",
+   "route": "interview/transcribe"
+  },
+  {
+   "project": "Interview Studio",
+   "name": "User Research Agent",
+   "kind": "Specialist",
+   "task": "Synthesize test feedback from studio sessions",
+   "cadence": "After sessions Leon runs; on demand",
+   "scope": "Works only from sessions and feedback Leon provides. Free-tier Gemini caveat applies to content: keep sensitive client details out of interviews, since free-tier prompts may be used by Google to improve products.",
+   "gm_escalation": "Syntheses go to the Studio GM.",
+   "leon_escalation": "A recurring friction point across three or more sessions.",
+   "output": "Session themes and problem evidence",
+   "route": "interview/research"
+  },
+  {
+   "project": "Leave It to Bum Bum",
+   "name": "Analytics Agent",
+   "kind": "Specialist",
+   "task": "Watch traffic for anomalies against the trailing baseline once the data feed is restored",
+   "cadence": "PAUSED - resumes when PostHog access works",
+   "scope": "Blocked: the PostHog key returned 401 on Nov 12 and Leon parked it. When live: hourly checks, report only real anomalies (a tool's traffic falling off a cliff, a sudden spike worth feeding).",
+   "gm_escalation": "Anomalies would be reported in the nightly rollup as well as immediately.",
+   "leon_escalation": "Only genuine anomalies once running; today, nothing - the pause is Leon's call to lift.",
+   "output": "Traffic and conversion anomaly flags (paused until PostHog access works)",
+   "route": "bum/analytics"
+  },
+  {
+   "project": "Leave It to Bum Bum",
+   "name": "Copywriting Agent",
+   "kind": "Specialist",
+   "task": "Draft copy from the queue (tool pages, alternatives pages, listings) in the Bum Bum brand voice",
+   "cadence": "Daily, 4:00 PM queue check",
+   "scope": "Drafts only; publishes nothing, ever. Voice rules are hard: no em dashes, no formulaic contrast writing, Exclusion Rule on metaphors, no tool counts, no invented numbers. Leon approves every draft in chat.",
+   "gm_escalation": "Drafts awaiting approval are listed in the nightly rollup until Leon rules on them.",
+   "leon_escalation": "Every finished draft (approval is Leon's step), plus any brief missing a fact the copy needs.",
+   "output": "Drafts from the copy queue in brand voice; the agent never publishes",
+   "route": "bum/copy"
+  },
+  {
+   "project": "Leave It to Bum Bum",
+   "name": "Growth Experiments Agent",
+   "kind": "Specialist",
+   "task": "Design acquisition experiments and grade them on realism before anything is built",
+   "cadence": "On demand only",
+   "scope": "Every proposal graded on feasibility, what REN can build directly, what needs budget or Leon's time. Paid Meta/Instagram is closed (Leon's account is permanently disabled); organic and search channels only.",
+   "gm_escalation": "Proposals and results go through the Pet Pet GM rollup.",
+   "leon_escalation": "Any experiment needing budget, a new channel, or Leon's own time commitment.",
+   "output": "Test proposals with success criteria, for Leon to approve",
+   "route": "bum/experiments"
+  },
+  {
+   "project": "Leave It to Bum Bum",
+   "name": "Pet Pet · General Manager",
+   "kind": "GM",
+   "task": "Publish the fleet rollup: what each Bum Bum agent did, what waits on Leon, any failures",
+   "cadence": "Daily rollup, 8:30 PM",
+   "scope": "Coordinates the Bum Bum branch agents (QA, competitor watch, copy, scout) from their shared ledger. Reports only what agents actually logged; an unupdated ledger is reported as 'no report filed'.",
+   "gm_escalation": "n/a - branch GM. Escalates to Leon via the rollup and to REN in chat for anything urgent.",
+   "leon_escalation": "Any agent failure, two agents disagreeing, or anything waiting on Leon's approval at rollup time.",
+   "output": "Daily rollup of fleet and specialist output, next priorities, escalations",
+   "route": "bum/gm"
+  },
+  {
+   "project": "Leave It to Bum Bum",
+   "name": "Product Agent",
+   "kind": "Specialist",
+   "task": "Prioritize microtool requests and UX friction; run the prebuild check before anything is built",
+   "cadence": "On demand only",
+   "scope": "Before a build: confirm audience fit, the input model users picture, per-use cost, and the tangible output. Any tool whose per-use AI cost breaks the actions pricing needs Leon's explicit pricing decision first. Build staging first, always.",
+   "gm_escalation": "Build queue changes surface in the nightly rollup.",
+   "leon_escalation": "Pricing decisions, scope changes to a tool mid-build, and any deploy (production needs Leon's go with the exact domain named).",
+   "output": "Tool specs and prioritization notes",
+   "route": "bum/product"
+  },
+  {
+   "project": "Leave It to Bum Bum",
+   "name": "QA Agent",
+   "kind": "Specialist",
+   "task": "Run functional checks on production: key pages, tool pages, registry, JSON endpoints",
+   "cadence": "Daily, 7:15 AM; on every release",
+   "scope": "leaveittobumbum.com production only. Observes and reports; never edits code, never deploys. A page returning 200 with wrong content counts as a failure. Silent when everything passes.",
+   "gm_escalation": "Failures also land in the Pet Pet GM rollup the same evening.",
+   "leon_escalation": "Any failure or regression, with the URL, what was expected, and what came back.",
+   "output": "Pass/fail report with evidence; silent when everything passes",
+   "route": "bum/qa"
+  },
+  {
+   "project": "Leave It to Bum Bum",
+   "name": "SEO + AEO Agent",
+   "kind": "Specialist",
+   "task": "Monitor organic search and AI answer visibility; run indexing requests and technical fixes during sprints",
+   "cadence": "On demand; SEO sprint days; one-off indexing follow-ups as scheduled",
+   "scope": "Exact-intent tool pages are the strategy (PDF cluster first). Judge results by return visits (30-day return rate, second-tool rate, signups per 1,000 visits), not raw clicks. Indexing requests respect Google's daily quota.",
+   "gm_escalation": "Sprint progress and indexing outcomes go in the nightly rollup.",
+   "leon_escalation": "Indexing quota blocks, a page dropping out of the index, or anything needing Leon's signed-in Search Console session.",
+   "output": "Audits, indexing follow-ups, alternatives and hub pages",
+   "route": "bum/seo"
+  },
+  {
+   "project": "Quartermaster",
+   "name": "Account Intelligence Agent",
+   "kind": "Specialist",
+   "task": "Build the account brief: what the company does, who the marketing leader is, why a dinner fits",
+   "cadence": "Event-triggered by an approved intent signal",
+   "scope": "Apollo people search is free; the LinkedIn URL comes from enrichment at roughly 1 credit per person, and enrichment spend follows the estimate-then-confirm rule.",
+   "gm_escalation": "Briefs go to the Events GM before any outreach draft is written.",
+   "leon_escalation": "Enrichment spend beyond a pre-approved estimate, or a brief that contradicts Attio.",
+   "output": "Account research briefs with fit and intent evidence",
+   "route": "quartermaster/account-intel"
+  },
+  {
+   "project": "Quartermaster",
+   "name": "Events GM",
+   "kind": "GM",
+   "task": "Review output from the Quartermaster specialists and keep the dinner pipeline moving",
+   "cadence": "Daily review; on demand for deal work",
+   "scope": "Attio is the source of truth; Sheets is a quick mirror. REN does everything except the send click: ranking and drafting outreach in batches of 25 is Leon's-send-only. Two price lanes never mix: platform $249/mo per workspace (+$99 per extra user, 14-day trial) for software directories; dinners start at $17,500 for agency buyers.",
+   "gm_escalation": "n/a - branch GM. Escalates to Leon.",
+   "leon_escalation": "Send-ready batches, replies from prospects, pricing or scope questions (the Jonathan $12K counter needs the fee split with Adrian and the currency pinned first).",
+   "output": "Pipeline and event readiness summary, escalations",
+   "route": "quartermaster/gm"
+  },
+  {
+   "project": "Quartermaster",
+   "name": "Outreach Agent",
+   "kind": "Specialist",
+   "task": "Draft outreach messages in the Operator's Manifesto voice",
+   "cadence": "On demand; batches drafted for Leon's send",
+   "scope": "Drafts only - Gmail drafts never send; Leon clicks send. Voice: operator, not commentator; specific detail; no invented results; no em dashes anywhere in Quartermaster copy. No compliant LinkedIn automation exists; do not propose any.",
+   "gm_escalation": "Batches are delivered through the Events GM.",
+   "leon_escalation": "Every finished batch (send-ready), and any draft needing a fact only Leon has.",
+   "output": "Outreach drafts in batches, ready for Leon's send click",
+   "route": "quartermaster/outreach"
+  },
+  {
+   "project": "Quartermaster",
+   "name": "Product Marketing Agent",
+   "kind": "Specialist",
+   "task": "Watch competitor movement in the executive-events market",
+   "cadence": "Weekly scan; on demand",
+   "scope": "Public sources only; attendance claims labelled by source; a human accuracy pass before anything reaches Leon as fact. Proof before scale: one hand-checked sample before any tooling gets built.",
+   "gm_escalation": "Findings go to the Events GM weekly.",
+   "leon_escalation": "A competitor event that collides with a live Quartermaster dinner or a named prospect's own event.",
+   "output": "Positioning and competitor scan notes",
+   "route": "quartermaster/product-marketing"
+  },
+  {
+   "project": "Quartermaster",
+   "name": "SEO + AEO Agent",
+   "kind": "Specialist",
+   "task": "Directory listings and search presence for Quartermaster Studio",
+   "cadence": "On demand only",
+   "scope": "Directory rule is hard: if a profile already exists, do not claim it - leave it and report it. Completed vs submitted vs in-flight are reported as separate counts; a listing in a review queue is not a live backlink. Public HQ: 2 Embarcadero Center, Floor 8, San Francisco; contact leon@quartermaster.studio.",
+   "gm_escalation": "Listing status changes go to the Events GM.",
+   "leon_escalation": "Any listing needing Leon's own submission, payment, or identity verification.",
+   "output": "Search and AI-answer visibility notes",
+   "route": "quartermaster/seo"
+  },
+  {
+   "project": "Quartermaster",
+   "name": "Social Listening Agent",
+   "kind": "Specialist",
+   "task": "Check intent signals: teams hiring field marketers, event-role postings, dinner-format interest",
+   "cadence": "Mondays and Wednesdays",
+   "scope": "Signals feed the Account Intelligence Agent; no outreach is drafted from a signal until the Events GM approves the account.",
+   "gm_escalation": "All signals route to the Events GM.",
+   "leon_escalation": "A signal tied to a company already in the Attio pipeline.",
+   "output": "Relevant conversation flags, Mondays and Wednesdays",
+   "route": "quartermaster/social-listening"
+  }
+ ],
+ "task_log": [
+  {
+   "route": "creative/video",
+   "project": "creative",
+   "agent": "Runpod stock scout",
+   "date": "2026-11-13",
+   "time": "11:24",
+   "title": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
+   "status": "completed",
+   "note": "US-IL-1: none for 4090/A6000; EUR-IS-1: none; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "deliverable": "",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/qa",
+   "project": "bum",
+   "agent": "Fleet QA check",
+   "date": "2026-11-13",
+   "time": "",
+   "title": "Scheduled agent stood up",
+   "status": "completed",
+   "note": "Daily 7:15 AM. Stood up Nov 13, 2026 as part of the always-on fleet.",
+   "deliverable": "Scheduled agent stood up",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/qa",
+   "project": "bum",
+   "agent": "Fleet E2E suite",
+   "date": "2026-11-13",
+   "time": "",
+   "title": "Scheduled agent stood up",
+   "status": "completed",
+   "note": "Daily 9:00 AM. Stood up Nov 13, 2026 as part of the always-on fleet.",
+   "deliverable": "Scheduled agent stood up",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/seo",
+   "project": "bum",
+   "agent": "Fleet competitor watch",
+   "date": "2026-11-13",
+   "time": "",
+   "title": "Scheduled agent stood up",
+   "status": "completed",
+   "note": "Mondays 9:00 AM. Stood up Nov 13, 2026 as part of the always-on fleet.",
+   "deliverable": "Scheduled agent stood up",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/copy",
+   "project": "bum",
+   "agent": "Fleet copy queue",
+   "date": "2026-11-13",
+   "time": "",
+   "title": "Scheduled agent stood up",
+   "status": "completed",
+   "note": "Daily 4:00 PM. Stood up Nov 13, 2026 as part of the always-on fleet.",
+   "deliverable": "Scheduled agent stood up",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/gm",
+   "project": "bum",
+   "agent": "Fleet manager rollup",
+   "date": "2026-11-13",
+   "time": "",
+   "title": "Scheduled agent stood up",
+   "status": "completed",
+   "note": "Daily 8:30 PM. Stood up Nov 13, 2026 as part of the always-on fleet.",
+   "deliverable": "Scheduled agent stood up",
+   "type": "Fleet"
+  },
+  {
+   "route": "creative/video",
+   "project": "creative",
+   "agent": "Runpod stock scout",
+   "date": "2026-11-13",
+   "time": "",
+   "title": "Scheduled agent stood up",
+   "status": "completed",
+   "note": "Hourly. Stood up Nov 13, 2026 as part of the always-on fleet.",
+   "deliverable": "Scheduled agent stood up",
+   "type": "Fleet"
+  }
+ ],
+ "activity": [
+  {
+   "id": 1,
+   "project": "creative",
+   "type": "analysis",
+   "agent": "Runpod Scout",
+   "title": "GPU stock check: US-IL-1 unavailable",
+   "description": "Prices unchanged vs Nov 13 reference (4090 Secure $0.89/hr, Community $0.34/hr; A6000 Secure $0.69/hr, Community $0.33/hr). Catalog shows stock: A6000 LOW in EU-SE-1 only; 4090 unavailable in all three watched datacenters; neither card in US-IL-1 or EUR-IS-1. Same availability as previous check at 10:23 EST (A6000 EU-SE-1 LOW was already present). No alert trigger.",
+   "time": "2026-11-13 · 11:24"
+  },
+  {
+   "id": 2,
+   "project": "bum",
+   "type": "ship",
+   "agent": "Manager Rollup",
+   "title": "Always-on agent fleet stood up",
+   "description": "Six scheduled agents went live on Nov 13, 2026: QA (daily 7:15 AM), E2E suite (daily 9:00 AM), competitor watch (Mondays 9:00 AM), copy queue (daily 4:00 PM), manager rollup (daily 8:30 PM), and the Runpod scout (hourly). Each writes to a shared ledger that feeds this page.",
+   "time": "2026-11-13 · "
+  }
+ ],
+ "alerts": [
+  {
+   "id": "creative",
+   "severity": "review",
+   "title": "GPU stock unavailable in US-IL-1",
+   "desc": "US-IL-1: none for 4090/A6000; EUR-IS-1: none; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)"
+  }
+ ],
+ "fleet": [
+  {
+   "key": "qa",
+   "name": "Fleet QA check",
+   "project": "bum",
+   "cadence": "Daily 7:15 AM",
+   "state": "idle",
+   "last_run": null,
+   "current_task": "Not yet run",
+   "summary": "Stood up Nov 13, 2026. First run pending.",
+   "deliverables": []
+  },
+  {
+   "key": "e2e",
+   "name": "Fleet E2E suite",
+   "project": "bum",
+   "cadence": "Daily 9:00 AM",
+   "state": "idle",
+   "last_run": null,
+   "current_task": "Not yet run",
+   "summary": "Stood up Nov 13, 2026. Runs the Playwright suite (smoke + weekly) against staging daily at 9 AM.",
+   "deliverables": []
+  },
+  {
+   "key": "competitor",
+   "name": "Fleet competitor watch",
+   "project": "bum",
+   "cadence": "Mondays 9:00 AM",
+   "state": "idle",
+   "last_run": null,
+   "current_task": "Not yet run",
+   "summary": "Stood up Nov 13, 2026. First run pending.",
+   "deliverables": []
+  },
+  {
+   "key": "copy",
+   "name": "Fleet copy queue",
+   "project": "bum",
+   "cadence": "Daily 4:00 PM",
+   "state": "idle",
+   "last_run": null,
+   "current_task": "Not yet run",
+   "summary": "Stood up Nov 13, 2026. First run pending.",
+   "deliverables": []
+  },
+  {
+   "key": "manager",
+   "name": "Fleet manager rollup",
+   "project": "bum",
+   "cadence": "Daily 8:30 PM",
+   "state": "idle",
+   "last_run": null,
+   "current_task": "Not yet run",
+   "summary": "Stood up Nov 13, 2026. First run pending.",
+   "deliverables": []
+  },
+  {
+   "key": "runpod",
+   "name": "Runpod stock scout",
+   "project": "creative",
+   "cadence": "Hourly",
+   "state": "idle",
+   "last_run": "2026-11-13T11:24:02-05:00",
+   "current_task": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
+   "summary": "US-IL-1: none for 4090/A6000; EUR-IS-1: none; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "deliverables": []
+  }
+ ]
+}

@@ -65,7 +65,7 @@ function require_page_auth(PDO $pdo): void {
         exit;
     }
     if (!is_logged_in()) {
-        header('Location: ' . APP_BASE_PATH . '/login.php');
+        header('Location: ' . APP_BASE_PATH . '/login/');
         exit;
     }
 }

@@ -16,7 +16,7 @@ if (!empty($GLOBALS['CONFIG_MISSING']) || $pdo === null) {
     exit;
 }
 if (admin_exists($pdo)) {
-    header('Location: ' . APP_BASE_PATH . '/login.php');
+    header('Location: ' . APP_BASE_PATH . '/login/');
     exit;
 }
 $error = $_GET['error'] ?? '';

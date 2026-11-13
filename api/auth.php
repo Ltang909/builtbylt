@@ -26,7 +26,7 @@ if ($action === 'me') {
 
 if ($action === 'setup') {
     if (admin_exists($pdo)) {
-        header('Location: ' . APP_BASE_PATH . '/login.php');
+        header('Location: ' . APP_BASE_PATH . '/login/');
         exit;
     }
     $password = (string)($_POST['password'] ?? '');
@@ -38,7 +38,7 @@ if ($action === 'setup') {
         'INSERT INTO panel_admin (password_hash) VALUES (?)');
     $stmt->execute([password_hash($password, PASSWORD_DEFAULT)]);
     do_login_session();
-    header('Location: ' . APP_BASE_PATH . '/');
+    header('Location: ' . APP_BASE_PATH . '/index.php');
     exit;
 }
 
@@ -52,16 +52,16 @@ if ($action === 'login') {
                ->fetch(PDO::FETCH_ASSOC);
     if ($row !== false && password_verify($password, (string)$row['password_hash'])) {
         do_login_session();
-        header('Location: ' . APP_BASE_PATH . '/');
+        header('Location: ' . APP_BASE_PATH . '/index.php');
         exit;
     }
-    header('Location: ' . APP_BASE_PATH . '/login.php?error=1');
+    header('Location: ' . APP_BASE_PATH . '/login/?error=1');
     exit;
 }
 
 if ($action === 'logout') {
     do_logout_session();
-    header('Location: ' . APP_BASE_PATH . '/login.php');
+    header('Location: ' . APP_BASE_PATH . '/login/');
     exit;
 }
 

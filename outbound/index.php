@@ -20,7 +20,7 @@ if (!admin_exists($pdo)) {
     exit;
 }
 if (!is_logged_in()) {
-    header('Location: ../login.php');
+    header('Location: ../login/');
     exit;
 }
 ?>

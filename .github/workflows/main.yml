@@ -22,7 +22,7 @@ jobs:
           password: ${{ secrets.name_password }}
           port: ${{ secrets.hostinger_port }}
           # v1 has no exclude input, so list only deployable app files.
-          source: "index.php,favicon.ico,lib.php,login.php,setup.php,api,app.js,app.css,.user.ini,lib,assets,uploads,.htaccess,storage,private-config.example.php,README.md,outbound,interview-studio,private-config.interview-studio.example.php"
+          source: "index.php,index.html,hq.js,hq-data.json,agent-roster.csv,favicon.ico,lib.php,login.php,login,setup.php,api,app.js,app.css,.user.ini,lib,assets,uploads,.htaccess,storage,private-config.example.php,README.md,outbound,interview-studio,private-config.interview-studio.example.php"
           target: "domains/builtbylt.com/public_html"
           overwrite: true
           rm: false
