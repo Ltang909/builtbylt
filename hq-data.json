@@ -1,7 +1,7 @@
 {
  "meta": {
-  "generated_at": "2026-11-13T12:07:46-05:00",
-  "generated_display": "Nov 13, 2026 · 12:07 PM EST",
+  "generated_at": "2026-11-13T17:12:05+00:00",
+  "generated_display": "Nov 13, 2026 · 05:12 PM UTC",
   "today": "2026-11-13",
   "fleet_launch": "2026-11-13",
   "version": "1.0"
@@ -55,6 +55,8 @@
      "state": "review",
      "label": "Paused",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -64,8 +66,10 @@
      "focus": "Draft copy from the queue (tool pages, alternatives pages, listings) in the Bum Bum brand voice",
      "state": "working",
      "label": "Scheduled · Daily 4:00 PM queue check",
-     "actions": 1,
-     "last": "Daily 4:00 PM. Stood up Nov 13, 2026 as part of the always-on fleet.",
+     "actions": 2,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
+     "last": "Queue empty on 2026-11-13 run; no drafts created.",
      "quality": ""
     },
     {
@@ -75,6 +79,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -85,6 +91,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -95,6 +103,8 @@
      "state": "working",
      "label": "Scheduled · QA 7:15 AM + E2E 9:00 AM",
      "actions": 2,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "Daily 7:15 AM. Stood up Nov 13, 2026 as part of the always-on fleet.",
      "quality": ""
     },
@@ -105,6 +115,8 @@
      "state": "working",
      "label": "On demand · Competitor watch Mondays 9:00 AM",
      "actions": 1,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "Mondays 9:00 AM. Stood up Nov 13, 2026 as part of the always-on fleet.",
      "quality": ""
     }
@@ -158,6 +170,8 @@
      "state": "idle",
      "label": "Event-triggered",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -168,6 +182,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -178,6 +194,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -188,6 +206,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -198,6 +218,8 @@
      "state": "idle",
      "label": "Scheduled",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     }
@@ -251,6 +273,8 @@
      "state": "idle",
      "label": "QA gate · Runs on every asset",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -261,6 +285,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -271,6 +297,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -281,6 +309,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -291,6 +321,8 @@
      "state": "working",
      "label": "On demand · Runpod scout checks GPU stock hourly",
      "actions": 2,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "US-IL-1: none for 4090/A6000; EUR-IS-1: none; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
      "quality": ""
     }
@@ -344,6 +376,8 @@
      "state": "idle",
      "label": "QA gate · Runs on checks and builds",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -354,6 +388,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -364,6 +400,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -374,6 +412,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -384,6 +424,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     }
@@ -437,6 +479,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -447,6 +491,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -457,6 +503,8 @@
      "state": "idle",
      "label": "QA gate · Runs on checks and builds",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -467,6 +515,8 @@
      "state": "idle",
      "label": "Session-triggered",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     }
@@ -520,6 +570,8 @@
      "state": "idle",
      "label": "Scheduled · Inside the daily sweep",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -530,6 +582,8 @@
      "state": "idle",
      "label": "On demand",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -540,6 +594,8 @@
      "state": "idle",
      "label": "Scheduled",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     },
@@ -550,6 +606,8 @@
      "state": "idle",
      "label": "Scheduled · Inside the daily sweep",
      "actions": 0,
+     "tasks_24h": 0,
+     "tasks_7d": 0,
      "last": "",
      "quality": ""
     }
@@ -567,7 +625,9 @@
    "gm_escalation": "Pre-send checks report to the Outbound GM.",
    "leon_escalation": "Anything that would risk the sending domain or an account: limit breaches, hygiene failures, bounce spikes.",
    "output": "Pre-send safety verdict: limits, hygiene, draft integrity",
-   "route": "outbound/deliver"
+   "route": "outbound/deliver",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Agentic Outbound",
@@ -579,7 +639,9 @@
    "gm_escalation": "Completed enrichments report to the Outbound GM with actual credits spent.",
    "leon_escalation": "Every enrichment batch before it runs (estimate first), and any batch that would exceed the monthly budget.",
    "output": "Enriched records, behind an approved credit estimate",
-   "route": "outbound/enrich"
+   "route": "outbound/enrich",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Agentic Outbound",
@@ -591,7 +653,9 @@
    "gm_escalation": "Run results go to the Outbound GM.",
    "leon_escalation": "A segment that needs enrichment spend to be usable.",
    "output": "Account lists matched to ICP rules",
-   "route": "outbound/icp"
+   "route": "outbound/icp",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Agentic Outbound",
@@ -603,7 +667,9 @@
    "gm_escalation": "n/a - branch GM for outbound. Reports to Leon in chat.",
    "leon_escalation": "Anything needing spend approval, a send decision, or his setup steps.",
    "output": "Outreach readiness and deliverability summary",
-   "route": "outbound/gm"
+   "route": "outbound/gm",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Agentic Outbound",
@@ -615,7 +681,9 @@
    "gm_escalation": "Classifications surface to the Outbound GM during Leon's sessions.",
    "leon_escalation": "A hot reply, a meeting request, or anything time-sensitive.",
    "output": "Replies tagged by intent, with follow-up routing",
-   "route": "outbound/reply"
+   "route": "outbound/reply",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Agentic Outbound",
@@ -627,7 +695,9 @@
    "gm_escalation": "Drafts go through the Outbound GM.",
    "leon_escalation": "Finished drafts ready for his send, or a sequence blocked on the missing outreach link.",
    "output": "Outreach drafts and follow-up sequences for approval",
-   "route": "outbound/sequence"
+   "route": "outbound/sequence",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Career Research",
@@ -639,7 +709,9 @@
    "gm_escalation": "Every scored lead goes to the Research GM with the sweep results.",
    "leon_escalation": "A lead that looks strong on title but fails on scope, or an eligibility question only Leon can answer.",
    "output": "Fit briefs comparing roles to Leon's record",
-   "route": "career/job-match"
+   "route": "career/job-match",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Career Research",
@@ -651,7 +723,9 @@
    "gm_escalation": "Drafts and open loops surface in the Research GM's morning review.",
    "leon_escalation": "A reply that needs a decision, a deadline inside 48 hours, or a thread that has gone quiet past its expected decision window.",
    "output": "Follow-up drafts with context, for Leon to send",
-   "route": "career/job-follow"
+   "route": "career/job-follow",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Career Research",
@@ -663,7 +737,9 @@
    "gm_escalation": "All new leads, dedupe conflicts, and drafted resumes route through the Research GM's morning review.",
    "leon_escalation": "Exceptional fits worth same-day action, postings about to expire, and any day LinkedIn blocks the scan (fall back to ATS boards and say so).",
    "output": "ATS-verified role leads from the daily sweep",
-   "route": "career/job-scout"
+   "route": "career/job-scout",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Career Research",
@@ -675,7 +751,9 @@
    "gm_escalation": "Finished drafts are reported with the sweep so the Research GM can queue Leon's submissions.",
    "leon_escalation": "A posting asking for experience the base resume does not document (name the gap, never paper over it).",
    "output": "Tailored resume drafts in Drive, linked in the tracker",
-   "route": "career/job-materials"
+   "route": "career/job-materials",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Career Research",
@@ -687,7 +765,9 @@
    "gm_escalation": "n/a - this is the GM for Career Research. Escalates directly to Leon.",
    "leon_escalation": "Interview decisions, rejections, comp questions, and anything that changes the submission queue order or a deadline (e.g. League by Nov 16).",
    "output": "Morning review: yesterday graded from Leon's own log, today's top priorities",
-   "route": "career/gm"
+   "route": "career/gm",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Creative Experiments",
@@ -699,7 +779,9 @@
    "gm_escalation": "Consistency failures go to the Creative GM with the asset.",
    "leon_escalation": "Any asset where a cat's look drifts from the cards, before it ships or posts.",
    "output": "Consistency verdicts on every creative asset",
-   "route": "creative/creative-qa"
+   "route": "creative/creative-qa",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Creative Experiments",
@@ -711,7 +793,9 @@
    "gm_escalation": "n/a - branch GM. Reports to Leon directly in chat.",
    "leon_escalation": "Any spend decision, a tranche cap within reach, or a quality call on final clips.",
    "output": "Creative pipeline summary and quality escalations",
-   "route": "creative/gm"
+   "route": "creative/gm",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Creative Experiments",
@@ -723,7 +807,9 @@
    "gm_escalation": "Publishing readiness is reported to the Creative GM.",
    "leon_escalation": "When a batch is post-ready, or a platform rule threatens an account.",
    "output": "Channel-ready exports and captions, ready to post",
-   "route": "creative/distribution"
+   "route": "creative/distribution",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Creative Experiments",
@@ -735,7 +821,9 @@
    "gm_escalation": "Script readiness is reported to the Creative GM when a batch is being assembled.",
    "leon_escalation": "A script that cannot fit 15 seconds as written, with the exact overage.",
    "output": "Timing and word-count checks on Leon's scripts (35-40 words per clip)",
-   "route": "creative/script"
+   "route": "creative/script",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Creative Experiments",
@@ -747,7 +835,9 @@
    "gm_escalation": "Plans go to the Creative GM with the batch proposal.",
    "leon_escalation": "A script whose shots exceed what a single generation can hold, before any render money is spent.",
    "output": "Shot lists and sequence plans",
-   "route": "creative/story"
+   "route": "creative/story",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Creative Experiments",
@@ -759,7 +849,9 @@
    "gm_escalation": "Session results and spend go to the Creative GM the same day.",
    "leon_escalation": "GPU stock blocks, spend approaching a tranche cap, or a finished batch ready for his review. Finished clips are delivered in chat, watchable, not as a report about clips.",
    "output": "Rendered clips with QC results, inside the batch budget rules",
-   "route": "creative/video"
+   "route": "creative/video",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Interview Studio",
@@ -771,7 +863,9 @@
    "gm_escalation": "Evaluations go to the Studio GM.",
    "leon_escalation": "Prompt changes that would alter the editorial bar, before they ship.",
    "output": "Interview flow and follow-up question quality notes",
-   "route": "interview/dialogue"
+   "route": "interview/dialogue",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Interview Studio",
@@ -783,7 +877,9 @@
    "gm_escalation": "Proposals go to the Studio GM.",
    "leon_escalation": "Any change touching shared builtbylt code or headers.",
    "output": "Flow designs and scoped feature specs",
-   "route": "interview/studio-product"
+   "route": "interview/studio-product",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Interview Studio",
@@ -795,7 +891,9 @@
    "gm_escalation": "n/a - branch GM. Reports to Leon in chat.",
    "leon_escalation": "Decisions only he can make (model choice, header change), and any production issue.",
    "output": "Build and learning summary, open decisions for Leon",
-   "route": "interview/gm"
+   "route": "interview/gm",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Interview Studio",
@@ -807,7 +905,9 @@
    "gm_escalation": "QA results go to the Studio GM after every build.",
    "leon_escalation": "Any failed voice flow on the served site, or a deploy that did not land.",
    "output": "Transcription verification on every build",
-   "route": "interview/transcribe"
+   "route": "interview/transcribe",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Interview Studio",
@@ -819,7 +919,9 @@
    "gm_escalation": "Syntheses go to the Studio GM.",
    "leon_escalation": "A recurring friction point across three or more sessions.",
    "output": "Session themes and problem evidence",
-   "route": "interview/research"
+   "route": "interview/research",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Leave It to Bum Bum",
@@ -831,7 +933,9 @@
    "gm_escalation": "Anomalies would be reported in the nightly rollup as well as immediately.",
    "leon_escalation": "Only genuine anomalies once running; today, nothing - the pause is Leon's call to lift.",
    "output": "Traffic and conversion anomaly flags (paused until PostHog access works)",
-   "route": "bum/analytics"
+   "route": "bum/analytics",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Leave It to Bum Bum",
@@ -843,7 +947,9 @@
    "gm_escalation": "Drafts awaiting approval are listed in the nightly rollup until Leon rules on them.",
    "leon_escalation": "Every finished draft (approval is Leon's step), plus any brief missing a fact the copy needs.",
    "output": "Drafts from the copy queue in brand voice; the agent never publishes",
-   "route": "bum/copy"
+   "route": "bum/copy",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Leave It to Bum Bum",
@@ -855,7 +961,9 @@
    "gm_escalation": "Proposals and results go through the Pet Pet GM rollup.",
    "leon_escalation": "Any experiment needing budget, a new channel, or Leon's own time commitment.",
    "output": "Test proposals with success criteria, for Leon to approve",
-   "route": "bum/experiments"
+   "route": "bum/experiments",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Leave It to Bum Bum",
@@ -867,7 +975,9 @@
    "gm_escalation": "n/a - branch GM. Escalates to Leon via the rollup and to REN in chat for anything urgent.",
    "leon_escalation": "Any agent failure, two agents disagreeing, or anything waiting on Leon's approval at rollup time.",
    "output": "Daily rollup of fleet and specialist output, next priorities, escalations",
-   "route": "bum/gm"
+   "route": "bum/gm",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Leave It to Bum Bum",
@@ -879,7 +989,9 @@
    "gm_escalation": "Build queue changes surface in the nightly rollup.",
    "leon_escalation": "Pricing decisions, scope changes to a tool mid-build, and any deploy (production needs Leon's go with the exact domain named).",
    "output": "Tool specs and prioritization notes",
-   "route": "bum/product"
+   "route": "bum/product",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Leave It to Bum Bum",
@@ -891,7 +1003,9 @@
    "gm_escalation": "Failures also land in the Pet Pet GM rollup the same evening.",
    "leon_escalation": "Any failure or regression, with the URL, what was expected, and what came back.",
    "output": "Pass/fail report with evidence; silent when everything passes",
-   "route": "bum/qa"
+   "route": "bum/qa",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Leave It to Bum Bum",
@@ -903,7 +1017,9 @@
    "gm_escalation": "Sprint progress and indexing outcomes go in the nightly rollup.",
    "leon_escalation": "Indexing quota blocks, a page dropping out of the index, or anything needing Leon's signed-in Search Console session.",
    "output": "Audits, indexing follow-ups, alternatives and hub pages",
-   "route": "bum/seo"
+   "route": "bum/seo",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Quartermaster",
@@ -915,7 +1031,9 @@
    "gm_escalation": "Briefs go to the Events GM before any outreach draft is written.",
    "leon_escalation": "Enrichment spend beyond a pre-approved estimate, or a brief that contradicts Attio.",
    "output": "Account research briefs with fit and intent evidence",
-   "route": "quartermaster/account-intel"
+   "route": "quartermaster/account-intel",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Quartermaster",
@@ -927,7 +1045,9 @@
    "gm_escalation": "n/a - branch GM. Escalates to Leon.",
    "leon_escalation": "Send-ready batches, replies from prospects, pricing or scope questions (the Jonathan $12K counter needs the fee split with Adrian and the currency pinned first).",
    "output": "Pipeline and event readiness summary, escalations",
-   "route": "quartermaster/gm"
+   "route": "quartermaster/gm",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Quartermaster",
@@ -939,7 +1059,9 @@
    "gm_escalation": "Batches are delivered through the Events GM.",
    "leon_escalation": "Every finished batch (send-ready), and any draft needing a fact only Leon has.",
    "output": "Outreach drafts in batches, ready for Leon's send click",
-   "route": "quartermaster/outreach"
+   "route": "quartermaster/outreach",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Quartermaster",
@@ -951,7 +1073,9 @@
    "gm_escalation": "Findings go to the Events GM weekly.",
    "leon_escalation": "A competitor event that collides with a live Quartermaster dinner or a named prospect's own event.",
    "output": "Positioning and competitor scan notes",
-   "route": "quartermaster/product-marketing"
+   "route": "quartermaster/product-marketing",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Quartermaster",
@@ -963,7 +1087,9 @@
    "gm_escalation": "Listing status changes go to the Events GM.",
    "leon_escalation": "Any listing needing Leon's own submission, payment, or identity verification.",
    "output": "Search and AI-answer visibility notes",
-   "route": "quartermaster/seo"
+   "route": "quartermaster/seo",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   },
   {
    "project": "Quartermaster",
@@ -975,10 +1101,24 @@
    "gm_escalation": "All signals route to the Events GM.",
    "leon_escalation": "A signal tied to a company already in the Attio pipeline.",
    "output": "Relevant conversation flags, Mondays and Wednesdays",
-   "route": "quartermaster/social-listening"
+   "route": "quartermaster/social-listening",
+   "tasks_24h": 0,
+   "tasks_7d": 0
   }
  ],
  "task_log": [
+  {
+   "route": "bum/copy",
+   "project": "bum",
+   "agent": "Fleet copy queue",
+   "date": "2026-11-13",
+   "time": "12:11",
+   "title": "None - copy queue empty",
+   "status": "completed",
+   "note": "Queue empty on 2026-11-13 run; no drafts created.",
+   "deliverable": "",
+   "type": "Fleet"
+  },
   {
    "route": "creative/video",
    "project": "bum",
@@ -1132,9 +1272,9 @@
    "project": "bum",
    "cadence": "Daily 4:00 PM",
    "state": "idle",
-   "last_run": null,
-   "current_task": "Not yet run",
-   "summary": "Stood up Nov 13, 2026. First run pending.",
+   "last_run": "2026-11-13T12:11:28-05:00",
+   "current_task": "None - copy queue empty",
+   "summary": "Queue empty on 2026-11-13 run; no drafts created.",
    "deliverables": []
   },
   {
