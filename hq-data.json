@@ -1,7 +1,7 @@
 {
  "meta": {
-  "generated_at": "2026-11-13T16:24:27+00:00",
-  "generated_display": "Nov 13, 2026 · 04:24 PM UTC",
+  "generated_at": "2026-11-13T17:01:27+00:00",
+  "generated_display": "Nov 13, 2026 · 05:01 PM UTC",
   "today": "2026-11-13",
   "fleet_launch": "2026-11-13",
   "version": "1.0"
@@ -1158,6 +1158,26 @@
    "current_task": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
    "summary": "US-IL-1: none for 4090/A6000; EUR-IS-1: none; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
    "deliverables": []
+  }
+ ],
+ "waiting": [
+  {
+   "title": "Desk E2E tests: rewrite or drop",
+   "detail": "12 weekly tests assert front-desk behavior the November rebuild retired on purpose. Decide: rewrite them against the new tool-first desk, or drop them from the suite.",
+   "since": "2026-11-13",
+   "source": "E2E agent"
+  },
+  {
+   "title": "Push the extended E2E suite",
+   "detail": "The all-tools extension (commit d9e9933) is committed locally in the bumbum-e2e clone but not pushed. Pushing it to GitHub needs your go.",
+   "since": "2026-11-13",
+   "source": "E2E agent"
+  },
+  {
+   "title": "Create a Day Log test account",
+   "detail": "The signed-in Day Log E2E flow is written but skips itself: no dedicated test account exists. Creating one closes the last uncovered flow.",
+   "since": "2026-11-13",
+   "source": "E2E agent"
   }
  ]
 }
