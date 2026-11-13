@@ -1,7 +1,7 @@
 {
  "meta": {
-  "generated_at": "2026-11-13T17:12:05+00:00",
-  "generated_display": "Nov 13, 2026 · 05:12 PM UTC",
+  "generated_at": "2026-11-13T12:20:10-05:00",
+  "generated_display": "Nov 13, 2026 · 12:20 PM EST",
   "today": "2026-11-13",
   "fleet_launch": "2026-11-13",
   "version": "1.0"
@@ -102,10 +102,10 @@
      "focus": "Run functional checks on production: key pages, tool pages, registry, JSON endpoints",
      "state": "working",
      "label": "Scheduled · QA 7:15 AM + E2E 9:00 AM",
-     "actions": 2,
+     "actions": 3,
      "tasks_24h": 0,
      "tasks_7d": 0,
-     "last": "Daily 7:15 AM. Stood up Nov 13, 2026 as part of the always-on fleet.",
+     "last": "All 11 URLs returned 200; homepage lede present; registry.json valid JSON; pdf-merger FAQ JSON-LD present.",
      "quality": ""
     },
     {
@@ -114,10 +114,10 @@
      "focus": "Monitor organic search and AI answer visibility; run indexing requests and technical fixes during sprints",
      "state": "working",
      "label": "On demand · Competitor watch Mondays 9:00 AM",
-     "actions": 1,
+     "actions": 2,
      "tasks_24h": 0,
      "tasks_7d": 0,
-     "last": "Mondays 9:00 AM. Stood up Nov 13, 2026 as part of the always-on fleet.",
+     "last": "Baseline snapshots created for TinyWow, iLovePDF, Smallpdf, Sejda, PDF24 and remove.bg alternatives; no prior week to diff, remove.bg shutdown confirmed Dec 1, 2026 9am CET.",
      "quality": ""
     }
    ]
@@ -323,7 +323,7 @@
      "actions": 2,
      "tasks_24h": 0,
      "tasks_7d": 0,
-     "last": "US-IL-1: none for 4090/A6000; EUR-IS-1: none; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+     "last": "US-IL-1: Secure 4090 LOW (new, flickering), A6000 none; EUR-IS-1: none for 4090/A6000; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
      "quality": ""
     }
    ]
@@ -976,8 +976,8 @@
    "leon_escalation": "Any agent failure, two agents disagreeing, or anything waiting on Leon's approval at rollup time.",
    "output": "Daily rollup of fleet and specialist output, next priorities, escalations",
    "route": "bum/gm",
-   "tasks_24h": 0,
-   "tasks_7d": 0
+   "tasks_24h": 1,
+   "tasks_7d": 1
   },
   {
    "project": "Leave It to Bum Bum",
@@ -1108,6 +1108,66 @@
  ],
  "task_log": [
   {
+   "route": "bum/gm",
+   "project": "bum",
+   "agent": "Fleet manager rollup",
+   "date": "2026-11-13",
+   "time": "12:19",
+   "title": "Nightly fleet rollup completed",
+   "status": "completed",
+   "note": "Filed 2 Assignment Desk results (AEO check 0/10 Bum Bum mentions; HQ LinkedIn draft awaiting approval); QA, competitor, copy idle after first runs; Runpod scout flagged flickering LOW Secure 4090 stock in US-IL-1; E2E not yet run.",
+   "deliverable": "Fleet rollup 2026-11-13",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/gm",
+   "project": "bum",
+   "agent": "Fleet manager rollup",
+   "date": "2026-11-13",
+   "time": "12:19",
+   "title": "Fleet rollup 2026-11-13",
+   "status": "completed",
+   "note": "",
+   "deliverable": "Fleet rollup 2026-11-13",
+   "type": "Fleet"
+  },
+  {
+   "route": "creative/video",
+   "project": "bum",
+   "agent": "Runpod stock scout",
+   "date": "2026-11-13",
+   "time": "12:16",
+   "title": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
+   "status": "completed",
+   "note": "US-IL-1: Secure 4090 LOW (new, flickering), A6000 none; EUR-IS-1: none for 4090/A6000; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "deliverable": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/qa",
+   "project": "bum",
+   "agent": "Fleet QA check",
+   "date": "2026-11-13",
+   "time": "12:11",
+   "title": "Daily production health check completed - all checks passed",
+   "status": "completed",
+   "note": "All 11 URLs returned 200; homepage lede present; registry.json valid JSON; pdf-merger FAQ JSON-LD present.",
+   "deliverable": "",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/seo",
+   "project": "bum",
+   "agent": "Fleet competitor watch",
+   "date": "2026-11-13",
+   "time": "12:11",
+   "title": "Weekly competitor diff — baseline established, next run Monday",
+   "status": "completed",
+   "note": "Baseline snapshots created for TinyWow, iLovePDF, Smallpdf, Sejda, PDF24 and remove.bg alternatives; no prior week to diff, remove.bg shutdown confirmed Dec 1, 2026 9am CET.",
+   "deliverable": "",
+   "type": "Fleet"
+  },
+  {
    "route": "bum/copy",
    "project": "bum",
    "agent": "Fleet copy queue",
@@ -1116,18 +1176,6 @@
    "title": "None - copy queue empty",
    "status": "completed",
    "note": "Queue empty on 2026-11-13 run; no drafts created.",
-   "deliverable": "",
-   "type": "Fleet"
-  },
-  {
-   "route": "creative/video",
-   "project": "bum",
-   "agent": "Runpod stock scout",
-   "date": "2026-11-13",
-   "time": "11:24",
-   "title": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
-   "status": "completed",
-   "note": "US-IL-1: none for 4090/A6000; EUR-IS-1: none; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
    "deliverable": "",
    "type": "Fleet"
   },
@@ -1211,8 +1259,8 @@
    "type": "analysis",
    "agent": "Runpod Scout",
    "title": "GPU stock check: US-IL-1 unavailable",
-   "description": "Prices unchanged vs Nov 13 reference (4090 Secure $0.89/hr, Community $0.34/hr; A6000 Secure $0.69/hr, Community $0.33/hr). Catalog shows stock: A6000 LOW in EU-SE-1 only; 4090 unavailable in all three watched datacenters; neither card in US-IL-1 or EUR-IS-1. Same availability as previous check at 10:23 EST (A6000 EU-SE-1 LOW was already present). No alert trigger.",
-   "time": "2026-11-13 · 11:24"
+   "description": "ALERT TRIGGER (a): Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 after being unavailable there in the 11:24 snapshot. Cross-checked repeatedly during this run via get_gpu(AVAILABILITY, POD) dataCenters and list-data-centers GPU_AVAILABILITY: US-IL-1 4090 LOW present in most reads (5 of 7 paired reads), flickering in/out at LOW level between reads, so stock is not guaranteed to convert to a real machine. Prices unchanged vs Nov 13 reference (4090 Secure $0.89/hr, Community $0.34/hr; A6000 Secure $0.69/hr, Community $0.33/hr). A6000 LOW in EU-SE-1 only (already present in previous snapshot, no new alert). EUR-IS-1: neither watched card. No separate Community-specific US-IL-1 listing returned by the catalog routes checked; community_us_il_1_available kept false.",
+   "time": "2026-11-13 · 12:16"
   },
   {
    "id": 2,
@@ -1222,16 +1270,27 @@
    "title": "Always-on agent fleet stood up",
    "description": "Six scheduled agents went live on Nov 13, 2026: QA (daily 7:15 AM), E2E suite (daily 9:00 AM), competitor watch (Mondays 9:00 AM), copy queue (daily 4:00 PM), manager rollup (daily 8:30 PM), and the Runpod scout (hourly). Each writes to a shared ledger that feeds this page.",
    "time": "2026-11-13 · "
-  }
- ],
- "alerts": [
+  },
   {
-   "id": "bum",
-   "severity": "review",
-   "title": "GPU stock unavailable in US-IL-1",
-   "desc": "US-IL-1: none for 4090/A6000; EUR-IS-1: none; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)"
+   "id": 3,
+   "project": "bum",
+   "type": "ship",
+   "agent": "Fleet manager rollup",
+   "title": "Fleet rollup 2026-11-13",
+   "description": "Filed 2 Assignment Desk results (AEO check 0/10 Bum Bum mentions; HQ LinkedIn draft awaiting approval); QA, competitor, copy idle after first runs; Runpod scout flagged flickering LOW Secure 4090 stock in US-IL-1; E2E not yet run.",
+   "time": "2026-11-13 · 12:19"
+  },
+  {
+   "id": 4,
+   "project": "bum",
+   "type": "ship",
+   "agent": "Runpod stock scout",
+   "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1",
+   "description": "US-IL-1: Secure 4090 LOW (new, flickering), A6000 none; EUR-IS-1: none for 4090/A6000; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "time": ""
   }
  ],
+ "alerts": [],
  "fleet": [
   {
    "key": "qa",
@@ -1239,9 +1298,9 @@
    "project": "bum",
    "cadence": "Daily 7:15 AM",
    "state": "idle",
-   "last_run": null,
-   "current_task": "Not yet run",
-   "summary": "Stood up Nov 13, 2026. First run pending.",
+   "last_run": "2026-11-13T12:11:28-05:00",
+   "current_task": "Daily production health check completed - all checks passed",
+   "summary": "All 11 URLs returned 200; homepage lede present; registry.json valid JSON; pdf-merger FAQ JSON-LD present.",
    "deliverables": []
   },
   {
@@ -1261,9 +1320,9 @@
    "project": "bum",
    "cadence": "Mondays 9:00 AM",
    "state": "idle",
-   "last_run": null,
-   "current_task": "Not yet run",
-   "summary": "Stood up Nov 13, 2026. First run pending.",
+   "last_run": "2026-11-13T12:11:28-05:00",
+   "current_task": "Weekly competitor diff — baseline established, next run Monday",
+   "summary": "Baseline snapshots created for TinyWow, iLovePDF, Smallpdf, Sejda, PDF24 and remove.bg alternatives; no prior week to diff, remove.bg shutdown confirmed Dec 1, 2026 9am CET.",
    "deliverables": []
   },
   {
@@ -1283,10 +1342,16 @@
    "project": "bum",
    "cadence": "Daily 8:30 PM",
    "state": "idle",
-   "last_run": null,
-   "current_task": "Not yet run",
-   "summary": "Stood up Nov 13, 2026. First run pending.",
-   "deliverables": []
+   "last_run": "2026-11-13T12:19:41-05:00",
+   "current_task": "Nightly fleet rollup completed",
+   "summary": "Filed 2 Assignment Desk results (AEO check 0/10 Bum Bum mentions; HQ LinkedIn draft awaiting approval); QA, competitor, copy idle after first runs; Runpod scout flagged flickering LOW Secure 4090 stock in US-IL-1; E2E not yet run.",
+   "deliverables": [
+    {
+     "title": "Fleet rollup 2026-11-13",
+     "at": "2026-11-13T12:19:41-05:00",
+     "link_or_path": ""
+    }
+   ]
   },
   {
    "key": "runpod",
@@ -1294,10 +1359,16 @@
    "project": "bum",
    "cadence": "Hourly",
    "state": "idle",
-   "last_run": "2026-11-13T11:24:02-05:00",
+   "last_run": "2026-11-13T12:16:17-05:00",
    "current_task": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
-   "summary": "US-IL-1: none for 4090/A6000; EUR-IS-1: none; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
-   "deliverables": []
+   "summary": "US-IL-1: Secure 4090 LOW (new, flickering), A6000 none; EUR-IS-1: none for 4090/A6000; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "deliverables": [
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1",
+     "at": null,
+     "link_or_path": ""
+    }
+   ]
   }
  ],
  "waiting": [
@@ -1318,6 +1389,12 @@
    "detail": "The signed-in Day Log E2E flow is written but skips itself: no dedicated test account exists. Creating one closes the last uncovered flow.",
    "since": "2026-11-13",
    "source": "E2E agent"
+  },
+  {
+   "title": "Approve the HQ LinkedIn post draft",
+   "detail": "A LinkedIn post announcing the public HQ page is drafted (main post plus a short variant) and filed, awaiting your approval before anything is published.",
+   "since": "2026-11-13",
+   "source": "Assignment Desk (Copywriting)"
   }
  ]
 }
