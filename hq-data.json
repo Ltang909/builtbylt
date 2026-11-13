@@ -1,7 +1,7 @@
 {
  "meta": {
-  "generated_at": "2026-11-13T17:01:27+00:00",
-  "generated_display": "Nov 13, 2026 · 05:01 PM UTC",
+  "generated_at": "2026-11-13T12:07:46-05:00",
+  "generated_display": "Nov 13, 2026 · 12:07 PM EST",
   "today": "2026-11-13",
   "fleet_launch": "2026-11-13",
   "version": "1.0"
@@ -981,7 +981,7 @@
  "task_log": [
   {
    "route": "creative/video",
-   "project": "creative",
+   "project": "bum",
    "agent": "Runpod stock scout",
    "date": "2026-11-13",
    "time": "11:24",
@@ -1053,7 +1053,7 @@
   },
   {
    "route": "creative/video",
-   "project": "creative",
+   "project": "bum",
    "agent": "Runpod stock scout",
    "date": "2026-11-13",
    "time": "",
@@ -1067,7 +1067,7 @@
  "activity": [
   {
    "id": 1,
-   "project": "creative",
+   "project": "bum",
    "type": "analysis",
    "agent": "Runpod Scout",
    "title": "GPU stock check: US-IL-1 unavailable",
@@ -1086,7 +1086,7 @@
  ],
  "alerts": [
   {
-   "id": "creative",
+   "id": "bum",
    "severity": "review",
    "title": "GPU stock unavailable in US-IL-1",
    "desc": "US-IL-1: none for 4090/A6000; EUR-IS-1: none; EU-SE-1: A6000 LOW only, 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)"
@@ -1151,7 +1151,7 @@
   {
    "key": "runpod",
    "name": "Runpod stock scout",
-   "project": "creative",
+   "project": "bum",
    "cadence": "Hourly",
    "state": "idle",
    "last_run": "2026-11-13T11:24:02-05:00",
