@@ -1,8 +1,8 @@
 {
  "meta": {
-  "generated_at": "2026-11-14T01:06:48+00:00",
-  "generated_display": "Nov 14, 2026 · 01:06 AM UTC",
-  "today": "2026-11-14",
+  "generated_at": "2026-11-13T20:33:59-05:00",
+  "generated_display": "Nov 13, 2026 · 08:33 PM EST",
+  "today": "2026-11-13",
   "fleet_launch": "2026-11-13",
   "version": "1.0"
  },
@@ -323,7 +323,7 @@
      "actions": 2,
      "tasks_24h": 0,
      "tasks_7d": 0,
-     "last": "US-IL-1: Secure 4090 LOW (new), A6000 none, no Community; EUR-IS-1: no Secure 4090/A6000 (4090 was LOW, now none); EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+     "last": "US-IL-1: Secure 4090 LOW (unchanged), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (new), A6000 none; EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
      "quality": ""
     }
    ]
@@ -976,8 +976,8 @@
    "leon_escalation": "Any agent failure, two agents disagreeing, or anything still waiting on Leon's approval when the rollup goes out.",
    "output": "The daily rollup: what the fleet and specialists did, what comes next, and anything flagged up",
    "route": "bum/gm",
-   "tasks_24h": 1,
-   "tasks_7d": 1
+   "tasks_24h": 2,
+   "tasks_7d": 2
   },
   {
    "project": "Leave It to Bum Bum",
@@ -1108,14 +1108,38 @@
  ],
  "task_log": [
   {
+   "route": "bum/gm",
+   "project": "bum",
+   "agent": "Fleet manager rollup",
+   "date": "2026-11-13",
+   "time": "20:33",
+   "title": "Nightly fleet rollup completed",
+   "status": "completed",
+   "note": "No Ready desk results to file; acted on Leon's three E2E steering comments: extended suite pushed to GitHub (Filed), Day Log test account credentials stored locally (Filed), desk-test rewrite queued past tonight's 2-pickup cap; SEO Day 2 bounced to Leon for a publish decision; E2E ledger failed (94 passed, 17 failed, desk cluster).",
+   "deliverable": "Fleet rollup 2026-11-13 (evening)",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/gm",
+   "project": "bum",
+   "agent": "Fleet manager rollup",
+   "date": "2026-11-13",
+   "time": "20:33",
+   "title": "Fleet rollup 2026-11-13 (evening)",
+   "status": "completed",
+   "note": "",
+   "deliverable": "Fleet rollup 2026-11-13 (evening)",
+   "type": "Fleet"
+  },
+  {
    "route": "creative/video",
    "project": "bum",
    "agent": "Runpod stock scout",
    "date": "2026-11-13",
-   "time": "19:24",
+   "time": "20:25",
    "title": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
    "status": "completed",
-   "note": "US-IL-1: Secure 4090 LOW (new), A6000 none, no Community; EUR-IS-1: no Secure 4090/A6000 (4090 was LOW, now none); EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "note": "US-IL-1: Secure 4090 LOW (unchanged), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (new), A6000 none; EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
    "deliverable": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1",
    "type": "Fleet"
   },
@@ -1141,18 +1165,6 @@
    "status": "completed",
    "note": "Queue empty on 2026-11-13 run; no drafts created.",
    "deliverable": "",
-   "type": "Fleet"
-  },
-  {
-   "route": "bum/gm",
-   "project": "bum",
-   "agent": "Fleet manager rollup",
-   "date": "2026-11-13",
-   "time": "12:19",
-   "title": "Nightly fleet rollup completed",
-   "status": "completed",
-   "note": "Filed 2 Assignment Desk results (AEO check 0/10 Bum Bum mentions; HQ LinkedIn draft awaiting approval); QA, competitor, copy idle after first runs; Runpod scout flagged flickering LOW Secure 4090 stock in US-IL-1; E2E not yet run.",
-   "deliverable": "Fleet rollup 2026-11-13",
    "type": "Fleet"
   },
   {
@@ -1271,8 +1283,8 @@
    "type": "analysis",
    "agent": "Runpod Scout",
    "title": "GPU stock check: US-IL-1 unavailable",
-   "description": "ALERT trigger (a): Secure RTX 4090 became available in US-IL-1 after being unavailable there. Verified via runpod.get_gpus() for prices and /v2/catalog/gpus/{id} with include=AVAILABILITY, product=POD, cloud=SECURE/COMMUNITY across 5 batch reads per card/cloud (20 reads), all consistent. Secure 4090: US-IL-1 LOW in 5/5 reads (was NONE in 18:24 snapshot, so new alert); EUR-IS-1 NONE in 5/5 (was LOW, now unavailable, no alert for loss); EU-SE-1 NONE in 5/5 (unchanged). Secure A6000: EU-SE-1 LOW in 5/5 (unchanged, already present in prior snapshot); US-IL-1 and EUR-IS-1 NONE in 5/5 (unchanged). Community: 4090 and A6000 both NONE with empty dataCenters in all 5 reads each, so no US-IL-1 Community availability for either card (unchanged). Prices unchanged vs Nov 13 reference and prior snapshot (4090 Secure $0.89/hr, Community $0.34/hr; A6000 Secure $0.69/hr, Community $0.33/hr). Catalog shows stock is not a guarantee of a real machine (Nov 13 listings repeatedly failed to convert). No pod created, no volume touched, $0 spent.",
-   "time": "2026-11-13 · 19:24"
+   "description": "ALERT trigger (a): Secure RTX 4090 became available in EUR-IS-1 after being unavailable there. Verified via runpod.get_gpus() for prices and /v2/catalog/gpus/{id} with include=AVAILABILITY, product=POD, cloud=SECURE/COMMUNITY across 5 reads per card/cloud (20 reads), all consistent. Secure 4090: US-IL-1 LOW in 5/5 reads (unchanged, already present in 19:24 snapshot); EUR-IS-1 LOW in 5/5 reads (was NONE in 19:24 snapshot, so new alert); EU-SE-1 NONE in 5/5 (unchanged). Secure A6000: EU-SE-1 LOW in 5/5 (unchanged); US-IL-1 and EUR-IS-1 NONE in 5/5 (unchanged). Community: 4090 and A6000 both NONE with empty dataCenters in all 5 reads each, so no US-IL-1 Community availability for either card (unchanged). Prices unchanged vs Nov 13 reference and prior snapshot (4090 Secure $0.89/hr, Community $0.34/hr; A6000 Secure $0.69/hr, Community $0.33/hr). Catalog shows stock is not a guarantee of a real machine (Nov 13 listings repeatedly failed to convert). No pod created, no volume touched, $0 spent.",
+   "time": "2026-11-13 · 20:25"
   },
   {
    "id": 2,
@@ -1297,26 +1309,26 @@
    "project": "bum",
    "type": "ship",
    "agent": "Fleet manager rollup",
-   "title": "Fleet rollup 2026-11-13",
-   "description": "Filed 2 Assignment Desk results (AEO check 0/10 Bum Bum mentions; HQ LinkedIn draft awaiting approval); QA, competitor, copy idle after first runs; Runpod scout flagged flickering LOW Secure 4090 stock in US-IL-1; E2E not yet run.",
-   "time": "2026-11-13 · 12:19"
+   "title": "Fleet rollup 2026-11-13 (evening)",
+   "description": "No Ready desk results to file; acted on Leon's three E2E steering comments: extended suite pushed to GitHub (Filed), Day Log test account credentials stored locally (Filed), desk-test rewrite queued past tonight's 2-pickup cap; SEO Day 2 bounced to Leon for a publish decision; E2E ledger failed (94 passed, 17 failed, desk cluster).",
+   "time": "2026-11-13 · 20:33"
   },
   {
    "id": 5,
    "project": "bum",
    "type": "ship",
-   "agent": "Runpod stock scout",
-   "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1",
-   "description": "US-IL-1: Secure 4090 LOW (new), A6000 none, no Community; EUR-IS-1: no Secure 4090/A6000 (4090 was LOW, now none); EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
-   "time": ""
+   "agent": "Fleet manager rollup",
+   "title": "Fleet rollup 2026-11-13",
+   "description": "No Ready desk results to file; acted on Leon's three E2E steering comments: extended suite pushed to GitHub (Filed), Day Log test account credentials stored locally (Filed), desk-test rewrite queued past tonight's 2-pickup cap; SEO Day 2 bounced to Leon for a publish decision; E2E ledger failed (94 passed, 17 failed, desk cluster).",
+   "time": "2026-11-13 · 12:19"
   },
   {
    "id": 6,
    "project": "bum",
    "type": "ship",
    "agent": "Runpod stock scout",
-   "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1",
-   "description": "US-IL-1: Secure 4090 LOW (new), A6000 none, no Community; EUR-IS-1: no Secure 4090/A6000 (4090 was LOW, now none); EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1",
+   "description": "US-IL-1: Secure 4090 LOW (unchanged), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (new), A6000 none; EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
    "time": ""
   },
   {
@@ -1324,8 +1336,8 @@
    "project": "bum",
    "type": "ship",
    "agent": "Runpod stock scout",
-   "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
-   "description": "US-IL-1: Secure 4090 LOW (new), A6000 none, no Community; EUR-IS-1: no Secure 4090/A6000 (4090 was LOW, now none); EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1",
+   "description": "US-IL-1: Secure 4090 LOW (unchanged), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (new), A6000 none; EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
    "time": ""
   },
   {
@@ -1333,8 +1345,26 @@
    "project": "bum",
    "type": "ship",
    "agent": "Runpod stock scout",
+   "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
+   "description": "US-IL-1: Secure 4090 LOW (unchanged), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (new), A6000 none; EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "time": ""
+  },
+  {
+   "id": 9,
+   "project": "bum",
+   "type": "ship",
+   "agent": "Runpod stock scout",
    "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 at $0.89/hr",
-   "description": "US-IL-1: Secure 4090 LOW (new), A6000 none, no Community; EUR-IS-1: no Secure 4090/A6000 (4090 was LOW, now none); EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "description": "US-IL-1: Secure 4090 LOW (unchanged), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (new), A6000 none; EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "time": ""
+  },
+  {
+   "id": 10,
+   "project": "bum",
+   "type": "ship",
+   "agent": "Runpod stock scout",
+   "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
+   "description": "US-IL-1: Secure 4090 LOW (unchanged), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (new), A6000 none; EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
    "time": ""
   }
  ],
@@ -1403,10 +1433,15 @@
    "project": "bum",
    "cadence": "Daily 8:30 PM",
    "state": "idle",
-   "last_run": "2026-11-13T12:19:41-05:00",
+   "last_run": "2026-11-13T20:33:38-05:00",
    "current_task": "Nightly fleet rollup completed",
-   "summary": "Filed 2 Assignment Desk results (AEO check 0/10 Bum Bum mentions; HQ LinkedIn draft awaiting approval); QA, competitor, copy idle after first runs; Runpod scout flagged flickering LOW Secure 4090 stock in US-IL-1; E2E not yet run.",
+   "summary": "No Ready desk results to file; acted on Leon's three E2E steering comments: extended suite pushed to GitHub (Filed), Day Log test account credentials stored locally (Filed), desk-test rewrite queued past tonight's 2-pickup cap; SEO Day 2 bounced to Leon for a publish decision; E2E ledger failed (94 passed, 17 failed, desk cluster).",
    "deliverables": [
+    {
+     "title": "Fleet rollup 2026-11-13 (evening)",
+     "at": "2026-11-13T20:33:38-05:00",
+     "link_or_path": ""
+    },
     {
      "title": "Fleet rollup 2026-11-13",
      "at": "2026-11-13T12:19:41-05:00",
@@ -1420,9 +1455,9 @@
    "project": "bum",
    "cadence": "Hourly",
    "state": "idle",
-   "last_run": "2026-11-13T19:24:19-05:00",
+   "last_run": "2026-11-13T20:25:33-05:00",
    "current_task": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
-   "summary": "US-IL-1: Secure 4090 LOW (new), A6000 none, no Community; EUR-IS-1: no Secure 4090/A6000 (4090 was LOW, now none); EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "summary": "US-IL-1: Secure 4090 LOW (unchanged), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (new), A6000 none; EU-SE-1: Secure A6000 LOW (unchanged), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
    "deliverables": [
     {
      "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1",
@@ -1443,34 +1478,21 @@
      "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 at $0.89/hr",
      "at": null,
      "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
     }
    ]
   }
  ],
  "waiting": [
   {
-   "title": "Desk E2E tests: rewrite or drop",
-   "detail": "12 weekly tests assert front-desk behavior the November rebuild retired on purpose. Decide: rewrite them against the new tool-first desk, or drop them from the suite.",
+   "title": "Decide: publish the two SEO how-to drafts",
+   "detail": "Two how-to drafts for the Bum Bum SEO sprint are written and waiting on a publish, hold, or drop call; Day 3 distribution follows the decision.",
    "since": "2026-11-13",
-   "source": "E2E agent"
-  },
-  {
-   "title": "Push the extended E2E suite",
-   "detail": "The all-tools extension (commit d9e9933) is committed locally in the bumbum-e2e clone but not pushed. Pushing it to GitHub needs your go.",
-   "since": "2026-11-13",
-   "source": "E2E agent"
-  },
-  {
-   "title": "Create a Day Log test account",
-   "detail": "The signed-in Day Log E2E flow is written but skips itself: no dedicated test account exists. Creating one closes the last uncovered flow.",
-   "since": "2026-11-13",
-   "source": "E2E agent"
-  },
-  {
-   "title": "Approve the HQ LinkedIn post draft",
-   "detail": "A LinkedIn post announcing the public HQ page is drafted (main post plus a short variant) and filed, awaiting your approval before anything is published.",
-   "since": "2026-11-13",
-   "source": "Assignment Desk (Copywriting)"
+   "source": "Assignment Desk (SEO sprint Day 2)"
   }
  ]
 }
