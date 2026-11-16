@@ -155,14 +155,18 @@ foreach (['name', 'email', 'city'] as $req) {
         exit;
     }
 }
-// The form invites a rough answer here, so a fuzzy guest count
-// ("about 20", "10-12") must never cost the lead: keep the visitor's
-// words in the message, send Attio no number, and show what they
-// typed in the Slack ping.
+// Attio's guest_count field is an optional NUMBER, not a string.
+// Omit it entirely when blank. Send positive whole numbers as integers.
+// Preserve approximate answers (e.g. "about 20" or "10-12") in the
+// message and Slack notification without breaking the Attio workflow.
 $guestsDisplay = $payload['guest_count'];
-if ($payload['guest_count'] !== '' && (!ctype_digit($payload['guest_count']) || (int)$payload['guest_count'] < 1)) {
-    $payload['message'] = trim($payload['message'] . "\nGuest count as entered: " . $payload['guest_count']);
-    $payload['guest_count'] = '';
+if ($guestsDisplay === '') {
+    unset($payload['guest_count']);
+} elseif (ctype_digit($guestsDisplay) && (int)$guestsDisplay > 0) {
+    $payload['guest_count'] = (int)$guestsDisplay;
+} else {
+    $payload['message'] = trim($payload['message'] . "\nGuest count as entered: " . $guestsDisplay);
+    unset($payload['guest_count']);
 }
 
 $ch = curl_init($ATTIO_WEBHOOK);
