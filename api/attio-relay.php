@@ -14,19 +14,10 @@ declare(strict_types=1);
  *
  * Security: the destination is hardcoded (not an open relay), only the
  * expected fields are forwarded with length caps, name/email/city
- * are mandatory; target date and guest count are optional, personal
- * email providers are rejected, and submissions are throttled per IP.
+ * are mandatory; target date and guest count are optional, valid
+ * personal or work email addresses are accepted, and submissions are
+ * throttled per IP.
  */
-
-$PERSONAL_DOMAINS = [
-    'gmail.com', 'googlemail.com',
-    'yahoo.com', 'yahoo.ca', 'yahoo.co.uk', 'ymail.com',
-    'hotmail.com', 'hotmail.ca', 'hotmail.co.uk',
-    'outlook.com', 'outlook.ca', 'live.com', 'live.ca', 'msn.com',
-    'aol.com', 'icloud.com', 'me.com', 'mac.com',
-    'protonmail.com', 'proton.me', 'pm.me',
-    'gmx.com', 'gmx.net', 'mail.com', 'yandex.com',
-];
 
 $ALLOWED_ORIGINS = [
     'https://www.quartermaster.studio',
@@ -77,16 +68,6 @@ function rl_throttle(string $ip): bool
     return $data['n'] <= $max;
 }
 
-function is_personal_email(string $email): bool
-{
-    global $PERSONAL_DOMAINS;
-    $at = strrpos($email, '@');
-    if ($at === false) {
-        return false;
-    }
-    return in_array(strtolower(substr($email, $at + 1)), $PERSONAL_DOMAINS, true);
-}
-
 function rl_slack_notify(string $title, array $fields): void
 {
     // Optional Slack ping, configured server-side only: the webhook
@@ -119,8 +100,7 @@ function rl_slack_notify(string $title, array $fields): void
             ['type' => 'header',
              'text' => ['type' => 'plain_text', 'text' => $title]],
             ['type' => 'section',
-             'text' => ['type' => 'mrkdwn', 'text' => implode("
-", $lines)]],
+             'text' => ['type' => 'mrkdwn', 'text' => implode("\n", $lines)]],
         ],
     ];
     $ch = curl_init($hook);
@@ -167,18 +147,13 @@ if ($payload['name'] === '' || !filter_var($payload['email'], FILTER_VALIDATE_EM
 }
 // Mandatory: name, email, event city. Target date and guest count
 // are optional, matching the form's labels.
-// Email must be a work address (no free personal providers).
+// Both personal and work email providers are accepted.
 foreach (['name', 'email', 'city'] as $req) {
     if ($payload[$req] === '') {
         http_response_code(422);
         echo json_encode(['ok' => false, 'error' => 'missing_' . $req]);
         exit;
     }
-}
-if (is_personal_email($payload['email'])) {
-    http_response_code(422);
-    echo json_encode(['ok' => false, 'error' => 'personal_email']);
-    exit;
 }
 // The form invites a rough answer here, so a fuzzy guest count
 // ("about 20", "10-12") must never cost the lead: keep the visitor's
