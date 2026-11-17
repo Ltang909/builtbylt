@@ -1,0 +1,197 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * Attio relay for the quartermaster.studio platform contact form.
+ *
+ * Attio's incoming webhook does not accept cross-site browser posts
+ * (its CORS policy only allows https://app.attio.com), so the
+ * Squarespace form POSTs here instead and this script forwards the
+ * payload to Attio server-side, where CORS does not apply.
+ *
+ *   POST /api/platform-relay.php   {"name","email","company",
+ *                                  "referring_page"}
+ *
+ * The form has no message box, so the payload's message (the Attio
+ * Brief) is composed here: "Platform contact form", plus the
+ * referring page when one was captured. referring_page is also
+ * forwarded as its own key. Every submission is stamped
+ * product = "Platform" (the Attio Product select option).
+ *
+ * Security: the destination is hardcoded (not an open relay), only
+ * the expected fields are forwarded with length caps, name/email/
+ * company are mandatory, and submissions are throttled per IP.
+ */
+
+$ALLOWED_ORIGINS = [
+    'https://www.quartermaster.studio',
+    'https://quartermaster.studio',
+];
+$ATTIO_WEBHOOK = 'https://hooks.attio.com/w/273e79ee-fa63-4cc1-9451-70a764f4737a/af6babff-46a7-46bf-a92f-3389a9e30023';
+
+$origin = (string)($_SERVER['HTTP_ORIGIN'] ?? '');
+if (in_array($origin, $ALLOWED_ORIGINS, true)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+}
+header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Content-Type: application/json; charset=utf-8');
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['ok' => false, 'error' => 'method_not_allowed']);
+    exit;
+}
+
+function rl_throttle(string $ip): bool
+{
+    $dir = sys_get_temp_dir() . '/attio-relay-rl';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0700, true);
+    }
+    $file = $dir . '/' . md5($ip) . '.json';
+    $now = time();
+    $window = 3600; // 1 hour
+    $max = 20;      // max submissions per IP per window
+    $data = ['t' => $now, 'n' => 0];
+    if (is_file($file)) {
+        $d = json_decode((string)@file_get_contents($file), true);
+        if (is_array($d) && isset($d['t'], $d['n'])) {
+            $data = $d;
+        }
+    }
+    if ($now - (int)$data['t'] > $window) {
+        $data = ['t' => $now, 'n' => 0];
+    }
+    $data['n'] = (int)$data['n'] + 1;
+    @file_put_contents($file, json_encode($data), LOCK_EX);
+    return $data['n'] <= $max;
+}
+
+function rl_slack_notify(string $title, array $fields): void
+{
+    // Optional Slack ping, configured server-side only: the webhook
+    // URL is a secret and never lives in this repo. Create
+    // domains/builtbylt.com/private/relay-config.php returning
+    // ['slack_webhook' => 'https://hooks.slack.com/services/...'].
+    // Missing file or empty value means no notification. Fires only
+    // after Attio accepts, and the result is ignored on purpose: a
+    // Slack outage must never affect a form submission.
+    $cfgFile = dirname(__DIR__, 2) . '/private/relay-config.php';
+    if (!is_file($cfgFile)) {
+        return;
+    }
+    $cfg = require $cfgFile;
+    $hook = is_array($cfg) ? (string)($cfg['slack_webhook'] ?? '') : '';
+    if (strpos($hook, 'https://hooks.slack.com/') !== 0) {
+        return;
+    }
+    $lines = [];
+    foreach ($fields as $f) {
+        $v = trim((string)$f[1]);
+        if ($v !== '') {
+            $v = str_replace(['&', '<', '>'], ['&amp;', '&lt;', '&gt;'], $v);
+            $lines[] = '*' . $f[0] . ':* ' . $v;
+        }
+    }
+    $payload = [
+        'text'   => $title,
+        'blocks' => [
+            ['type' => 'header',
+             'text' => ['type' => 'plain_text', 'text' => $title]],
+            ['type' => 'section',
+             'text' => ['type' => 'mrkdwn', 'text' => implode("\n", $lines)]],
+        ],
+    ];
+    $ch = curl_init($hook);
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_POSTFIELDS     => json_encode($payload),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 2,
+    ]);
+    curl_exec($ch);
+    curl_close($ch);
+}
+
+$ip = (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+if (!rl_throttle($ip)) {
+    http_response_code(429);
+    echo json_encode(['ok' => false, 'error' => 'rate_limited']);
+    exit;
+}
+
+$raw = (string)file_get_contents('php://input');
+$data = json_decode($raw, true);
+if (!is_array($data)) {
+    http_response_code(400);
+    echo json_encode(['ok' => false, 'error' => 'bad_json']);
+    exit;
+}
+
+// Referring page: the form strips the query string and fragment
+// before sending; strip again here as a second line of defence so a
+// crafted post cannot smuggle URL parameters into Attio or Slack.
+$referringPage = substr(trim((string)($data['referring_page'] ?? '')), 0, 500);
+$referringPage = substr($referringPage, 0, strcspn($referringPage, '?#'));
+
+$message = 'Platform contact form';
+if ($referringPage !== '') {
+    $message .= "\n" . 'Referring page: ' . $referringPage;
+}
+
+$payload = [
+    'name'    => substr(trim((string)($data['name'] ?? '')), 0, 200),
+    'email'   => substr(trim((string)($data['email'] ?? '')), 0, 200),
+    'company' => substr(trim((string)($data['company'] ?? '')), 0, 200),
+    'message' => substr($message, 0, 5000),
+    'product' => 'Platform',
+];
+if ($referringPage !== '') {
+    $payload['referring_page'] = $referringPage;
+}
+if ($payload['name'] === '' || !filter_var($payload['email'], FILTER_VALIDATE_EMAIL)) {
+    http_response_code(422);
+    echo json_encode(['ok' => false, 'error' => 'invalid_fields']);
+    exit;
+}
+// Mandatory: name, email, company. Both personal and work email
+// providers are accepted.
+foreach (['name', 'email', 'company'] as $req) {
+    if ($payload[$req] === '') {
+        http_response_code(422);
+        echo json_encode(['ok' => false, 'error' => 'missing_' . $req]);
+        exit;
+    }
+}
+
+$ch = curl_init($ATTIO_WEBHOOK);
+curl_setopt_array($ch, [
+    CURLOPT_POST           => true,
+    CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+    CURLOPT_POSTFIELDS     => json_encode($payload),
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT        => 15,
+]);
+curl_exec($ch);
+$code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$err = curl_error($ch);
+curl_close($ch);
+
+$ok = $code >= 200 && $code < 300;
+if ($ok) {
+    rl_slack_notify('New Quartermaster platform contact', [
+        ['Name', $payload['name']],
+        ['Company', $payload['company']],
+        ['Email', $payload['email']],
+        ['Product', $payload['product']],
+        ['Referring page', $referringPage],
+    ]);
+}
+http_response_code($ok ? 200 : 502);
+echo json_encode(['ok' => $ok, 'attio_status' => $code, 'error' => $ok ? null : ($err !== '' ? 'forward_failed' : 'attio_rejected')]);
