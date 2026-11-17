@@ -170,6 +170,7 @@ $payload = [
     'email'   => $email,
     'company' => '',
     'message' => 'waitlist',
+    'product' => 'Platform',
 ];
 
 $ch = curl_init($ATTIO_WEBHOOK);
@@ -187,7 +188,7 @@ curl_close($ch);
 
 $ok = $code >= 200 && $code < 300;
 if ($ok) {
-    wl_slack_notify('New Quartermaster waitlist signup', [['Email', $email]]);
+    wl_slack_notify('New Quartermaster waitlist signup', [['Email', $email], ['Product', $payload['product']]]);
 }
 http_response_code($ok ? 200 : 502);
 echo json_encode(['ok' => $ok, 'attio_status' => $code, 'error' => $ok ? null : ($err !== '' ? 'forward_failed' : 'attio_rejected')]);

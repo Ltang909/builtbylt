@@ -139,6 +139,7 @@ $payload = [
     'plan_type'   => substr(trim((string)($data['plan_type'] ?? '')), 0, 200),
     'target_date' => substr(trim((string)($data['target_date'] ?? '')), 0, 200),
     'guest_count' => substr(trim((string)($data['guest_count'] ?? '')), 0, 50),
+    'product'     => 'Service',
 ];
 if ($payload['name'] === '' || !filter_var($payload['email'], FILTER_VALIDATE_EMAIL)) {
     http_response_code(422);
@@ -192,6 +193,7 @@ if ($ok) {
         ['Target date', $payload['target_date']],
         ['Guests', $guestsDisplay],
         ['Plan', $payload['plan_type']],
+        ['Product', $payload['product']],
     ]);
 }
 http_response_code($ok ? 200 : 502);

@@ -172,6 +172,7 @@ $payload = [
     'company'     => '',
     'message'     => 'wardroom',
     'lead_source' => 'Wardroom',
+    'product'     => 'Service',
 ];
 
 $ch = curl_init($ATTIO_WEBHOOK);
@@ -189,7 +190,7 @@ curl_close($ch);
 
 $ok = $code >= 200 && $code < 300;
 if ($ok) {
-    wr_slack_notify('New Wardroom invitation request', [['Email', $email]]);
+    wr_slack_notify('New Wardroom invitation request', [['Email', $email], ['Product', $payload['product']]]);
 }
 http_response_code($ok ? 200 : 502);
 echo json_encode(['ok' => $ok, 'attio_status' => $code, 'error' => $ok ? null : ($err !== '' ? 'forward_failed' : 'attio_rejected')]);
