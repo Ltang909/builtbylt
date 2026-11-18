@@ -59,10 +59,10 @@ const PROJECT_TOOLS = {bum:[
 ['MP4 to GIF Converter','/tools/mp4-to-gif/','Video']
 ],
 creative:[
-['Creative Testing Panel','https://leontang.ca/panel/login.php','Creative']
+['Creative Testing Panel','https://builtbylt.com/index.php','Creative']
 ],
 outbound:[
-['Outbound Engine','https://builtbylt.com/login/','Outbound']
+['Outbound Engine','https://builtbylt.com/outbound/#/dashboard/1','Outbound']
 ],
 interview:[
 ['Interview Studio','https://builtbylt.com/interview-studio/','Studio']
