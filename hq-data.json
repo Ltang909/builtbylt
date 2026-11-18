@@ -1,8 +1,8 @@
 {
  "meta": {
-  "generated_at": "2026-11-16T20:31:30-05:00",
-  "generated_display": "Nov 16, 2026 · 08:31 PM EST",
-  "today": "2026-11-16",
+  "generated_at": "2026-11-17T20:31:02-05:00",
+  "generated_display": "Nov 17, 2026 · 08:31 PM EST",
+  "today": "2026-11-17",
   "fleet_launch": "2026-11-13",
   "version": "1.0"
  },
@@ -69,7 +69,7 @@
      "actions": 2,
      "tasks_24h": 0,
      "tasks_7d": 0,
-     "last": "Queue empty on 2026-11-16 run; no drafts created.",
+     "last": "Queue empty on 2026-11-17 run; no drafts created.",
      "quality": ""
     },
     {
@@ -105,7 +105,7 @@
      "actions": 4,
      "tasks_24h": 0,
      "tasks_7d": 0,
-     "last": "E2E run 2026-11-16 vs staging: 96 passed, 17 failed, 0 skipped (113 total). Core 16 desk/guest-prompt/handoff failures fourth day running, plus video-converter MP4 round trip failed again.",
+     "last": "E2E run 2026-11-17 vs staging: 93 passed, 20 failed, 0 skipped (113 total). Core desk/guest-prompt/handoff failures fifth day running, plus new homepage desk, tools-count (32 vs 31) and Best Free CRM Salesforce link failures.",
      "quality": ""
     },
     {
@@ -115,7 +115,7 @@
      "state": "working",
      "label": "Runs when Leon asks · Competitor watch Mondays 9:00 AM",
      "actions": 3,
-     "tasks_24h": 1,
+     "tasks_24h": 0,
      "tasks_7d": 1,
      "last": "PDF24 shipped a large free November feature batch + 29 guides; TinyWow, iLovePDF, Smallpdf, Sejda and remove.bg terms unchanged.",
      "quality": ""
@@ -323,7 +323,7 @@
      "actions": 2,
      "tasks_24h": 0,
      "tasks_7d": 0,
-     "last": "US-IL-1: Secure 4090 LOW fleeting (9/40 primary, 16/80 total), A6000 none, no confirmed Community; EUR-IS-1: Secure 4090 none (0/80, was available last run), A6000 none; EU-SE-1: Secure A6000 LOW (80/80), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33); no alert",
+     "last": "US-IL-1: Secure 4090 LOW in 40/40 reads (already available, record-only), A6000 none, no confirmed Community; EUR-IS-1: Secure 4090 LOW in 40/40 reads (already available), A6000 none; EU-SE-1: Secure 4090 none, A6000 LOW in 40/40 reads (still available); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33); no alert",
      "quality": ""
     }
    ]
@@ -976,8 +976,8 @@
    "leon_escalation": "Any agent failure, two agents disagreeing, or anything still waiting on Leon's approval when the rollup goes out.",
    "output": "The daily rollup: what the fleet and specialists did, what comes next, and anything flagged up",
    "route": "bum/gm",
-   "tasks_24h": 2,
-   "tasks_7d": 5
+   "tasks_24h": 1,
+   "tasks_7d": 6
   },
   {
    "project": "Leave It to Bum Bum",
@@ -1018,7 +1018,7 @@
    "leon_escalation": "When the indexing quota blocks a request, when a page drops out of the index, or when a fix needs Leon's signed-in Search Console session.",
    "output": "Audits, indexing follow-ups, and alternatives and hub pages",
    "route": "bum/seo",
-   "tasks_24h": 1,
+   "tasks_24h": 0,
    "tasks_7d": 1
   },
   {
@@ -1111,12 +1111,72 @@
    "route": "bum/gm",
    "project": "bum",
    "agent": "Fleet manager rollup",
-   "date": "2026-11-16",
+   "date": "2026-11-17",
    "time": "20:30",
    "title": "Nightly fleet rollup completed",
    "status": "completed",
-   "note": "Filed 5 Ready desk rows (2 AEO Nov 16 baselines, remove.bg research, SEO Ranking Sprint Day 1 and Day 2). Created 1 follow-up: Astra research -> Copy sweep for the remove.bg switcher guide. E2E failed day 4 (17 failures, rewrite row still Running). AEO plumbing due today not started. Emergency retry live to Nov 17 00:30, no Leon decision needed. No Deep Research briefs waiting.",
-   "deliverable": "Fleet rollup 2026-11-16",
+   "note": "No Ready desk rows to file; all 3 prior Leon items resolved (Day 2 and Quartermaster Day 3 Filed, Bum Bum Day 3 got Leon's go for Nov 18 execution). E2E failed 5th day (93 passed, 20 failed) with Leon's Nov 13 rewrite still undone; AEO plumbing overdue since Nov 16, still Briefed and unstarted; Emergency auto-attempts still refused (48 attempts this evening, $0 spent). Nothing waits on Leon.",
+   "deliverable": "Fleet rollup 2026-11-17",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/gm",
+   "project": "bum",
+   "agent": "Fleet manager rollup",
+   "date": "2026-11-17",
+   "time": "20:30",
+   "title": "Fleet rollup 2026-11-17",
+   "status": "completed",
+   "note": "",
+   "deliverable": "Fleet rollup 2026-11-17",
+   "type": "Fleet"
+  },
+  {
+   "route": "creative/video",
+   "project": "bum",
+   "agent": "Runpod stock scout",
+   "date": "2026-11-17",
+   "time": "20:23",
+   "title": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
+   "status": "completed",
+   "note": "US-IL-1: Secure 4090 LOW in 40/40 reads (already available, record-only), A6000 none, no confirmed Community; EUR-IS-1: Secure 4090 LOW in 40/40 reads (already available), A6000 none; EU-SE-1: Secure 4090 none, A6000 LOW in 40/40 reads (still available); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33); no alert",
+   "deliverable": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 at $0.89/hr",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/copy",
+   "project": "bum",
+   "agent": "Fleet copy queue",
+   "date": "2026-11-17",
+   "time": "16:00",
+   "title": "None - copy queue empty",
+   "status": "completed",
+   "note": "Queue empty on 2026-11-17 run; no drafts created.",
+   "deliverable": "",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/qa",
+   "project": "bum",
+   "agent": "Fleet E2E suite",
+   "date": "2026-11-17",
+   "time": "14:11",
+   "title": "Daily Playwright run vs staging",
+   "status": "blocked",
+   "note": "E2E run 2026-11-17 vs staging: 93 passed, 20 failed, 0 skipped (113 total). Core desk/guest-prompt/handoff failures fifth day running, plus new homepage desk, tools-count (32 vs 31) and Best Free CRM Salesforce link failures.",
+   "deliverable": "E2E run 2026-11-13: 94 passed, 17 failed",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/qa",
+   "project": "bum",
+   "agent": "Fleet QA check",
+   "date": "2026-11-17",
+   "time": "07:15",
+   "title": "Daily production health check completed - all checks passed",
+   "status": "completed",
+   "note": "All 11 core URLs 200; homepage lede present; registry.json valid JSON; pdf-merger FAQ JSON-LD present; all 10 guide/blog pages 200 with prose blog-wide, no duplicate H1/H2 headlines; lede CSS has no 610px and .lede max-width:none; Interview Studio 200, Permissions-Policy: camera=(), microphone=(), geolocation=() - blocks microphone for self, standing condition unchanged.",
+   "deliverable": "",
    "type": "Fleet"
   },
   {
@@ -1129,42 +1189,6 @@
    "status": "completed",
    "note": "",
    "deliverable": "Fleet rollup 2026-11-16",
-   "type": "Fleet"
-  },
-  {
-   "route": "creative/video",
-   "project": "bum",
-   "agent": "Runpod stock scout",
-   "date": "2026-11-16",
-   "time": "20:24",
-   "title": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
-   "status": "completed",
-   "note": "US-IL-1: Secure 4090 LOW fleeting (9/40 primary, 16/80 total), A6000 none, no confirmed Community; EUR-IS-1: Secure 4090 none (0/80, was available last run), A6000 none; EU-SE-1: Secure A6000 LOW (80/80), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33); no alert",
-   "deliverable": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1",
-   "type": "Fleet"
-  },
-  {
-   "route": "bum/copy",
-   "project": "bum",
-   "agent": "Fleet copy queue",
-   "date": "2026-11-16",
-   "time": "16:00",
-   "title": "None - copy queue empty",
-   "status": "completed",
-   "note": "Queue empty on 2026-11-16 run; no drafts created.",
-   "deliverable": "",
-   "type": "Fleet"
-  },
-  {
-   "route": "bum/qa",
-   "project": "bum",
-   "agent": "Fleet E2E suite",
-   "date": "2026-11-16",
-   "time": "14:17",
-   "title": "Daily Playwright run vs staging",
-   "status": "blocked",
-   "note": "E2E run 2026-11-16 vs staging: 96 passed, 17 failed, 0 skipped (113 total). Core 16 desk/guest-prompt/handoff failures fourth day running, plus video-converter MP4 round trip failed again.",
-   "deliverable": "E2E run 2026-11-13: 94 passed, 17 failed",
    "type": "Fleet"
   },
   {
@@ -1189,18 +1213,6 @@
    "status": "completed",
    "note": "",
    "deliverable": "Competitor changes 2026-11-16",
-   "type": "Fleet"
-  },
-  {
-   "route": "bum/qa",
-   "project": "bum",
-   "agent": "Fleet QA check",
-   "date": "2026-11-16",
-   "time": "07:11",
-   "title": "Daily production health check completed - all checks passed",
-   "status": "completed",
-   "note": "All 11 URLs returned 200; homepage lede present; registry.json valid JSON; pdf-merger FAQ JSON-LD present; Interview Studio 200, Permissions-Policy: camera=(), microphone=(), geolocation=() - blocks microphone for self, standing condition unchanged.",
-   "deliverable": "",
    "type": "Fleet"
   },
   {
@@ -1331,8 +1343,8 @@
    "type": "analysis",
    "agent": "Runpod Scout",
    "title": "GPU stock check: US-IL-1 unavailable",
-   "description": "Prices verified via runpod.get_gpus() (matched by GPU id), unchanged vs Nov 13 reference and vs 19:25 run (4090 Secure $0.89/hr, Community $0.34/hr; A6000 Secure $0.69/hr, Community $0.33/hr). Method: catalog via runpod.rp_cli.compute.list_gpus with product=POD, cloud=SECURE/COMMUNITY, matched by GPU id (NVIDIA GeForce RTX 4090 / NVIDIA RTX A6000). Primary snapshot = first 40 Secure reads + 10 Community reads, per established protocol; this run added 40 extra Secure reads as diligence because EUR-IS-1 4090 was absent in the primary batch (80 Secure reads total). Secure 4090: primary batch LOW 17/40 overall (NONE 23/40); US-IL-1 LOW in 9/40 primary and 16/80 total (unchanged, still available, fleeting/intermittent); EUR-IS-1 absent in 80/80 reads (CHANGED: was LOW 34/80 and available in the 19:25 run, now unavailable); EU-SE-1 absent in 80/80 (unchanged, unavailable). Only other 4090 LOW reads named unwatched EU-RO-1 (15 reads) or returned no datacenter list. Secure A6000: LOW in 80/80 Secure reads, EU-SE-1 LOW in 80/80 (unchanged, available); US-IL-1 and EUR-IS-1 absent in all reads (unchanged). Community (10 reads): 4090 NONE in 10/10, A6000 NONE in 10/10; no datacenter entries returned in any Community read, so US-IL-1-specific Community availability cannot be confirmed and is treated as no availability (unchanged). No alert criteria met: no Secure card newly available in any watched datacenter (EUR-IS-1 4090 was a loss, not a gain), no Community US-IL-1 gain, no price change. Catalog shows stock is not a guarantee of a real machine (Nov 13 listings repeatedly failed to convert). No pod created, no volume touched, $0 spent. Raw sample: ledger/runpod-sample-2026-11-16-2022.json.",
-   "time": "2026-11-16 · 20:24"
+   "description": "Prices verified via runpod.get_gpus() (matched by GPU id), unchanged vs Nov 13 reference and vs 19:24 run (4090 Secure $0.89/hr, Community $0.34/hr; A6000 Secure $0.69/hr, Community $0.33/hr). Method: catalog via runpod.rp_cli.compute.list_gpus with product=POD, cloud=SECURE/COMMUNITY, matched by GPU id (NVIDIA GeForce RTX 4090 / NVIDIA RTX A6000). Primary snapshot = 40 Secure reads + 10 Community reads, per established protocol. Secure 4090: overall HIGH in 40/40 reads; US-IL-1 listed LOW in 40/40 reads and EUR-IS-1 listed LOW in 40/40 reads (both already available - no new gain); EU-SE-1 0/40 (unchanged). Secure A6000: LOW in 40/40 overall; EU-SE-1 listed LOW in 40/40 reads - still available there, unchanged in availability vs 16/40 at 19:24 (no new gain, only firmer count); US-IL-1 0/40 and EUR-IS-1 0/40 (unchanged). Community (10 reads): 4090 LOW in 4/10 and NONE in 6/10 at top level, A6000 NONE in 10/10, and dataCenters was null in all 10 reads, so US-IL-1-specific Community availability cannot be confirmed and is treated as no availability (unchanged for US-IL-1), per established protocol. Alert criteria NOT met under current rules: no Secure 4090 gain in EUR-IS-1/EU-SE-1 (already available in EUR-IS-1; still none in EU-SE-1), no Secure A6000 gain in any watched datacenter, no confirmed Community gain in US-IL-1, no price change. Secure RTX 4090 availability in US-IL-1 is recorded only and is not an alert trigger (owned by runpod-emergency-auto-attempt since 2026-11-17). Catalog shows stock is not a guarantee of a real machine (Nov 13 listings repeatedly failed to convert). No pod created, no volume touched, $0 spent. Raw sample: ledger/runpod-sample-2026-11-17-2022.json.",
+   "time": "2026-11-17 · 20:23"
   },
   {
    "id": 2,
@@ -1349,7 +1361,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-13: 94 passed, 17 failed",
-   "description": "E2E run 2026-11-16 vs staging: 96 passed, 17 failed, 0 skipped (113 total). Core 16 desk/guest-prompt/handoff failures fourth day running, plus video-converter MP4 round trip failed again.",
+   "description": "E2E run 2026-11-17 vs staging: 93 passed, 20 failed, 0 skipped (113 total). Core desk/guest-prompt/handoff failures fifth day running, plus new homepage desk, tools-count (32 vs 31) and Best Free CRM Salesforce link failures.",
    "time": ""
   },
   {
@@ -1358,7 +1370,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-14: 94 passed, 16 failed",
-   "description": "E2E run 2026-11-16 vs staging: 96 passed, 17 failed, 0 skipped (113 total). Core 16 desk/guest-prompt/handoff failures fourth day running, plus video-converter MP4 round trip failed again.",
+   "description": "E2E run 2026-11-17 vs staging: 93 passed, 20 failed, 0 skipped (113 total). Core desk/guest-prompt/handoff failures fifth day running, plus new homepage desk, tools-count (32 vs 31) and Best Free CRM Salesforce link failures.",
    "time": ""
   },
   {
@@ -1367,7 +1379,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-15: 96 passed, 16 failed",
-   "description": "E2E run 2026-11-16 vs staging: 96 passed, 17 failed, 0 skipped (113 total). Core 16 desk/guest-prompt/handoff failures fourth day running, plus video-converter MP4 round trip failed again.",
+   "description": "E2E run 2026-11-17 vs staging: 93 passed, 20 failed, 0 skipped (113 total). Core desk/guest-prompt/handoff failures fifth day running, plus new homepage desk, tools-count (32 vs 31) and Best Free CRM Salesforce link failures.",
    "time": ""
   },
   {
@@ -1376,11 +1388,20 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-16: 96 passed, 17 failed",
-   "description": "E2E run 2026-11-16 vs staging: 96 passed, 17 failed, 0 skipped (113 total). Core 16 desk/guest-prompt/handoff failures fourth day running, plus video-converter MP4 round trip failed again.",
+   "description": "E2E run 2026-11-17 vs staging: 93 passed, 20 failed, 0 skipped (113 total). Core desk/guest-prompt/handoff failures fifth day running, plus new homepage desk, tools-count (32 vs 31) and Best Free CRM Salesforce link failures.",
    "time": ""
   },
   {
    "id": 7,
+   "project": "bum",
+   "type": "ship",
+   "agent": "Fleet E2E suite",
+   "title": "E2E run 2026-11-17: 93 passed, 20 failed",
+   "description": "E2E run 2026-11-17 vs staging: 93 passed, 20 failed, 0 skipped (113 total). Core desk/guest-prompt/handoff failures fifth day running, plus new homepage desk, tools-count (32 vs 31) and Best Free CRM Salesforce link failures.",
+   "time": ""
+  },
+  {
+   "id": 8,
    "project": "bum",
    "type": "ship",
    "agent": "Fleet competitor watch",
@@ -1389,49 +1410,40 @@
    "time": "2026-11-16 · 09:00"
   },
   {
-   "id": 8,
-   "project": "bum",
-   "type": "ship",
-   "agent": "Fleet manager rollup",
-   "title": "Fleet rollup 2026-11-16",
-   "description": "Filed 5 Ready desk rows (2 AEO Nov 16 baselines, remove.bg research, SEO Ranking Sprint Day 1 and Day 2). Created 1 follow-up: Astra research -> Copy sweep for the remove.bg switcher guide. E2E failed day 4 (17 failures, rewrite row still Running). AEO plumbing due today not started. Emergency retry live to Nov 17 00:30, no Leon decision needed. No Deep Research briefs waiting.",
-   "time": "2026-11-16 · 20:30"
-  },
-  {
    "id": 9,
    "project": "bum",
    "type": "ship",
    "agent": "Fleet manager rollup",
-   "title": "Fleet rollup 2026-11-15",
-   "description": "Filed 5 Ready desk rows (2 AEO Nov 16 baselines, remove.bg research, SEO Ranking Sprint Day 1 and Day 2). Created 1 follow-up: Astra research -> Copy sweep for the remove.bg switcher guide. E2E failed day 4 (17 failures, rewrite row still Running). AEO plumbing due today not started. Emergency retry live to Nov 17 00:30, no Leon decision needed. No Deep Research briefs waiting.",
-   "time": "2026-11-15 · 20:33"
+   "title": "Fleet rollup 2026-11-17",
+   "description": "No Ready desk rows to file; all 3 prior Leon items resolved (Day 2 and Quartermaster Day 3 Filed, Bum Bum Day 3 got Leon's go for Nov 18 execution). E2E failed 5th day (93 passed, 20 failed) with Leon's Nov 13 rewrite still undone; AEO plumbing overdue since Nov 16, still Briefed and unstarted; Emergency auto-attempts still refused (48 attempts this evening, $0 spent). Nothing waits on Leon.",
+   "time": "2026-11-17 · 20:30"
   },
   {
    "id": 10,
    "project": "bum",
    "type": "ship",
    "agent": "Fleet manager rollup",
-   "title": "Fleet rollup 2026-11-14",
-   "description": "Filed 5 Ready desk rows (2 AEO Nov 16 baselines, remove.bg research, SEO Ranking Sprint Day 1 and Day 2). Created 1 follow-up: Astra research -> Copy sweep for the remove.bg switcher guide. E2E failed day 4 (17 failures, rewrite row still Running). AEO plumbing due today not started. Emergency retry live to Nov 17 00:30, no Leon decision needed. No Deep Research briefs waiting.",
-   "time": "2026-11-14 · 20:35"
+   "title": "Fleet rollup 2026-11-16",
+   "description": "No Ready desk rows to file; all 3 prior Leon items resolved (Day 2 and Quartermaster Day 3 Filed, Bum Bum Day 3 got Leon's go for Nov 18 execution). E2E failed 5th day (93 passed, 20 failed) with Leon's Nov 13 rewrite still undone; AEO plumbing overdue since Nov 16, still Briefed and unstarted; Emergency auto-attempts still refused (48 attempts this evening, $0 spent). Nothing waits on Leon.",
+   "time": "2026-11-16 · 20:30"
   },
   {
    "id": 11,
    "project": "bum",
    "type": "ship",
    "agent": "Fleet manager rollup",
-   "title": "Fleet rollup 2026-11-13 (evening)",
-   "description": "Filed 5 Ready desk rows (2 AEO Nov 16 baselines, remove.bg research, SEO Ranking Sprint Day 1 and Day 2). Created 1 follow-up: Astra research -> Copy sweep for the remove.bg switcher guide. E2E failed day 4 (17 failures, rewrite row still Running). AEO plumbing due today not started. Emergency retry live to Nov 17 00:30, no Leon decision needed. No Deep Research briefs waiting.",
-   "time": "2026-11-13 · 20:33"
+   "title": "Fleet rollup 2026-11-15",
+   "description": "No Ready desk rows to file; all 3 prior Leon items resolved (Day 2 and Quartermaster Day 3 Filed, Bum Bum Day 3 got Leon's go for Nov 18 execution). E2E failed 5th day (93 passed, 20 failed) with Leon's Nov 13 rewrite still undone; AEO plumbing overdue since Nov 16, still Briefed and unstarted; Emergency auto-attempts still refused (48 attempts this evening, $0 spent). Nothing waits on Leon.",
+   "time": "2026-11-15 · 20:33"
   },
   {
    "id": 12,
    "project": "bum",
    "type": "ship",
    "agent": "Fleet manager rollup",
-   "title": "Fleet rollup 2026-11-13",
-   "description": "Filed 5 Ready desk rows (2 AEO Nov 16 baselines, remove.bg research, SEO Ranking Sprint Day 1 and Day 2). Created 1 follow-up: Astra research -> Copy sweep for the remove.bg switcher guide. E2E failed day 4 (17 failures, rewrite row still Running). AEO plumbing due today not started. Emergency retry live to Nov 17 00:30, no Leon decision needed. No Deep Research briefs waiting.",
-   "time": "2026-11-13 · 12:19"
+   "title": "Fleet rollup 2026-11-14",
+   "description": "No Ready desk rows to file; all 3 prior Leon items resolved (Day 2 and Quartermaster Day 3 Filed, Bum Bum Day 3 got Leon's go for Nov 18 execution). E2E failed 5th day (93 passed, 20 failed) with Leon's Nov 13 rewrite still undone; AEO plumbing overdue since Nov 16, still Briefed and unstarted; Emergency auto-attempts still refused (48 attempts this evening, $0 spent). Nothing waits on Leon.",
+   "time": "2026-11-14 · 20:35"
   }
  ],
  "alerts": [
@@ -1439,7 +1451,7 @@
    "id": "bum",
    "severity": "block",
    "title": "Fleet E2E suite needs attention",
-   "desc": "E2E run 2026-11-16 vs staging: 96 passed, 17 failed, 0 skipped (113 total). Core 16 desk/guest-prompt/handoff failures fourth day running, plus video-converter MP4 round trip failed again."
+   "desc": "E2E run 2026-11-17 vs staging: 93 passed, 20 failed, 0 skipped (113 total). Core desk/guest-prompt/handoff failures fifth day running, plus new homepage desk, tools-count (32 vs 31) and Best Free CRM Salesforce link failures."
   }
  ],
  "fleet": [
@@ -1449,9 +1461,9 @@
    "project": "bum",
    "cadence": "Daily 7:15 AM",
    "state": "idle",
-   "last_run": "2026-11-16T07:11:10-05:00",
+   "last_run": "2026-11-17T07:15:00-05:00",
    "current_task": "Daily production health check completed - all checks passed",
-   "summary": "All 11 URLs returned 200; homepage lede present; registry.json valid JSON; pdf-merger FAQ JSON-LD present; Interview Studio 200, Permissions-Policy: camera=(), microphone=(), geolocation=() - blocks microphone for self, standing condition unchanged.",
+   "summary": "All 11 core URLs 200; homepage lede present; registry.json valid JSON; pdf-merger FAQ JSON-LD present; all 10 guide/blog pages 200 with prose blog-wide, no duplicate H1/H2 headlines; lede CSS has no 610px and .lede max-width:none; Interview Studio 200, Permissions-Policy: camera=(), microphone=(), geolocation=() - blocks microphone for self, standing condition unchanged.",
    "deliverables": []
   },
   {
@@ -1460,9 +1472,9 @@
    "project": "bum",
    "cadence": "Daily 9:00 AM",
    "state": "failed",
-   "last_run": "2026-11-16T14:17:03Z",
+   "last_run": "2026-11-17T14:11:50Z",
    "current_task": "Daily Playwright run vs staging",
-   "summary": "E2E run 2026-11-16 vs staging: 96 passed, 17 failed, 0 skipped (113 total). Core 16 desk/guest-prompt/handoff failures fourth day running, plus video-converter MP4 round trip failed again.",
+   "summary": "E2E run 2026-11-17 vs staging: 93 passed, 20 failed, 0 skipped (113 total). Core desk/guest-prompt/handoff failures fifth day running, plus new homepage desk, tools-count (32 vs 31) and Best Free CRM Salesforce link failures.",
    "deliverables": [
     {
      "title": "E2E run 2026-11-13: 94 passed, 17 failed",
@@ -1481,6 +1493,11 @@
     },
     {
      "title": "E2E run 2026-11-16: 96 passed, 17 failed",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "E2E run 2026-11-17: 93 passed, 20 failed",
      "at": null,
      "link_or_path": ""
     }
@@ -1509,9 +1526,9 @@
    "project": "bum",
    "cadence": "Daily 4:00 PM",
    "state": "idle",
-   "last_run": "2026-11-16T16:00:00-05:00",
+   "last_run": "2026-11-17T16:00:00-05:00",
    "current_task": "None - copy queue empty",
-   "summary": "Queue empty on 2026-11-16 run; no drafts created.",
+   "summary": "Queue empty on 2026-11-17 run; no drafts created.",
    "deliverables": []
   },
   {
@@ -1519,11 +1536,16 @@
    "name": "Fleet manager rollup",
    "project": "bum",
    "cadence": "Daily 8:30 PM",
-   "state": "waiting",
-   "last_run": "2026-11-16T20:30:00-05:00",
+   "state": "idle",
+   "last_run": "2026-11-17T20:30:00-05:00",
    "current_task": "Nightly fleet rollup completed",
-   "summary": "Filed 5 Ready desk rows (2 AEO Nov 16 baselines, remove.bg research, SEO Ranking Sprint Day 1 and Day 2). Created 1 follow-up: Astra research -> Copy sweep for the remove.bg switcher guide. E2E failed day 4 (17 failures, rewrite row still Running). AEO plumbing due today not started. Emergency retry live to Nov 17 00:30, no Leon decision needed. No Deep Research briefs waiting.",
+   "summary": "No Ready desk rows to file; all 3 prior Leon items resolved (Day 2 and Quartermaster Day 3 Filed, Bum Bum Day 3 got Leon's go for Nov 18 execution). E2E failed 5th day (93 passed, 20 failed) with Leon's Nov 13 rewrite still undone; AEO plumbing overdue since Nov 16, still Briefed and unstarted; Emergency auto-attempts still refused (48 attempts this evening, $0 spent). Nothing waits on Leon.",
    "deliverables": [
+    {
+     "title": "Fleet rollup 2026-11-17",
+     "at": "2026-11-17T20:30:00-05:00",
+     "link_or_path": ""
+    },
     {
      "title": "Fleet rollup 2026-11-16",
      "at": "2026-11-16T20:30:00-05:00",
@@ -1557,41 +1579,11 @@
    "project": "bum",
    "cadence": "Hourly",
    "state": "idle",
-   "last_run": "2026-11-16T20:24:07-05:00",
+   "last_run": "2026-11-17T20:23:19.630741-05:00",
    "current_task": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
-   "summary": "US-IL-1: Secure 4090 LOW fleeting (9/40 primary, 16/80 total), A6000 none, no confirmed Community; EUR-IS-1: Secure 4090 none (0/80, was available last run), A6000 none; EU-SE-1: Secure A6000 LOW (80/80), 4090 none; prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33); no alert",
+   "summary": "US-IL-1: Secure 4090 LOW in 40/40 reads (already available, record-only), A6000 none, no confirmed Community; EUR-IS-1: Secure 4090 LOW in 40/40 reads (already available), A6000 none; EU-SE-1: Secure 4090 none, A6000 LOW in 40/40 reads (still available); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33); no alert",
    "deliverables": [
     {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 at $0.89/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
      "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 at $0.89/hr",
      "at": null,
      "link_or_path": ""
@@ -1643,30 +1635,56 @@
     },
     {
      "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 and EUR-IS-1 at $0.89/hr; Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 and EUR-IS-1 at $0.89/hr",
      "at": null,
      "link_or_path": ""
     }
    ]
   }
  ],
- "waiting": [
-  {
-   "title": "Decide: publish the two SEO how-to drafts",
-   "detail": "Two how-to drafts for the Bum Bum SEO sprint are written and waiting on a publish, hold, or drop call; Day 3 distribution follows the decision.",
-   "since": "2026-11-13",
-   "source": "Assignment Desk (SEO sprint Day 2)"
-  },
-  {
-   "title": "Apply the Quartermaster Day 3 distribution pack",
-   "detail": "The paste-ready G2 profile fields and the SaaSHub field set are in the desk row in full; the pastes and the submit are manual steps only Leon can do.",
-   "since": "2026-11-14",
-   "source": "Assignment Desk (SEO sprint Day 3, Quartermaster)"
-  },
-  {
-   "title": "Approve the Day 3 outreach drafts and send timing",
-   "detail": "10 outreach drafts for the Bum Bum SEO sprint are pasted in full in the Day 3 desk row; sends and directory submissions wait on your go-ahead, nominally Wed Nov 18.",
-   "since": "2026-11-16",
-   "source": "Assignment Desk (SEO Ranking Sprint Day 3)"
-  }
- ]
+ "waiting": []
 }
