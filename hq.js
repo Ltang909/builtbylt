@@ -18,6 +18,44 @@ const icons = {
 };
 const icon = (name,size=17)=>`<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]||icons.bots}</svg>`;
 const AG = (id,name,focus,state,actions,last,quality) => ({id,name,focus,state,actions,last,quality});
+// Live tool pages per project, from the project's own registry
+// (leaveittobumbum.com/tools/registry.json, synced 2026-11-18).
+const PROJECT_TOOLS = {bum:[
+['Screen Recorder','/tools/clips/','Video'],
+['Voice Notes to Text','/tools/notes/','Voice'],
+['Subscription Tracker','/tools/cutline/','Money'],
+['Client Follow-Up Tracker','/tools/purrsuit/','Clients'],
+['Job Application Tracker','/tools/corporate-bum-bum/','Career'],
+['Online Sketchpad','/tools/doodle/','Draw'],
+['Invoice Reminder','/tools/invoice-chaser/','Money'],
+['Receipt Scanner','/tools/receipt-reader/','Money'],
+['Poster to Calendar','/tools/poster-to-calendar/','Plan'],
+['Meal Scanner','/tools/meal-scanner/','Health'],
+['Resume Gap Checker','/tools/gap-scout/','Career'],
+['Video Trimmer','/tools/video-trimmer/','Video'],
+['Image Converter','/tools/image-converter/','Files'],
+['PDF Merger','/tools/pdf-merger/','Files'],
+['PDF to Image','/tools/pdf-to-image/','Files'],
+['Image Cropper','/tools/image-cropper/','Files'],
+['Voice to Content','/tools/ghostwriter/','Content'],
+['Sound Human','/tools/sound-human/','Content'],
+['Audiogram Maker','/tools/audiogram/','Content'],
+['QR Code Generator','/tools/purr-code/','Design'],
+['SOP Generator','/tools/sop-ify/','Team'],
+['AI Mention Tracker','/tools/hearsay/','Marketing'],
+['Video Converter','/tools/video-converter/','Video'],
+['Video MP3 Overlay','/tools/video-mp3-overlay/','Video'],
+['Day Log','/tools/day-log/','Plan'],
+['Email Signature Maker','/tools/email-signature-generator/','Brand'],
+['PDF Compressor','/tools/pdf-compressor/','Files'],
+['Invoice Generator','/tools/invoice-generator/','Money'],
+['HEIC to JPG','/tools/heic-to-jpg/','Files'],
+['JPG to PDF','/tools/jpg-to-pdf/','Files'],
+['Split PDF','/tools/split-pdf/','Files'],
+['MP4 to WebM Converter','/tools/mp4-to-webm/','Video'],
+['MP4 to GIF Converter','/tools/mp4-to-gif/','Video']
+]};
+const toolsSection = p => {let tools=PROJECT_TOOLS[p.id];if(!tools||!p.website)return '';let base=p.website.replace(/\/+$/,'');return `<div class="drawer-section"><h3>The tools</h3>${tools.map(t=>`<a class="drawer-agent" style="text-decoration:none" href="${base}${t[1]}" target="_blank" rel="noopener noreferrer"><strong>${t[0]}</strong><small>${t[2]} ↗</small></a>`).join('')}</div>`};
 let projects = [];
 const state={view:'overview',period:30,activityFilter:'all',projectFilter:'all',statusFilter:'all',outputProject:'all',outputDate:'',rosterProject:'all',rosterSearch:'',query:'',activity:[],runs:0,alerts:[],selected:null};
 const $=sel=>document.querySelector(sel);
@@ -75,7 +113,7 @@ function bindContentPeriod(){document.querySelectorAll('[data-period]').forEach(
 function openDrawer(html){$('#drawer').innerHTML=html;$('#overlay').classList.add('open');document.body.style.overflow='hidden';$('#drawer').scrollTop=0;$('#drawer').focus();$('#drawer').querySelectorAll('[data-agent]').forEach(b=>b.addEventListener('click',()=>openAgent(b.dataset.agent)));$('#drawer').querySelectorAll('[data-project]').forEach(b=>b.addEventListener('click',()=>openProject(b.dataset.project)));$('#drawer').querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeDrawer));}
 function closeDrawer(){$('#overlay').classList.remove('open');document.body.style.overflow='';}
 function drawerTop(label){return `<div class="drawer-top"><span class="small-caps">${label}</span><button class="close" data-close aria-label="Close details">✕</button></div>`}
-function openProject(id){let p=projectById(id);if(!p)return;openDrawer(`${drawerTop('Project scorecard')}<h2>${p.name}</h2><p>${p.desc}</p><div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:12px">${pill(p.status)}<span class="pill neutral">${p.gm} · General Manager</span></div><div class="drawer-section"><h3>Business scorecard</h3><div class="drawer-kpis">${p.kpis.map(k=>`<div class="drawer-kpi"><span>${k[0]}</span><strong>${k[1]}</strong><small>${k[2]}</small></div>`).join('')}</div></div><div class="drawer-section"><h3>Current objective</h3><div class="drawer-detail"><div class="key">OUTCOME TARGET</div><div class="val">${p.goal}</div></div><div class="drawer-detail"><div class="key">CURRENT FOCUS</div><div class="val">${safe(p.focus)}</div></div></div><div class="drawer-section"><h3>GM + ${p.agents.length} specialist agents</h3><div class="drawer-detail"><div class="key">GENERAL MANAGER</div><div class="val">${p.gm} · ${p.owner}</div></div>${p.agents.map(a=>`<button class="drawer-agent" data-agent="${p.id}/${a.id}"><span class="agent-dot ${a.state}" style="height:7px;width:7px;background:${a.state==='working'?'var(--green)':a.state==='review'?'var(--amber)':'#828c94'};border-radius:50%"></span><strong>${a.name}</strong><small>${a.actions} runs ↗</small></button>`).join('')}</div>${p.website?`<div class="drawer-section"><a class="btn ghost" style="width:100%" href="${p.website}" target="_blank" rel="noopener noreferrer">Visit public project ${icon('arrow',14)}</a></div>`:''}`);}
+function openProject(id){let p=projectById(id);if(!p)return;openDrawer(`${drawerTop('Project scorecard')}<h2>${p.name}</h2><p>${p.desc}</p><div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:12px">${pill(p.status)}<span class="pill neutral">${p.gm} · General Manager</span></div><div class="drawer-section"><h3>Business scorecard</h3><div class="drawer-kpis">${p.kpis.map(k=>`<div class="drawer-kpi"><span>${k[0]}</span><strong>${k[1]}</strong><small>${k[2]}</small></div>`).join('')}</div></div><div class="drawer-section"><h3>Current objective</h3><div class="drawer-detail"><div class="key">OUTCOME TARGET</div><div class="val">${p.goal}</div></div><div class="drawer-detail"><div class="key">CURRENT FOCUS</div><div class="val">${safe(p.focus)}</div></div></div><div class="drawer-section"><h3>GM + ${p.agents.length} specialist agents</h3><div class="drawer-detail"><div class="key">GENERAL MANAGER</div><div class="val">${p.gm} · ${p.owner}</div></div>${p.agents.map(a=>`<button class="drawer-agent" data-agent="${p.id}/${a.id}"><span class="agent-dot ${a.state}" style="height:7px;width:7px;background:${a.state==='working'?'var(--green)':a.state==='review'?'var(--amber)':'#828c94'};border-radius:50%"></span><strong>${a.name}</strong><small>${a.actions} runs ↗</small></button>`).join('')}</div>${toolsSection(p)}${p.website?`<div class="drawer-section"><a class="btn ghost" style="width:100%" href="${p.website}" target="_blank" rel="noopener noreferrer">Visit public project ${icon('arrow',14)}</a></div>`:''}`);}
 function openAgent(route){let r=ROLE_DETAILS.find(x=>x.route===route);if(!r)return;let [pid,aid]=route.split('/');let p=projectById(pid),a=p?.agents.find(x=>x.id===aid);let isGM=r.kind==='GM';let logs=workFor(route);let totals=taskSummary(logs);let status=isGM?'Direct report to Leon':(a&&a.label?a.label:'On demand');let last=TASK_LOG.filter(x=>x.route===route).slice(0,12);openDrawer(`${drawerTop(isGM?'General manager':'Specialist agent')}<div style="margin-top:18px"><span class="pill ${a?.state==='review'?'warning':'success'}">${status}</span></div><h2>${safe(r.name)}</h2><p>${safe(r.task)}</p><div class="drawer-section"><h3>Ownership &amp; cadence</h3><div class="drawer-detail"><div class="key">SCHEDULE</div><div class="val">${safe(r.cadence)}</div></div><div class="drawer-detail"><div class="key">SCOPE</div><div class="val">${safe(r.scope)}</div></div><div class="drawer-detail"><div class="key">REPORTING LINE</div><div class="val">${isGM?'Leon Tang':safe(p.gm)+' · GM, '+safe(p.name)}</div></div></div><div class="drawer-section"><h3>Recorded runs</h3><div class="drawer-kpis"><div class="drawer-kpi"><span>Completed</span><strong>${totals.done}</strong><small>From the fleet ledger</small></div><div class="drawer-kpi"><span>Review / blocked</span><strong>${totals.review+totals.blocked}</strong><small>${totals.review} review · ${totals.blocked} blocked</small></div><div class="drawer-kpi"><span>Past 24 hours</span><strong>${r.tasks_24h ?? 0}</strong><small>Tasks completed</small></div><div class="drawer-kpi"><span>Past week</span><strong>${r.tasks_7d ?? 0}</strong><small>Tasks completed</small></div></div></div><div class="drawer-section"><h3>Day-by-day output</h3><div class="agent-daily-log">${last.map(l=>`<div class="agent-daily-entry"><div class="log-entry-top"><span>${fmtDate(l.date)} · ${l.time}</span><span class="task-status ${l.status}">${l.status==='completed'?'Done':l.status==='review'?'Review':'Blocked'}</span></div><strong>${safe(l.title)}</strong><p>${l.note?safe(l.note):'Output logged and submitted for review against the project goal.'}</p></div>`).join('')||'<p>No recorded runs yet. Scheduled jobs write here after each run.</p>'}</div></div><div class="drawer-section"><h3>Escalation rules</h3><div class="drawer-detail"><div class="key">TO GENERAL MANAGER</div><div class="val">${safe(r.gm_escalation)}</div></div><div class="drawer-detail"><div class="key">DIRECTLY TO LEON</div><div class="val">${safe(r.leon_escalation)}</div></div></div><div class="drawer-section"><button class="btn ghost" style="width:100%" data-project="${p.id}">Inspect ${safe(p.name)} ${icon('arrow',14)}</button></div>`)}
 function toast(msg){let t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('show'),3500)}
 
