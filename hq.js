@@ -18,8 +18,11 @@ const icons = {
 };
 const icon = (name,size=17)=>`<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]||icons.bots}</svg>`;
 const AG = (id,name,focus,state,actions,last,quality) => ({id,name,focus,state,actions,last,quality});
-// Live tool pages per project, from the project's own registry
+// Live tool pages per project. Bum Bum entries are paths on the project
+// website, from the project's own registry
 // (leaveittobumbum.com/tools/registry.json, synced 2026-11-18).
+// Other entries are absolute URLs; password-protected apps link to their
+// login page instead of the protected page (verified 2026-11-18).
 const PROJECT_TOOLS = {bum:[
 ['Screen Recorder','/tools/clips/','Video'],
 ['Voice Notes to Text','/tools/notes/','Voice'],
@@ -54,8 +57,20 @@ const PROJECT_TOOLS = {bum:[
 ['Split PDF','/tools/split-pdf/','Files'],
 ['MP4 to WebM Converter','/tools/mp4-to-webm/','Video'],
 ['MP4 to GIF Converter','/tools/mp4-to-gif/','Video']
+],
+creative:[
+['Creative Testing Panel','https://leontang.ca/panel/login.php','Creative']
+],
+outbound:[
+['Outbound Engine','https://builtbylt.com/login/','Outbound']
+],
+interview:[
+['Interview Studio','https://builtbylt.com/interview-studio/','Studio']
+],
+quartermaster:[
+['Quartermaster Platform','https://app.quartermaster.studio/sign-in?callbackUrl=https%3A%2F%2Fapp.quartermaster.studio%2F','Platform']
 ]};
-const toolsSection = p => {let tools=PROJECT_TOOLS[p.id];if(!tools||!p.website)return '';let base=p.website.replace(/\/+$/,'');return `<div class="drawer-section"><h3>The tools</h3>${tools.map(t=>`<a class="drawer-agent" style="text-decoration:none" href="${base}${t[1]}" target="_blank" rel="noopener noreferrer"><strong>${t[0]}</strong><small>${t[2]} ↗</small></a>`).join('')}</div>`};
+const toolsSection = p => {let tools=PROJECT_TOOLS[p.id];if(!tools||!tools.length)return '';let base=(p.website||'').replace(/\/+$/,'');return `<div class="drawer-section"><h3>The tools</h3>${tools.map(t=>`<a class="drawer-agent" style="text-decoration:none" href="${/^https?:\/\//.test(t[1])?t[1]:base+t[1]}" target="_blank" rel="noopener noreferrer"><strong>${t[0]}</strong><small>${t[2]} ↗</small></a>`).join('')}</div>`};
 let projects = [];
 const state={view:'overview',period:30,activityFilter:'all',projectFilter:'all',statusFilter:'all',outputProject:'all',outputDate:'',rosterProject:'all',rosterSearch:'',query:'',activity:[],runs:0,alerts:[],selected:null};
 const $=sel=>document.querySelector(sel);
