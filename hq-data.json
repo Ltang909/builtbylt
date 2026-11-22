@@ -1,8 +1,8 @@
 {
  "meta": {
-  "generated_at": "2026-11-20T20:31:06-05:00",
-  "generated_display": "Nov 20, 2026 · 08:31 PM EST",
-  "today": "2026-11-20",
+  "generated_at": "2026-11-21T20:28:57-05:00",
+  "generated_display": "Nov 21, 2026 · 08:28 PM EST",
+  "today": "2026-11-21",
   "fleet_launch": "2026-11-13",
   "version": "1.0"
  },
@@ -69,7 +69,7 @@
      "actions": 2,
      "tasks_24h": 0,
      "tasks_7d": 0,
-     "last": "Queue empty on 2026-11-20 run; no drafts created.",
+     "last": "Queue empty on 2026-11-21 run; no drafts created.",
      "quality": ""
     },
     {
@@ -105,7 +105,7 @@
      "actions": 5,
      "tasks_24h": 0,
      "tasks_7d": 1,
-     "last": "E2E run 2026-11-20 vs staging: 93 passed (92 clean + 1 flaky tombstone), 20 failed, 0 skipped (113 total). Desk composer missing on staging (.desk-greeting / 'Type anything to log it' not found) breaks all desk-routing, handoff and guest-prompt specs - eighth day running; plus tools grid missing split-pdf, Best Free CRM Salesforce ItemList deep link, and video-converter download hidden.",
+     "last": "E2E run 2026-11-21 vs staging: 117 passed, 0 failed, 0 skipped, 1 flaky (118 total). Flaky: smoke-mobile tombstone spec timed out on first attempt fetching /api/diag-admin.php, passed on retry. First fully green run after the Nov 20 spec rewrite; previous 8 days of desk/tools failures are gone.",
      "quality": ""
     },
     {
@@ -323,7 +323,7 @@
      "actions": 2,
      "tasks_24h": 0,
      "tasks_7d": 0,
-     "last": "US-IL-1: Secure 4090 LOW (40/40, record-only), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (40/40, new gain), A6000 none; EU-SE-1: Secure 4090 none, Secure A6000 LOW (40/40); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+     "last": "US-IL-1: Secure 4090 LOW (40/40, unchanged, record-only), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (40/40, was 15/40, still available), A6000 none; EU-SE-1: Secure 4090 none, A6000 none in primary pass (0/40, was 40/40; earlier pass flickered 19/40); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33); no alert sent",
      "quality": ""
     }
    ]
@@ -977,7 +977,7 @@
    "output": "The daily rollup: what the fleet and specialists did, what comes next, and anything flagged up",
    "route": "bum/gm",
    "tasks_24h": 1,
-   "tasks_7d": 8
+   "tasks_7d": 7
   },
   {
    "project": "Leave It to Bum Bum",
@@ -1111,12 +1111,72 @@
    "route": "bum/gm",
    "project": "bum",
    "agent": "Fleet manager rollup",
-   "date": "2026-11-20",
+   "date": "2026-11-21",
    "time": "20:30",
    "title": "Nightly fleet rollup completed",
    "status": "completed",
-   "note": "Filed AEO plumbing result to bum-bum-search-visibility and created Leon follow-up for Crunchbase/Wellfound profiles; no Muse-lane Briefed/Running rows and no Deep Research Briefed rows; QA passed Nov 20, copy queue empty, Runpod prices unchanged; E2E ledger still shows 93/20 failed from its 14:12Z run, which disagrees with the later Nov 20 spec rewrite reported in main chat (117 passed, 0 failed) - ledger not yet updated.",
-   "deliverable": "Fleet rollup 2026-11-20",
+   "note": "No Ready desk rows, no Muse-lane Briefed/Running rows, and no Deep Research Briefed rows; QA passed Nov 21, E2E went fully green (117 passed, 0 failed) resolving yesterday's ledger disagreement, copy queue empty, Runpod prices unchanged; remove.bg approval is now Filed with the guide live, leaving 3 items waiting on Leon.",
+   "deliverable": "Fleet rollup 2026-11-21",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/gm",
+   "project": "bum",
+   "agent": "Fleet manager rollup",
+   "date": "2026-11-21",
+   "time": "20:30",
+   "title": "Fleet rollup 2026-11-21",
+   "status": "completed",
+   "note": "",
+   "deliverable": "Fleet rollup 2026-11-21",
+   "type": "Fleet"
+  },
+  {
+   "route": "creative/video",
+   "project": "bum",
+   "agent": "Runpod stock scout",
+   "date": "2026-11-21",
+   "time": "20:27",
+   "title": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
+   "status": "completed",
+   "note": "US-IL-1: Secure 4090 LOW (40/40, unchanged, record-only), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (40/40, was 15/40, still available), A6000 none; EU-SE-1: Secure 4090 none, A6000 none in primary pass (0/40, was 40/40; earlier pass flickered 19/40); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33); no alert sent",
+   "deliverable": "Alert: Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/copy",
+   "project": "bum",
+   "agent": "Fleet copy queue",
+   "date": "2026-11-21",
+   "time": "16:00",
+   "title": "None - copy queue empty",
+   "status": "completed",
+   "note": "Queue empty on 2026-11-21 run; no drafts created.",
+   "deliverable": "",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/qa",
+   "project": "bum",
+   "agent": "Fleet E2E suite",
+   "date": "2026-11-21",
+   "time": "14:08",
+   "title": "Daily Playwright run vs staging",
+   "status": "completed",
+   "note": "E2E run 2026-11-21 vs staging: 117 passed, 0 failed, 0 skipped, 1 flaky (118 total). Flaky: smoke-mobile tombstone spec timed out on first attempt fetching /api/diag-admin.php, passed on retry. First fully green run after the Nov 20 spec rewrite; previous 8 days of desk/tools failures are gone.",
+   "deliverable": "E2E run 2026-11-13: 94 passed, 17 failed",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/qa",
+   "project": "bum",
+   "agent": "Fleet QA check",
+   "date": "2026-11-21",
+   "time": "07:15",
+   "title": "Daily production health check completed - all checks passed",
+   "status": "completed",
+   "note": "All checks passed: 11 core URLs 200, registry.json valid JSON, homepage lede 'Free tools that read receipts, chase invoices, transcribe notes and more.' present, pdf-merger FAQ JSON-LD present, all 10 guide/blog pages 200 with prose blog-wide and no duplicate H1/H2, lede CSS no 610px and max-width:none, Interview Studio 200 with Permissions-Policy camera=(), microphone=(), geolocation=() unchanged (standing microphone block).",
+   "deliverable": "QA check 2026-11-18",
    "type": "Fleet"
   },
   {
@@ -1129,54 +1189,6 @@
    "status": "completed",
    "note": "",
    "deliverable": "Fleet rollup 2026-11-20",
-   "type": "Fleet"
-  },
-  {
-   "route": "creative/video",
-   "project": "bum",
-   "agent": "Runpod stock scout",
-   "date": "2026-11-20",
-   "time": "20:22",
-   "title": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
-   "status": "completed",
-   "note": "US-IL-1: Secure 4090 LOW (40/40, record-only), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (40/40, new gain), A6000 none; EU-SE-1: Secure 4090 none, Secure A6000 LOW (40/40); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
-   "deliverable": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 and EUR-IS-1 at $0.89/hr",
-   "type": "Fleet"
-  },
-  {
-   "route": "bum/copy",
-   "project": "bum",
-   "agent": "Fleet copy queue",
-   "date": "2026-11-20",
-   "time": "15:57",
-   "title": "None - copy queue empty",
-   "status": "completed",
-   "note": "Queue empty on 2026-11-20 run; no drafts created.",
-   "deliverable": "",
-   "type": "Fleet"
-  },
-  {
-   "route": "bum/qa",
-   "project": "bum",
-   "agent": "Fleet E2E suite",
-   "date": "2026-11-20",
-   "time": "14:12",
-   "title": "Daily Playwright run vs staging",
-   "status": "blocked",
-   "note": "E2E run 2026-11-20 vs staging: 93 passed (92 clean + 1 flaky tombstone), 20 failed, 0 skipped (113 total). Desk composer missing on staging (.desk-greeting / 'Type anything to log it' not found) breaks all desk-routing, handoff and guest-prompt specs - eighth day running; plus tools grid missing split-pdf, Best Free CRM Salesforce ItemList deep link, and video-converter download hidden.",
-   "deliverable": "E2E run 2026-11-13: 94 passed, 17 failed",
-   "type": "Fleet"
-  },
-  {
-   "route": "bum/qa",
-   "project": "bum",
-   "agent": "Fleet QA check",
-   "date": "2026-11-20",
-   "time": "07:15",
-   "title": "Daily production health check completed - all checks passed",
-   "status": "completed",
-   "note": "All checks passed: 11 core URLs 200, registry.json valid JSON, homepage lede 'Free tools that read receipts, chase invoices, transcribe notes and more.' present, pdf-merger FAQ JSON-LD present, all 10 guide/blog pages 200 with prose blog-wide and no duplicate H1/H2, lede CSS no 610px and max-width:none, Interview Studio 200 with Permissions-Policy camera=(), microphone=(), geolocation=() unchanged (standing microphone block).",
-   "deliverable": "QA check 2026-11-18",
    "type": "Fleet"
   },
   {
@@ -1391,8 +1403,8 @@
    "type": "analysis",
    "agent": "Runpod Scout",
    "title": "GPU stock check: US-IL-1 unavailable",
-   "description": "Prices verified via runpod.get_gpus() (matched by GPU id), unchanged vs Nov 13 reference and vs 19:23 run (4090 Secure $0.89/hr, Community $0.34/hr; A6000 Secure $0.69/hr, Community $0.33/hr). Method: catalog via runpod.rp_cli.compute.list_gpus with product=POD, cloud=SECURE/COMMUNITY, matched by GPU id (NVIDIA GeForce RTX 4090 / NVIDIA RTX A6000). Primary snapshot = 40 Secure reads + 10 Community reads, 0 errors. Secure 4090: overall MEDIUM in 40/40; US-IL-1 LOW in 40/40 (still available, record-only per auto-attempt job, NOT an alert), EUR-IS-1 LOW in 40/40 (was NONE 0/40 at 19:23 - NEW GAIN, alert trigger), EU-SE-1 0/40 unchanged NONE. Other DCs EU-RO-1 40, EUR-IS-2 40, US-TX-3 12, US-NC-1 1. Secure A6000: overall LOW in 40/40; US-IL-1 0/40 unchanged, EUR-IS-1 0/40 unchanged, EU-SE-1 LOW in 40/40 (was LOW 13/40 at 19:23 - still available, not a new gain). Community (10 reads): 4090 overall NONE in 7/10 and LOW in 3/10 but US-IL-1 0/10 unchanged; A6000 overall NONE in 10/10, US-IL-1 0/10 unchanged. Alert criteria MET: (a) Secure RTX 4090 became available in EUR-IS-1 after being unavailable there. No price change, no Community gain in US-IL-1. Secure 4090 in US-IL-1 is record-only per the auto-attempt job. EUR-IS-1 stock means the staged from-scratch build runs there (volume ixp56elam8); EU-SE-1 stock means the staged build runs there (volume tv2i65qtj1); US-IL-1 stock (record-only) would mean the Emergency test fires with zero re-setup on volume yl0zi56gqz. Catalog shows stock is not a guarantee of a real machine (Nov 13 listings repeatedly failed to convert). No pod created, no volume touched, $0 spent. Raw sample: ledger/runpod-sample-2026-11-20-2022.json.",
-   "time": "2026-11-20 · 20:22"
+   "description": "Prices verified via runpod.get_gpus() (matched by GPU id), unchanged vs Nov 13 reference and vs 19:23 run (4090 Secure $0.89/hr, Community $0.34/hr; A6000 Secure $0.69/hr, Community $0.33/hr). Method: catalog via runpod.rp_cli.compute.list_gpus with product=POD, cloud=SECURE/COMMUNITY, matched by GPU id (NVIDIA GeForce RTX 4090 / NVIDIA RTX A6000). Primary snapshot = 40 Secure reads + 10 Community reads, 0 errors. Secure 4090: overall HIGH 40/40; US-IL-1 LOW 40/40 unchanged (record-only per auto-attempt job, NOT an alert), EUR-IS-1 LOW 40/40 (was LOW 15/40 at 19:23 - still catalog-available, now solid, already available so NOT a new-availability alert), EU-SE-1 0/40 unchanged NONE. Other DCs EU-RO-1 40, EU-CZ-1 40, EUR-IS-2 40. Secure A6000: overall NONE 40/40 in primary pass; EU-SE-1 0/40 in primary (was LOW 40/40 at 19:23 - an earlier pass this run at ~20:24 showed LOW 19/40 there, so EU-SE-1 A6000 catalog stock is flickering out, not stable; a loss of availability is NOT an alert trigger), US-IL-1 0/40 unchanged, EUR-IS-1 0/40 unchanged. Community (10 reads): 4090 overall LOW 8/10 + NONE 2/10, US-IL-1 0/10 unchanged; A6000 overall NONE 10/10, US-IL-1 0/10 unchanged - no Community alert. No alert criteria met this run: no new Secure availability (4090 EUR-IS-1 was already available), no Community gain in US-IL-1, no price change. Catalog shows stock is not a guarantee of a real machine (Nov 13 listings repeatedly failed to convert). No pod created, no volume touched, $0 spent. Raw sample: ledger/runpod-sample-2026-11-21-2027.json.",
+   "time": "2026-11-21 · 20:27"
   },
   {
    "id": 2,
@@ -1418,7 +1430,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-13: 94 passed, 17 failed",
-   "description": "E2E run 2026-11-20 vs staging: 93 passed (92 clean + 1 flaky tombstone), 20 failed, 0 skipped (113 total). Desk composer missing on staging (.desk-greeting / 'Type anything to log it' not found) breaks all desk-routing, handoff and guest-prompt specs - eighth day running; plus tools grid missing split-pdf, Best Free CRM Salesforce ItemList deep link, and video-converter download hidden.",
+   "description": "E2E run 2026-11-21 vs staging: 117 passed, 0 failed, 0 skipped, 1 flaky (118 total). Flaky: smoke-mobile tombstone spec timed out on first attempt fetching /api/diag-admin.php, passed on retry. First fully green run after the Nov 20 spec rewrite; previous 8 days of desk/tools failures are gone.",
    "time": ""
   },
   {
@@ -1427,7 +1439,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-14: 94 passed, 16 failed",
-   "description": "E2E run 2026-11-20 vs staging: 93 passed (92 clean + 1 flaky tombstone), 20 failed, 0 skipped (113 total). Desk composer missing on staging (.desk-greeting / 'Type anything to log it' not found) breaks all desk-routing, handoff and guest-prompt specs - eighth day running; plus tools grid missing split-pdf, Best Free CRM Salesforce ItemList deep link, and video-converter download hidden.",
+   "description": "E2E run 2026-11-21 vs staging: 117 passed, 0 failed, 0 skipped, 1 flaky (118 total). Flaky: smoke-mobile tombstone spec timed out on first attempt fetching /api/diag-admin.php, passed on retry. First fully green run after the Nov 20 spec rewrite; previous 8 days of desk/tools failures are gone.",
    "time": ""
   },
   {
@@ -1436,7 +1448,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-15: 96 passed, 16 failed",
-   "description": "E2E run 2026-11-20 vs staging: 93 passed (92 clean + 1 flaky tombstone), 20 failed, 0 skipped (113 total). Desk composer missing on staging (.desk-greeting / 'Type anything to log it' not found) breaks all desk-routing, handoff and guest-prompt specs - eighth day running; plus tools grid missing split-pdf, Best Free CRM Salesforce ItemList deep link, and video-converter download hidden.",
+   "description": "E2E run 2026-11-21 vs staging: 117 passed, 0 failed, 0 skipped, 1 flaky (118 total). Flaky: smoke-mobile tombstone spec timed out on first attempt fetching /api/diag-admin.php, passed on retry. First fully green run after the Nov 20 spec rewrite; previous 8 days of desk/tools failures are gone.",
    "time": ""
   },
   {
@@ -1445,7 +1457,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-16: 96 passed, 17 failed",
-   "description": "E2E run 2026-11-20 vs staging: 93 passed (92 clean + 1 flaky tombstone), 20 failed, 0 skipped (113 total). Desk composer missing on staging (.desk-greeting / 'Type anything to log it' not found) breaks all desk-routing, handoff and guest-prompt specs - eighth day running; plus tools grid missing split-pdf, Best Free CRM Salesforce ItemList deep link, and video-converter download hidden.",
+   "description": "E2E run 2026-11-21 vs staging: 117 passed, 0 failed, 0 skipped, 1 flaky (118 total). Flaky: smoke-mobile tombstone spec timed out on first attempt fetching /api/diag-admin.php, passed on retry. First fully green run after the Nov 20 spec rewrite; previous 8 days of desk/tools failures are gone.",
    "time": ""
   },
   {
@@ -1454,7 +1466,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-17: 93 passed, 20 failed",
-   "description": "E2E run 2026-11-20 vs staging: 93 passed (92 clean + 1 flaky tombstone), 20 failed, 0 skipped (113 total). Desk composer missing on staging (.desk-greeting / 'Type anything to log it' not found) breaks all desk-routing, handoff and guest-prompt specs - eighth day running; plus tools grid missing split-pdf, Best Free CRM Salesforce ItemList deep link, and video-converter download hidden.",
+   "description": "E2E run 2026-11-21 vs staging: 117 passed, 0 failed, 0 skipped, 1 flaky (118 total). Flaky: smoke-mobile tombstone spec timed out on first attempt fetching /api/diag-admin.php, passed on retry. First fully green run after the Nov 20 spec rewrite; previous 8 days of desk/tools failures are gone.",
    "time": ""
   },
   {
@@ -1471,37 +1483,30 @@
    "project": "bum",
    "type": "ship",
    "agent": "Fleet manager rollup",
-   "title": "Fleet rollup 2026-11-20",
-   "description": "Filed AEO plumbing result to bum-bum-search-visibility and created Leon follow-up for Crunchbase/Wellfound profiles; no Muse-lane Briefed/Running rows and no Deep Research Briefed rows; QA passed Nov 20, copy queue empty, Runpod prices unchanged; E2E ledger still shows 93/20 failed from its 14:12Z run, which disagrees with the later Nov 20 spec rewrite reported in main chat (117 passed, 0 failed) - ledger not yet updated.",
-   "time": "2026-11-20 · 20:30"
+   "title": "Fleet rollup 2026-11-21",
+   "description": "No Ready desk rows, no Muse-lane Briefed/Running rows, and no Deep Research Briefed rows; QA passed Nov 21, E2E went fully green (117 passed, 0 failed) resolving yesterday's ledger disagreement, copy queue empty, Runpod prices unchanged; remove.bg approval is now Filed with the guide live, leaving 3 items waiting on Leon.",
+   "time": "2026-11-21 · 20:30"
   },
   {
    "id": 11,
    "project": "bum",
    "type": "ship",
    "agent": "Fleet manager rollup",
-   "title": "Fleet rollup 2026-11-19",
-   "description": "Filed AEO plumbing result to bum-bum-search-visibility and created Leon follow-up for Crunchbase/Wellfound profiles; no Muse-lane Briefed/Running rows and no Deep Research Briefed rows; QA passed Nov 20, copy queue empty, Runpod prices unchanged; E2E ledger still shows 93/20 failed from its 14:12Z run, which disagrees with the later Nov 20 spec rewrite reported in main chat (117 passed, 0 failed) - ledger not yet updated.",
-   "time": "2026-11-19 · 20:30"
+   "title": "Fleet rollup 2026-11-20",
+   "description": "No Ready desk rows, no Muse-lane Briefed/Running rows, and no Deep Research Briefed rows; QA passed Nov 21, E2E went fully green (117 passed, 0 failed) resolving yesterday's ledger disagreement, copy queue empty, Runpod prices unchanged; remove.bg approval is now Filed with the guide live, leaving 3 items waiting on Leon.",
+   "time": "2026-11-20 · 20:30"
   },
   {
    "id": 12,
    "project": "bum",
    "type": "ship",
    "agent": "Fleet manager rollup",
-   "title": "Fleet rollup 2026-11-18",
-   "description": "Filed AEO plumbing result to bum-bum-search-visibility and created Leon follow-up for Crunchbase/Wellfound profiles; no Muse-lane Briefed/Running rows and no Deep Research Briefed rows; QA passed Nov 20, copy queue empty, Runpod prices unchanged; E2E ledger still shows 93/20 failed from its 14:12Z run, which disagrees with the later Nov 20 spec rewrite reported in main chat (117 passed, 0 failed) - ledger not yet updated.",
-   "time": "2026-11-18 · 20:30"
+   "title": "Fleet rollup 2026-11-19",
+   "description": "No Ready desk rows, no Muse-lane Briefed/Running rows, and no Deep Research Briefed rows; QA passed Nov 21, E2E went fully green (117 passed, 0 failed) resolving yesterday's ledger disagreement, copy queue empty, Runpod prices unchanged; remove.bg approval is now Filed with the guide live, leaving 3 items waiting on Leon.",
+   "time": "2026-11-19 · 20:30"
   }
  ],
- "alerts": [
-  {
-   "id": "bum",
-   "severity": "block",
-   "title": "Fleet E2E suite needs attention",
-   "desc": "E2E run 2026-11-20 vs staging: 93 passed (92 clean + 1 flaky tombstone), 20 failed, 0 skipped (113 total). Desk composer missing on staging (.desk-greeting / 'Type anything to log it' not found) breaks all desk-routing, handoff and guest-prompt specs - eighth day running; plus tools grid missing split-pdf, Best Free CRM Salesforce ItemList deep link, and video-converter download hidden."
-  }
- ],
+ "alerts": [],
  "fleet": [
   {
    "key": "qa",
@@ -1509,7 +1514,7 @@
    "project": "bum",
    "cadence": "Daily 7:15 AM",
    "state": "idle",
-   "last_run": "2026-11-20T07:15:00-05:00",
+   "last_run": "2026-11-21T07:15:00-05:00",
    "current_task": "Daily production health check completed - all checks passed",
    "summary": "All checks passed: 11 core URLs 200, registry.json valid JSON, homepage lede 'Free tools that read receipts, chase invoices, transcribe notes and more.' present, pdf-merger FAQ JSON-LD present, all 10 guide/blog pages 200 with prose blog-wide and no duplicate H1/H2, lede CSS no 610px and max-width:none, Interview Studio 200 with Permissions-Policy camera=(), microphone=(), geolocation=() unchanged (standing microphone block).",
    "deliverables": [
@@ -1525,10 +1530,10 @@
    "name": "Fleet E2E suite",
    "project": "bum",
    "cadence": "Daily 9:00 AM",
-   "state": "failed",
-   "last_run": "2026-11-20T14:12:44Z",
+   "state": "idle",
+   "last_run": "2026-11-21T14:08:40Z",
    "current_task": "Daily Playwright run vs staging",
-   "summary": "E2E run 2026-11-20 vs staging: 93 passed (92 clean + 1 flaky tombstone), 20 failed, 0 skipped (113 total). Desk composer missing on staging (.desk-greeting / 'Type anything to log it' not found) breaks all desk-routing, handoff and guest-prompt specs - eighth day running; plus tools grid missing split-pdf, Best Free CRM Salesforce ItemList deep link, and video-converter download hidden.",
+   "summary": "E2E run 2026-11-21 vs staging: 117 passed, 0 failed, 0 skipped, 1 flaky (118 total). Flaky: smoke-mobile tombstone spec timed out on first attempt fetching /api/diag-admin.php, passed on retry. First fully green run after the Nov 20 spec rewrite; previous 8 days of desk/tools failures are gone.",
    "deliverables": [
     {
      "title": "E2E run 2026-11-13: 94 passed, 17 failed",
@@ -1569,6 +1574,11 @@
      "title": "E2E run 2026-11-20: 93 passed, 20 failed",
      "at": null,
      "link_or_path": ""
+    },
+    {
+     "title": "E2E run 2026-11-21: 117 passed, 0 failed",
+     "at": null,
+     "link_or_path": ""
     }
    ]
   },
@@ -1595,9 +1605,9 @@
    "project": "bum",
    "cadence": "Daily 4:00 PM",
    "state": "idle",
-   "last_run": "2026-11-20T15:57:26-05:00",
+   "last_run": "2026-11-21T16:00:00-05:00",
    "current_task": "None - copy queue empty",
-   "summary": "Queue empty on 2026-11-20 run; no drafts created.",
+   "summary": "Queue empty on 2026-11-21 run; no drafts created.",
    "deliverables": []
   },
   {
@@ -1606,10 +1616,15 @@
    "project": "bum",
    "cadence": "Daily 8:30 PM",
    "state": "idle",
-   "last_run": "2026-11-20T20:30:00-05:00",
+   "last_run": "2026-11-21T20:30:00-05:00",
    "current_task": "Nightly fleet rollup completed",
-   "summary": "Filed AEO plumbing result to bum-bum-search-visibility and created Leon follow-up for Crunchbase/Wellfound profiles; no Muse-lane Briefed/Running rows and no Deep Research Briefed rows; QA passed Nov 20, copy queue empty, Runpod prices unchanged; E2E ledger still shows 93/20 failed from its 14:12Z run, which disagrees with the later Nov 20 spec rewrite reported in main chat (117 passed, 0 failed) - ledger not yet updated.",
+   "summary": "No Ready desk rows, no Muse-lane Briefed/Running rows, and no Deep Research Briefed rows; QA passed Nov 21, E2E went fully green (117 passed, 0 failed) resolving yesterday's ledger disagreement, copy queue empty, Runpod prices unchanged; remove.bg approval is now Filed with the guide live, leaving 3 items waiting on Leon.",
    "deliverables": [
+    {
+     "title": "Fleet rollup 2026-11-21",
+     "at": "2026-11-21T20:30:00-05:00",
+     "link_or_path": ""
+    },
     {
      "title": "Fleet rollup 2026-11-20",
      "at": "2026-11-20T20:30:00-05:00",
@@ -1663,51 +1678,11 @@
    "project": "bum",
    "cadence": "Hourly",
    "state": "idle",
-   "last_run": "2026-11-20T20:22:56.130651-05:00",
+   "last_run": "2026-11-21T20:27:18.093780-05:00",
    "current_task": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
-   "summary": "US-IL-1: Secure 4090 LOW (40/40, record-only), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (40/40, new gain), A6000 none; EU-SE-1: Secure 4090 none, Secure A6000 LOW (40/40); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "summary": "US-IL-1: Secure 4090 LOW (40/40, unchanged, record-only), A6000 none, no Community; EUR-IS-1: Secure 4090 LOW (40/40, was 15/40, still available), A6000 none; EU-SE-1: Secure 4090 none, A6000 none in primary pass (0/40, was 40/40; earlier pass flickered 19/40); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33); no alert sent",
    "deliverables": [
     {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in US-IL-1 and EUR-IS-1 at $0.89/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
      "title": "Alert: Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
      "at": null,
      "link_or_path": ""
@@ -1764,6 +1739,46 @@
     },
     {
      "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr; Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr; Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW) in EUR-IS-1 at $0.89/hr; Secure RTX A6000 catalog shows stock (LOW) in EU-SE-1 at $0.69/hr",
      "at": null,
      "link_or_path": ""
     }
@@ -1771,12 +1786,6 @@
   }
  ],
  "waiting": [
-  {
-   "title": "Approve: remove.bg alternatives switcher guide draft",
-   "detail": "Full draft is pasted in the desk task for approval before any use; the guide covers what to use after the Dec 1 shutdown.",
-   "since": "2026-11-19",
-   "source": "ChatGPT · Copy sweep desk row"
-  },
   {
    "title": "Bum Bum videos: generate still frames first, then animate",
    "detail": "Stills-first production step sits with Leon on the desk, due Nov 19.",
