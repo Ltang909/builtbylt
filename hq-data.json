@@ -1,8 +1,8 @@
 {
  "meta": {
-  "generated_at": "2026-11-26T01:33:22+00:00",
-  "generated_display": "Nov 26, 2026 · 01:33 AM UTC",
-  "today": "2026-11-26",
+  "generated_at": "2026-11-27T01:27:47+00:00",
+  "generated_display": "Nov 27, 2026 · 01:27 AM UTC",
+  "today": "2026-11-27",
   "fleet_launch": "2026-11-13",
   "version": "1.0"
  },
@@ -69,7 +69,7 @@
      "actions": 2,
      "tasks_24h": 0,
      "tasks_7d": 0,
-     "last": "Queue empty on 2026-11-25 run; no drafts created.",
+     "last": "Queue empty on 2026-11-26 run; no drafts created.",
      "quality": ""
     },
     {
@@ -105,7 +105,7 @@
      "actions": 5,
      "tasks_24h": 0,
      "tasks_7d": 0,
-     "last": "[withheld]",
+     "last": "E2E run 2026-11-26 vs staging: 119 passed, 0 failed, 0 skipped of 119. Fully green; footer.spec.ts failures from Nov 24-25 did not recur.",
      "quality": ""
     },
     {
@@ -323,7 +323,7 @@
      "actions": 2,
      "tasks_24h": 0,
      "tasks_7d": 0,
-     "last": "US-IL-1: Secure 4090 LOW (record only), Secure A6000 none, Community both none; EUR-IS-1: Secure 4090 LOW (was LOW), Secure A6000 none; EU-SE-1: Secure 4090 none, Secure A6000 LOW (was LOW); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+     "last": "US-IL-1: Secure 4090 LOW (30/30, recorded only, not an alert), Secure A6000 none, Community both none; EUR-IS-1: Secure 4090 LOW (30/30, unchanged), Secure A6000 none; EU-SE-1: Secure 4090 none, Secure A6000 LOW (30/30, was NONE - alert trigger); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
      "quality": ""
     }
    ]
@@ -1111,12 +1111,72 @@
    "route": "bum/gm",
    "project": "bum",
    "agent": "Fleet manager rollup",
-   "date": "2026-11-25",
+   "date": "2026-11-26",
    "time": "20:30",
    "title": "Nightly fleet rollup completed",
    "status": "completed",
-   "note": "Picked up and filed the E2E footer fix: spec expectation updated in helpers.ts and the missed shared PHP footer (site-footer.php) fixed to the company LinkedIn URL; commit 67bb527 on staging, deploy succeeded, footer tests 6 passed / 0 failed vs staging. No Ready desk rows, no Deep Research Briefed rows. QA passed Nov 25, E2E full suite Nov 25 was 115 passed / 4 failed (the footer failures this fix addresses; next full run verifies), copy queue empty, competitor idle since Nov 23, Runpod US-IL-1 Secure 4090 LOW, EUR-IS-1 Secure 4090 LOW, EU-SE-1 Secure A6000 LOW, prices unchanged. 2 items still waiting on Leon.",
-   "deliverable": "Fleet rollup 2026-11-25",
+   "note": "Quiet day, no desk intake: no Ready rows, no Briefed rows at all, no Muse-lane pickups, no Deep Research briefs waiting. QA passed Nov 26, E2E Nov 26 fully green 119 passed / 0 failed (footer failures from Nov 24-25 did not recur, confirming yesterday's fix), copy queue empty, competitor idle since Nov 23, Runpod EU-SE-1 Secure A6000 flipped NONE to LOW (alert at 20:24), US-IL-1 Secure 4090 LOW, EUR-IS-1 Secure 4090 LOW, prices unchanged. 2 items still waiting on Leon, carried from Nov 19.",
+   "deliverable": "Fleet rollup 2026-11-26",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/gm",
+   "project": "bum",
+   "agent": "Fleet manager rollup",
+   "date": "2026-11-26",
+   "time": "20:30",
+   "title": "Fleet rollup 2026-11-26",
+   "status": "completed",
+   "note": "",
+   "deliverable": "Fleet rollup 2026-11-26",
+   "type": "Fleet"
+  },
+  {
+   "route": "creative/video",
+   "project": "bum",
+   "agent": "Runpod stock scout",
+   "date": "2026-11-26",
+   "time": "20:24",
+   "title": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
+   "status": "completed",
+   "note": "US-IL-1: Secure 4090 LOW (30/30, recorded only, not an alert), Secure A6000 none, Community both none; EUR-IS-1: Secure 4090 LOW (30/30, unchanged), Secure A6000 none; EU-SE-1: Secure 4090 none, Secure A6000 LOW (30/30, was NONE - alert trigger); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "deliverable": "Alert: Secure RTX A6000 catalog shows stock (LOW, 9/10 reads) in EU-SE-1 at $0.69/hr",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/copy",
+   "project": "bum",
+   "agent": "Fleet copy queue",
+   "date": "2026-11-26",
+   "time": "16:00",
+   "title": "None - copy queue empty",
+   "status": "completed",
+   "note": "Queue empty on 2026-11-26 run; no drafts created.",
+   "deliverable": "",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/qa",
+   "project": "bum",
+   "agent": "Fleet E2E suite",
+   "date": "2026-11-26",
+   "time": "14:08",
+   "title": "Daily Playwright run vs staging",
+   "status": "completed",
+   "note": "E2E run 2026-11-26 vs staging: 119 passed, 0 failed, 0 skipped of 119. Fully green; footer.spec.ts failures from Nov 24-25 did not recur.",
+   "deliverable": "E2E run 2026-11-13: 94 passed, 17 failed",
+   "type": "Fleet"
+  },
+  {
+   "route": "bum/qa",
+   "project": "bum",
+   "agent": "Fleet QA check",
+   "date": "2026-11-26",
+   "time": "07:15",
+   "title": "Daily production health check completed - all checks passed",
+   "status": "completed",
+   "note": "All checks passed: 11 core URLs 200, registry.json valid JSON, homepage lede 'Free tools that read receipts, chase invoices, transcribe notes and more.' present, pdf-merger FAQ JSON-LD present, all 10 guide/blog pages 200 with prose blog-wide and no duplicate H1/H2, lede CSS no 610px and max-width:none only, Interview Studio 200 with Permissions-Policy camera=(), microphone=(), geolocation=() unchanged (standing microphone block).",
+   "deliverable": "QA check 2026-11-18",
    "type": "Fleet"
   },
   {
@@ -1129,54 +1189,6 @@
    "status": "completed",
    "note": "",
    "deliverable": "Fleet rollup 2026-11-25",
-   "type": "Fleet"
-  },
-  {
-   "route": "creative/video",
-   "project": "bum",
-   "agent": "Runpod stock scout",
-   "date": "2026-11-25",
-   "time": "20:22",
-   "title": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
-   "status": "completed",
-   "note": "US-IL-1: Secure 4090 LOW (record only), Secure A6000 none, Community both none; EUR-IS-1: Secure 4090 LOW (was LOW), Secure A6000 none; EU-SE-1: Secure 4090 none, Secure A6000 LOW (was LOW); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
-   "deliverable": "Alert: Secure RTX 4090 catalog shows stock (LOW, 20/20 reads) in EUR-IS-1 at $0.89/hr",
-   "type": "Fleet"
-  },
-  {
-   "route": "bum/copy",
-   "project": "bum",
-   "agent": "Fleet copy queue",
-   "date": "2026-11-25",
-   "time": "15:57",
-   "title": "None - copy queue empty",
-   "status": "completed",
-   "note": "Queue empty on 2026-11-25 run; no drafts created.",
-   "deliverable": "",
-   "type": "Fleet"
-  },
-  {
-   "route": "bum/qa",
-   "project": "bum",
-   "agent": "Fleet E2E suite",
-   "date": "2026-11-25",
-   "time": "14:00",
-   "title": "Daily Playwright run vs staging",
-   "status": "blocked",
-   "note": "[withheld]",
-   "deliverable": "E2E run 2026-11-13: 94 passed, 17 failed",
-   "type": "Fleet"
-  },
-  {
-   "route": "bum/qa",
-   "project": "bum",
-   "agent": "Fleet QA check",
-   "date": "2026-11-25",
-   "time": "07:15",
-   "title": "Daily production health check completed - all checks passed",
-   "status": "completed",
-   "note": "All checks passed: 11 core URLs 200, registry.json valid JSON, homepage lede 'Free tools that read receipts, chase invoices, transcribe notes and more.' present, pdf-merger FAQ JSON-LD present, all 10 guide/blog pages 200 with prose blog-wide and no duplicate H1/H2, lede CSS no 610px and max-width:none only, Interview Studio 200 with Permissions-Policy camera=(), microphone=(), geolocation=() unchanged (standing microphone block).",
-   "deliverable": "QA check 2026-11-18",
    "type": "Fleet"
   },
   {
@@ -1463,8 +1475,8 @@
    "type": "analysis",
    "agent": "Runpod Scout",
    "title": "GPU stock check: US-IL-1 unavailable",
-   "description": "Prices verified via runpod.get_gpus() (matched by GPU id), unchanged vs Nov 13 reference and vs 19:23 Nov 25 run (4090 Secure $0.89/hr, Community $0.34/hr; A6000 Secure $0.69/hr, Community $0.33/hr). Method: per-datacenter catalog reads via runpod.api.rest run_rest_request GET /v2/catalog/gpus with include=AVAILABILITY, product=POD, cloud=SECURE/COMMUNITY, dataCenterIds=<dc>, plus unfiltered Secure reads; availability for a DC taken from that card's dataCenters[] entry matching the DC (absent = NONE). Aggregation = any LOW across all reads (same as prior runs, due to catalog flicker). Reads this run were unanimous with zero errors and no flicker: Secure filtered batch1, batch2, and unfiltered all agreed — US-IL-1 4090 LOW 10/10, EUR-IS-1 4090 LOW 10/10, EU-SE-1 A6000 LOW 10/10, all other Secure cards NONE 10/10 in every batch; Community US-IL-1 filtered both batches both cards NONE 10/10. Aggregated final identical to previous run: Secure 4090 US-IL-1 LOW (record only - not an alert trigger per auto-attempt ownership), EUR-IS-1 LOW (was LOW - no new alert), EU-SE-1 NONE; Secure A6000 US-IL-1 NONE, EUR-IS-1 NONE, EU-SE-1 LOW (was LOW - no new alert); Community US-IL-1 both NONE. Prices unchanged. No alert triggers this run. No pod created, no volume touched, $0 spent. Raw sample: ledger/runpod-sample-2026-11-25-2022.json",
-   "time": "2026-11-25 · 20:22"
+   "description": "Prices verified via runpod.get_gpus() (matched by GPU id), unchanged vs Nov 13 reference and vs 19:23 Nov 26 run (4090 Secure $0.89/hr, Community $0.34/hr; A6000 Secure $0.69/hr, Community $0.33/hr). Method: per-datacenter catalog reads via runpod.api.rest run_rest_request GET /v2/catalog/gpus with include=AVAILABILITY, product=POD, cloud=SECURE/COMMUNITY, dataCenterIds=<dc>, plus unfiltered Secure reads; availability for a DC taken from that card's dataCenters[] entry matching the DC (absent = NONE). Aggregation = any LOW across all reads (same as prior runs, due to catalog flicker). This run: zero errors. Secure 4090 US-IL-1 LOW 30/30 (recorded only, not an alert trigger), EUR-IS-1 LOW 30/30, EU-SE-1 NONE 30/30; Secure A6000 US-IL-1 NONE 30/30, EUR-IS-1 NONE 30/30, EU-SE-1 LOW 30/30; Community US-IL-1 both cards NONE 20/20. Changes vs previous run: Secure A6000 in EU-SE-1 went NONE (0/30) -> LOW (30/30) - an alert trigger under rule (a). All other availabilities unchanged in boolean terms. Prices unchanged. Alert sent this run for EU-SE-1 A6000. No pod created, no volume touched, $0 spent. Raw sample: ledger/runpod-sample-2026-11-26-2022.json",
+   "time": "2026-11-26 · 20:24"
   },
   {
    "id": 2,
@@ -1490,7 +1502,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-13: 94 passed, 17 failed",
-   "description": "[withheld]",
+   "description": "E2E run 2026-11-26 vs staging: 119 passed, 0 failed, 0 skipped of 119. Fully green; footer.spec.ts failures from Nov 24-25 did not recur.",
    "time": ""
   },
   {
@@ -1499,7 +1511,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-14: 94 passed, 16 failed",
-   "description": "[withheld]",
+   "description": "E2E run 2026-11-26 vs staging: 119 passed, 0 failed, 0 skipped of 119. Fully green; footer.spec.ts failures from Nov 24-25 did not recur.",
    "time": ""
   },
   {
@@ -1508,7 +1520,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-15: 96 passed, 16 failed",
-   "description": "[withheld]",
+   "description": "E2E run 2026-11-26 vs staging: 119 passed, 0 failed, 0 skipped of 119. Fully green; footer.spec.ts failures from Nov 24-25 did not recur.",
    "time": ""
   },
   {
@@ -1517,7 +1529,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-16: 96 passed, 17 failed",
-   "description": "[withheld]",
+   "description": "E2E run 2026-11-26 vs staging: 119 passed, 0 failed, 0 skipped of 119. Fully green; footer.spec.ts failures from Nov 24-25 did not recur.",
    "time": ""
   },
   {
@@ -1526,7 +1538,7 @@
    "type": "ship",
    "agent": "Fleet E2E suite",
    "title": "E2E run 2026-11-17: 93 passed, 20 failed",
-   "description": "[withheld]",
+   "description": "E2E run 2026-11-26 vs staging: 119 passed, 0 failed, 0 skipped of 119. Fully green; footer.spec.ts failures from Nov 24-25 did not recur.",
    "time": ""
   },
   {
@@ -1552,28 +1564,21 @@
    "project": "bum",
    "type": "ship",
    "agent": "Fleet manager rollup",
-   "title": "Fleet rollup 2026-11-25",
-   "description": "Picked up and filed the E2E footer fix: spec expectation updated in helpers.ts and the missed shared PHP footer (site-footer.php) fixed to the company LinkedIn URL; commit 67bb527 on staging, deploy succeeded, footer tests 6 passed / 0 failed vs staging. No Ready desk rows, no Deep Research Briefed rows. QA passed Nov 25, E2E full suite Nov 25 was 115 passed / 4 failed (the footer failures this fix addresses; next full run verifies), copy queue empty, competitor idle since Nov 23, Runpod US-IL-1 Secure 4090 LOW, EUR-IS-1 Secure 4090 LOW, EU-SE-1 Secure A6000 LOW, prices unchanged. 2 items still waiting on Leon.",
-   "time": "2026-11-25 · 20:30"
+   "title": "Fleet rollup 2026-11-26",
+   "description": "Quiet day, no desk intake: no Ready rows, no Briefed rows at all, no Muse-lane pickups, no Deep Research briefs waiting. QA passed Nov 26, E2E Nov 26 fully green 119 passed / 0 failed (footer failures from Nov 24-25 did not recur, confirming yesterday's fix), copy queue empty, competitor idle since Nov 23, Runpod EU-SE-1 Secure A6000 flipped NONE to LOW (alert at 20:24), US-IL-1 Secure 4090 LOW, EUR-IS-1 Secure 4090 LOW, prices unchanged. 2 items still waiting on Leon, carried from Nov 19.",
+   "time": "2026-11-26 · 20:30"
   },
   {
    "id": 12,
    "project": "bum",
    "type": "ship",
    "agent": "Fleet manager rollup",
-   "title": "Fleet rollup 2026-11-24",
-   "description": "Picked up and filed the E2E footer fix: spec expectation updated in helpers.ts and the missed shared PHP footer (site-footer.php) fixed to the company LinkedIn URL; commit 67bb527 on staging, deploy succeeded, footer tests 6 passed / 0 failed vs staging. No Ready desk rows, no Deep Research Briefed rows. QA passed Nov 25, E2E full suite Nov 25 was 115 passed / 4 failed (the footer failures this fix addresses; next full run verifies), copy queue empty, competitor idle since Nov 23, Runpod US-IL-1 Secure 4090 LOW, EUR-IS-1 Secure 4090 LOW, EU-SE-1 Secure A6000 LOW, prices unchanged. 2 items still waiting on Leon.",
-   "time": "2026-11-24 · 20:30"
+   "title": "Fleet rollup 2026-11-25",
+   "description": "Quiet day, no desk intake: no Ready rows, no Briefed rows at all, no Muse-lane pickups, no Deep Research briefs waiting. QA passed Nov 26, E2E Nov 26 fully green 119 passed / 0 failed (footer failures from Nov 24-25 did not recur, confirming yesterday's fix), copy queue empty, competitor idle since Nov 23, Runpod EU-SE-1 Secure A6000 flipped NONE to LOW (alert at 20:24), US-IL-1 Secure 4090 LOW, EUR-IS-1 Secure 4090 LOW, prices unchanged. 2 items still waiting on Leon, carried from Nov 19.",
+   "time": "2026-11-25 · 20:30"
   }
  ],
- "alerts": [
-  {
-   "id": "bum",
-   "severity": "block",
-   "title": "Fleet E2E suite needs attention",
-   "desc": "[withheld]"
-  }
- ],
+ "alerts": [],
  "fleet": [
   {
    "key": "qa",
@@ -1581,7 +1586,7 @@
    "project": "bum",
    "cadence": "Daily 7:15 AM",
    "state": "idle",
-   "last_run": "2026-11-25T07:15:00-05:00",
+   "last_run": "2026-11-26T07:15:00-05:00",
    "current_task": "Daily production health check completed - all checks passed",
    "summary": "All checks passed: 11 core URLs 200, registry.json valid JSON, homepage lede 'Free tools that read receipts, chase invoices, transcribe notes and more.' present, pdf-merger FAQ JSON-LD present, all 10 guide/blog pages 200 with prose blog-wide and no duplicate H1/H2, lede CSS no 610px and max-width:none only, Interview Studio 200 with Permissions-Policy camera=(), microphone=(), geolocation=() unchanged (standing microphone block).",
    "deliverables": [
@@ -1597,10 +1602,10 @@
    "name": "Fleet E2E suite",
    "project": "bum",
    "cadence": "Daily 9:00 AM",
-   "state": "failed",
-   "last_run": "2026-11-25T14:00:00Z",
+   "state": "idle",
+   "last_run": "2026-11-26T14:08:04Z",
    "current_task": "Daily Playwright run vs staging",
-   "summary": "[withheld]",
+   "summary": "E2E run 2026-11-26 vs staging: 119 passed, 0 failed, 0 skipped of 119. Fully green; footer.spec.ts failures from Nov 24-25 did not recur.",
    "deliverables": [
     {
      "title": "E2E run 2026-11-13: 94 passed, 17 failed",
@@ -1661,6 +1666,11 @@
      "title": "E2E run 2026-11-25: 115 passed, 4 failed",
      "at": null,
      "link_or_path": ""
+    },
+    {
+     "title": "E2E run 2026-11-26: 119 passed, 0 failed",
+     "at": null,
+     "link_or_path": ""
     }
    ]
   },
@@ -1692,9 +1702,9 @@
    "project": "bum",
    "cadence": "Daily 4:00 PM",
    "state": "idle",
-   "last_run": "2026-11-25T15:57:37-05:00",
+   "last_run": "2026-11-26T16:00:00-05:00",
    "current_task": "None - copy queue empty",
-   "summary": "Queue empty on 2026-11-25 run; no drafts created.",
+   "summary": "Queue empty on 2026-11-26 run; no drafts created.",
    "deliverables": []
   },
   {
@@ -1703,10 +1713,15 @@
    "project": "bum",
    "cadence": "Daily 8:30 PM",
    "state": "idle",
-   "last_run": "2026-11-25T20:30:00-05:00",
+   "last_run": "2026-11-26T20:30:00-05:00",
    "current_task": "Nightly fleet rollup completed",
-   "summary": "Picked up and filed the E2E footer fix: spec expectation updated in helpers.ts and the missed shared PHP footer (site-footer.php) fixed to the company LinkedIn URL; commit 67bb527 on staging, deploy succeeded, footer tests 6 passed / 0 failed vs staging. No Ready desk rows, no Deep Research Briefed rows. QA passed Nov 25, E2E full suite Nov 25 was 115 passed / 4 failed (the footer failures this fix addresses; next full run verifies), copy queue empty, competitor idle since Nov 23, Runpod US-IL-1 Secure 4090 LOW, EUR-IS-1 Secure 4090 LOW, EU-SE-1 Secure A6000 LOW, prices unchanged. 2 items still waiting on Leon.",
+   "summary": "Quiet day, no desk intake: no Ready rows, no Briefed rows at all, no Muse-lane pickups, no Deep Research briefs waiting. QA passed Nov 26, E2E Nov 26 fully green 119 passed / 0 failed (footer failures from Nov 24-25 did not recur, confirming yesterday's fix), copy queue empty, competitor idle since Nov 23, Runpod EU-SE-1 Secure A6000 flipped NONE to LOW (alert at 20:24), US-IL-1 Secure 4090 LOW, EUR-IS-1 Secure 4090 LOW, prices unchanged. 2 items still waiting on Leon, carried from Nov 19.",
    "deliverables": [
+    {
+     "title": "Fleet rollup 2026-11-26",
+     "at": "2026-11-26T20:30:00-05:00",
+     "link_or_path": ""
+    },
     {
      "title": "Fleet rollup 2026-11-25",
      "at": "2026-11-25T20:30:00-05:00",
@@ -1785,50 +1800,10 @@
    "project": "bum",
    "cadence": "Hourly",
    "state": "idle",
-   "last_run": "2026-11-25T20:22:42.267909-05:00",
+   "last_run": "2026-11-26T20:24:58.424225-05:00",
    "current_task": "Watching stock and prices in US-IL-1, EUR-IS-1, EU-SE-1",
-   "summary": "US-IL-1: Secure 4090 LOW (record only), Secure A6000 none, Community both none; EUR-IS-1: Secure 4090 LOW (was LOW), Secure A6000 none; EU-SE-1: Secure 4090 none, Secure A6000 LOW (was LOW); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
+   "summary": "US-IL-1: Secure 4090 LOW (30/30, recorded only, not an alert), Secure A6000 none, Community both none; EUR-IS-1: Secure 4090 LOW (30/30, unchanged), Secure A6000 none; EU-SE-1: Secure 4090 none, Secure A6000 LOW (30/30, was NONE - alert trigger); prices unchanged (4090 $0.89/$0.34, A6000 $0.69/$0.33)",
    "deliverables": [
-    {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW, 20/20 reads) in EUR-IS-1 at $0.89/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Community RTX 4090 catalog shows stock (LOW, 3/10 reads) in US-IL-1 at $0.34/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX A6000 catalog shows stock (LOW, 10/30 reads) in EU-SE-1 at $0.69/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX A6000 catalog shows stock (LOW, 4/10 reads) in EU-SE-1 at $0.69/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW, 3/10 reads) in EUR-IS-1 at $0.89/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW, 2/10 reads) in EU-SE-1 at $0.89/hr; Secure RTX A6000 catalog shows stock (LOW, 8/10 reads) in EU-SE-1 at $0.69/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW, 1/10 reads) in EUR-IS-1 at $0.89/hr",
-     "at": null,
-     "link_or_path": ""
-    },
-    {
-     "title": "Alert: Secure RTX A6000 catalog shows stock (LOW, 4/10 reads) in EU-SE-1 at $0.69/hr",
-     "at": null,
-     "link_or_path": ""
-    },
     {
      "title": "Alert: Secure RTX A6000 catalog shows stock (LOW, 9/10 reads) in EU-SE-1 at $0.69/hr",
      "at": null,
@@ -1886,6 +1861,46 @@
     },
     {
      "title": "Alert: Secure RTX 4090 catalog shows stock (LOW, 10/10 filtered reads) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW, 2/30 reads) in EUR-IS-1 at $0.89/hr; Secure RTX A6000 catalog shows stock (LOW, 10/30 reads) in EU-SE-1 at $0.69/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW, 2/30 reads) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX A6000 catalog shows stock (LOW, 8/30 reads) in EU-SE-1 at $0.69/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW, 2/30 reads) in EUR-IS-1 at $0.89/hr; Secure RTX A6000 catalog shows stock (LOW, 11/30 reads) in EU-SE-1 at $0.69/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW, 5/30 reads) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW, 20/30 reads) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX 4090 catalog shows stock (LOW, 2/30 reads) in EUR-IS-1 at $0.89/hr",
+     "at": null,
+     "link_or_path": ""
+    },
+    {
+     "title": "Alert: Secure RTX A6000 catalog shows stock (LOW, 30/30 reads) in EU-SE-1 at $0.69/hr",
      "at": null,
      "link_or_path": ""
     }
