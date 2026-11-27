@@ -46,6 +46,8 @@ button{font:inherit;color:inherit}[hidden]{display:none!important}
 .bar.hp i.low{background:var(--seal)}
 @keyframes pulse{to{opacity:.6}}
 #pause{pointer-events:auto;width:44px;height:44px;border:0;border-radius:50%;background:rgba(236,228,210,.7);font-size:18px;margin-top:-4px;flex:none}
+#bgmBtn{position:fixed;top:calc(env(safe-area-inset-top) + 64px);right:max(14px,env(safe-area-inset-right));width:44px;height:44px;border:0;border-radius:50%;background:rgba(236,228,210,.7);font-size:19px;color:var(--ink);z-index:60;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#bgmBtn.off{opacity:.45;text-decoration:line-through}
 #bout{position:fixed;top:calc(env(safe-area-inset-top) + 62px);left:0;right:0;text-align:center;font-size:13px;color:var(--wash);pointer-events:none}
 #ctl{position:fixed;inset:0;pointer-events:none;transition:opacity .4s}
 #stickZone{position:absolute;left:0;bottom:0;width:50%;height:62%;pointer-events:auto}
@@ -1156,6 +1158,31 @@ function loop(now){requestAnimationFrame(loop);let rdt=Math.min(.05,(now-last)/1
  clouds.forEach(c=>{const u=c.userData;u.a+=u.s*rdt;c.position.x=Math.cos(u.a)*u.r;c.position.z=Math.sin(u.a)*u.r});
  updCam(rdt);updScenery(rdt);R.render(S,cam)}
 requestAnimationFrame(loop);
+})();
+</script>
+<button id="bgmBtn" aria-label="Toggle music" title="Music on or off">♪</button>
+<script>
+(function(){
+  var tracks=['music/misty-peak-ode.mp3','music/fist-of-the-dragon.mp3','music/righteous-heroism.mp3','music/peak-duel.mp3','music/championship-of-the-five.mp3'];
+  var i=0,on=true,started=false,errs=0;
+  var a=new Audio();
+  a.preload='auto';a.volume=0.4;
+  var btn=document.getElementById('bgmBtn');
+  function load(n){i=(n+tracks.length)%tracks.length;a.src=tracks[i];}
+  function play(){var p=a.play();if(p&&p.catch)p.catch(function(){});}
+  load(0);
+  a.addEventListener('ended',function(){errs=0;load(i+1);if(on)play();});
+  a.addEventListener('error',function(){if(++errs<=tracks.length){load(i+1);if(started&&on)play();}});
+  function start(){if(started)return;started=true;if(on)play();}
+  window.addEventListener('pointerdown',start);
+  window.addEventListener('keydown',start);
+  btn.addEventListener('pointerdown',function(e){e.stopPropagation();});
+  btn.addEventListener('click',function(e){
+    e.stopPropagation();
+    on=!on;
+    btn.classList.toggle('off',!on);
+    if(on){started=true;play();}else{a.pause();}
+  });
 })();
 </script>
 </body></html>
